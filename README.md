@@ -84,8 +84,11 @@ mvn test -pl swiyu-client-attestation-validator
 
 ## License
 
-[Add your license here]
+This project is proprietary software owned by the Swiss Federal Office of Justice (BJ).
 
-## Contributing
+## Contact & Support
 
-[Add contributing guidelines here]
+For questions or support, please contact the SWIYU development team.
+
+---
+
