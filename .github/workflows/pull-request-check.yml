@@ -39,19 +39,13 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:java"
+
       - name: Upload JaCoCo reports
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-reports
           path: |
             swiyu-client-attestation-validator/target/site/jacoco/jacoco.xml
-
-      - name: Setup Node.js (for coverage summary script)
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Add coverage to summary
-        run: node .github/scripts/coverage-summary.js
 
       - name: Run PMD static analysis
         uses: pmd/pmd-github-action@v2
