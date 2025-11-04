@@ -5,19 +5,47 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>ch.admin.bj.swiyu</groupId>
+        <groupId>io.github.swiyu-admin-ch</groupId>
         <artifactId>swiyu-generic-java-lib-parent</artifactId>
         <version>0.0.1-snapshot</version>
     </parent>
 
     <artifactId>swiyu-generic-java-all</artifactId>
-    <name>Swiyu All - Complete Library</name>
+    <!-- required by https://central.sonatype.org/publish/requirements/ -->
+    <name>${project.groupId}:${project.artifactId}</name>
     <description>Aggregator module that includes all Swiyu utility libraries</description>
+    <url>https://github.com/swiyu-admin-ch/swiyu-generic-java-lib</url>
+
+    <!-- required by https://central.sonatype.org/publish/requirements/ -->
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://www.opensource.org/licenses/mit</url>
+        </license>
+    </licenses>
+
+    <!-- required by https://central.sonatype.org/publish/requirements/ -->
+    <developers>
+        <developer>
+            <id>vst-bit</id>
+            <name>vst-bit (Swiyu Omni Developer)</name>
+            <!--email>vladica.stojic@bit.admin.ch</email-->
+            <organization>Swiyu</organization>
+            <organizationUrl>https://github.com/swiyu-admin-ch</organizationUrl>
+        </developer>
+    </developers>
+
+    <!-- required by https://central.sonatype.org/publish/requirements/ -->
+    <scm>
+        <connection>scm:git:git://github.com/swiyu-admin-ch/swiyu-generic-java-lib.git</connection>
+        <developerConnection>scm:git:ssh://github.com:swiyu-admin-ch/swiyu-generic-java-lib.git</developerConnection>
+        <url>https://github.com/swiyu-admin-ch/swiyu-generic-java-lib/tree/main</url>
+    </scm>
 
     <dependencies>
         <!-- Include all modules -->
         <dependency>
-            <groupId>ch.admin.bj.swiyu</groupId>
+            <groupId>io.github.swiyu-admin-ch</groupId>
             <artifactId>swiyu-client-attestation-validator</artifactId>
             <version>${project.version}</version>
         </dependency>

@@ -18,7 +18,7 @@ Utilities for validating client attestation tokens and certificates (Android Saf
 
 ```xml
 <dependency>
-    <groupId>ch.admin.bj.swiyu</groupId>
+    <groupId>io.github.swiyu-admin-ch</groupId>
     <artifactId>swiyu-client-attestation-validator</artifactId>
     <version>0.0.1-snapshot</version>
 </dependency>
@@ -29,7 +29,7 @@ Include all utility modules at once
 
 ```xml
 <dependency>
-    <groupId>ch.admin.bj.swiyu</groupId>
+    <groupId>io.github.swiyu-admin-ch</groupId>
     <artifactId>swiyu-generic-java-all</artifactId>
     <version>0.0.1-snapshot</version>
 </dependency>
