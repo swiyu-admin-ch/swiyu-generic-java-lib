@@ -4,8 +4,7 @@ permissions:
 on:
   release:
     types: [created]
-#on:
-#  workflow_dispatch:
+  workflow_dispatch:
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -43,7 +42,7 @@ jobs:
         run: mvn versions:set -DnewVersion=${{ github.event.release.tag_name }}
 
       - name: Publish to repo
-        run: mvn --batch-mode deploy central:publish -DskipTests
+        run: mvn --batch-mode deploy -DskipTests
         env:
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
