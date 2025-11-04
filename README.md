@@ -82,10 +82,12 @@ mvn test -pl swiyu-client-attestation-validator
 4. Implement your utility classes
 5. Add tests
 
+# Contributions and feedback
+
+We welcome any feedback on the code regarding both the implementation and security aspects. Please follow the guidelines for
+contributing found in [CONTRIBUTING.md](/CONTRIBUTING.md).
+
 ## License
 
-[Add your license here]
+This project is licensed under the terms of the MIT license. See the [LICENSE](/LICENSE) file for details.
 
-## Contributing
-
-[Add contributing guidelines here]

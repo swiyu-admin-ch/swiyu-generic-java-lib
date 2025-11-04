@@ -27,9 +27,8 @@
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <developers>
         <developer>
-            <id>vst-bit</id>
-            <name>vst-bit (Swiyu Omni Developer)</name>
-            <!--email>vladica.stojic@bit.admin.ch</email-->
+            <id>gatschet-bit</id>
+            <name>gatschet-bit (Swiyu Omni Developer)</name>
             <organization>Swiyu</organization>
             <organizationUrl>https://github.com/swiyu-admin-ch</organizationUrl>
         </developer>

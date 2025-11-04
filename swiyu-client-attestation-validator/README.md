@@ -187,13 +187,14 @@ The library includes:
 - **Java JSON Canonicalization** (1.1): JCS implementation for hash verification
 - **Spring Boot Starter**: Auto-configuration support
 
+# Contributions and feedback
+
+We welcome any feedback on the code regarding both the implementation and security aspects. Please follow the guidelines for
+contributing found in [CONTRIBUTING.md](/CONTRIBUTING.md).
+
 ## License
 
-This project is proprietary software owned by the Swiss Federal Office of Justice (BJ).
-
-## Contact & Support
-
-For questions or support, please contact the SWIYU development team.
+This project is licensed under the terms of the MIT license. See the [LICENSE](/LICENSE) file for details.
 
 ---
 
