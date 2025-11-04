@@ -17,7 +17,7 @@ Add the dependency to your `pom.xml`:
 <dependency>
     <groupId>io.github.swiyu-admin-ch</groupId>
     <artifactId>swiyu-client-attestation-validator</artifactId>
-    <version>0.0.1-snapshot</version>
+    <version>0.0.1</version>
 </dependency>
 ```
 
