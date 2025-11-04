@@ -4,13 +4,41 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>ch.admin.bj.swiyu</groupId>
+    <!--     For the sake of Maven Central publishing, it must now match the Maven Central namespace. -->
+    <groupId>io.github.swiyu-admin-ch</groupId>
     <artifactId>swiyu-generic-java-lib-parent</artifactId>
-    <version>0.0.1-snapshot</version>
+    <version>0.0.1</version>
     <packaging>pom</packaging>
 
-    <name>Swiyu Generic Java Library - Parent</name>
+    <!-- required by https://central.sonatype.org/publish/requirements/ -->
+    <name>${project.groupId}:${project.artifactId}</name>
     <description>Parent POM for Swiyu generic Java helper libraries</description>
+    <url>https://github.com/swiyu-admin-ch/swiyu-generic-java-lib</url>
+
+    <!-- required by https://central.sonatype.org/publish/requirements/ -->
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://www.opensource.org/licenses/mit</url>
+        </license>
+    </licenses>
+
+    <!-- required by https://central.sonatype.org/publish/requirements/ -->
+    <developers>
+        <developer>
+            <id>gatschet-bit</id>
+            <name>gatschet-bit (Swiyu Omni Developer)</name>
+            <organization>Swiyu</organization>
+            <organizationUrl>https://github.com/swiyu-admin-ch</organizationUrl>
+        </developer>
+    </developers>
+
+    <!-- required by https://central.sonatype.org/publish/requirements/ -->
+    <scm>
+        <connection>scm:git:git://github.com/swiyu-admin-ch/swiyu-generic-java-lib.git</connection>
+        <developerConnection>scm:git:ssh://github.com:swiyu-admin-ch/swiyu-generic-java-lib.git</developerConnection>
+        <url>https://github.com/swiyu-admin-ch/swiyu-generic-java-lib/tree/main</url>
+    </scm>
 
     <modules>
         <module>swiyu-client-attestation-validator</module>
@@ -87,6 +115,19 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>3.2.3</version>
+                </plugin>
+                <!-- see https://central.sonatype.org/publish/publish-portal-maven/ -->
+                <plugin>
+                    <groupId>org.sonatype.central</groupId>
+                    <artifactId>central-publishing-maven-plugin</artifactId>
+                    <version>0.7.0</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <publishingServerId>central</publishingServerId>
+                        <autoPublish>true</autoPublish>
+                        <waitUntil>published</waitUntil>
+                        <checksums>required</checksums>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>

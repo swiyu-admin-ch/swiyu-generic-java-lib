@@ -18,9 +18,9 @@ Utilities for validating client attestation tokens and certificates (Android Saf
 
 ```xml
 <dependency>
-    <groupId>ch.admin.bj.swiyu</groupId>
+    <groupId>io.github.swiyu-admin-ch</groupId>
     <artifactId>swiyu-client-attestation-validator</artifactId>
-    <version>0.0.1-snapshot</version>
+    <version>0.0.1</version>
 </dependency>
 ```
 
@@ -29,9 +29,9 @@ Include all utility modules at once
 
 ```xml
 <dependency>
-    <groupId>ch.admin.bj.swiyu</groupId>
+    <groupId>io.github.swiyu-admin-ch</groupId>
     <artifactId>swiyu-generic-java-all</artifactId>
-    <version>0.0.1-snapshot</version>
+    <version>0.0.1</version>
 </dependency>
 ```
 
@@ -82,13 +82,12 @@ mvn test -pl swiyu-client-attestation-validator
 4. Implement your utility classes
 5. Add tests
 
+# Contributions and feedback
+
+We welcome any feedback on the code regarding both the implementation and security aspects. Please follow the guidelines for
+contributing found in [CONTRIBUTING.md](/CONTRIBUTING.md).
+
 ## License
 
-This project is proprietary software owned by the Swiss Federal Office of Justice (BJ).
-
-## Contact & Support
-
-For questions or support, please contact the SWIYU development team.
-
----
+This project is licensed under the terms of the MIT license. See the [LICENSE](/LICENSE) file for details.
 
