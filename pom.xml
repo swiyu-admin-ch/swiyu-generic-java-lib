@@ -155,6 +155,17 @@
                         </gpgArguments>
                     </configuration>
                 </plugin>
+
+                <!-- Verhindert, dass Maven das alte deploy-Plugin nutzt -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>3.1.2</version>
+                    <configuration>
+                        <skip>true</skip>
+                    </configuration>
+                </plugin>
+
                 <!-- see https://central.sonatype.org/publish/publish-portal-maven/ -->
                 <plugin>
                     <groupId>org.sonatype.central</groupId>
