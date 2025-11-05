@@ -41,15 +41,8 @@ jobs:
       - name: Set version (from release tag)
         run: mvn versions:set -DnewVersion=${{ github.event.release.tag_name }}
 
-      - name: Publish to repo swiyu-client-attestation-validator
-        run: mvn --batch-mode -pl swiyu-client-attestation-validator -X -DskipTests deploy -P release
-        env:
-          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-
-      - name: Publish to repo swiyu-generic-java-all
-        run: mvn --batch-mode -pl swiyu-generic-java-all deploy -DskipTests
+      - name: Publish to repo
+        run: mvn --batch-mode -X -DskipTests deploy
         env:
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
