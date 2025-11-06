@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Bean;
 public class ClientAttestationAutoConfiguration {
 
     @Bean
-    @ConditionalOnProperty(prefix = "swiyu.attestation", name = "enabled", havingValue = "true", matchIfMissing = false)
     public ClientAttestationValidator clientAttestationValidator(AttestationProperties attestationProperties) {
         return new ClientAttestationValidator(attestationProperties);
     }
