@@ -7,7 +7,7 @@
     <!--     For the sake of Maven Central publishing, it must now match the Maven Central namespace. -->
     <groupId>io.github.swiyu-admin-ch</groupId>
     <artifactId>swiyu-generic-java-lib-parent</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
     <packaging>pom</packaging>
 
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
@@ -41,6 +41,7 @@
     </scm>
 
     <modules>
+        <module>swiyu-jws-signature-service</module>
         <module>swiyu-client-attestation-validator</module>
         <module>swiyu-generic-java-all</module>
     </modules>
@@ -57,6 +58,8 @@
         <mockito.version>5.8.0</mockito.version>
         <slf4j.version>2.0.9</slf4j.version>
         <lombok.version>1.18.30</lombok.version>
+        <nimbus-jose-jwt.version>10.6</nimbus-jose-jwt.version>
+        <bouncycastle.version>1.82</bouncycastle.version>
     </properties>
 
     <dependencyManagement>
@@ -135,26 +138,6 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>3.2.3</version>
                 </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-gpg-plugin</artifactId>
-                    <version>3.2.7</version>
-                    <executions>
-                        <execution>
-                            <id>sign-artifacts</id>
-                            <phase>verify</phase>
-                            <goals>
-                                <goal>sign</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                    <configuration>
-                        <gpgArguments>
-                            <arg>--pinentry-mode</arg>
-                            <arg>loopback</arg>
-                        </gpgArguments>
-                    </configuration>
-                </plugin>
 
                 <!-- Verhindert, dass Maven das alte deploy-Plugin nutzt -->
                 <plugin>
@@ -183,4 +166,38 @@
         </pluginManagement>
     </build>
 
+    <profiles>
+        <profile>
+            <id>sign-artifacts</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.7</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 </project>
+

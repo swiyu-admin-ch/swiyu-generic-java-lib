@@ -7,13 +7,13 @@
     <parent>
         <groupId>io.github.swiyu-admin-ch</groupId>
         <artifactId>swiyu-generic-java-lib-parent</artifactId>
-        <version>0.0.2</version>
+        <version>0.0.3</version>
     </parent>
 
     <packaging>jar</packaging>
     <artifactId>swiyu-generic-java-all</artifactId>
     <groupId>io.github.swiyu-admin-ch</groupId>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Aggregator module that includes all Swiyu utility libraries</description>
@@ -84,27 +84,8 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- required by https://central.sonatype.org/publish/requirements/ -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>3.2.7</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <gpgArguments>
-                        <arg>--pinentry-mode</arg>
-                        <arg>loopback</arg>
-                    </gpgArguments>
-                </configuration>
-            </plugin>
+
+
             <!-- required by https://central.sonatype.org/publish/requirements/ -->
             <!-- Verhindert, dass Maven das alte deploy-Plugin nutzt -->
             <plugin>
@@ -127,5 +108,39 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>sign-artifacts</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <!-- required by https://central.sonatype.org/publish/requirements/ -->
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.7</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
