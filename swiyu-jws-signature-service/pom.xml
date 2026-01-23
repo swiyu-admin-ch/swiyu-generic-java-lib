@@ -16,7 +16,10 @@
     <version>0.0.3</version>
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <name>${project.groupId}:${project.artifactId}</name>
-    <description>Utilities for validating client attestation tokens and certificates</description>
+    <description>
+        Provides a service and strategies for creating and managing JWS (JSON Web Signature) signers using software keys or HSMs (PKCS#11, Securosys).
+        Supports flexible key management, configuration via DTOs, and integration with Spring Boot for secure digital signatures.
+    </description>
     <url>https://github.com/swiyu-admin-ch/swiyu-generic-java-lib</url>
 
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
