@@ -1,5 +1,6 @@
 package ch.admin.bj.swiyu.jwssignatureservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.springframework.util.StringUtils;
 
@@ -38,6 +39,7 @@ public class HSMPropertiesDto {
      *
      * @return the configuration string for Securosys
      */
+    @JsonIgnore
     public String getSecurosysStringConfig() {
         return getSecurosysConfigIfExists("credentials.host", getHost()) +
                getSecurosysConfigIfExists("credentials.port", getPort()) +

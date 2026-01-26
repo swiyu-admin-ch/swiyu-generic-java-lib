@@ -23,6 +23,8 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class JwsSignatureService {
 
+    private static final String MAPPER_IS_NOT_INITIALIZED = "ObjectMapper is not initialized";
+    private static final String FAILED_TO_COPY_SIGNATURE_CONFIGURATION = "Failed to copy signature configuration";
     private final KeyManagementStrategyFactory strategyFactory;
 
     private final ObjectMapper objectMapper;
@@ -47,6 +49,9 @@ public class JwsSignatureService {
      */
     public JWSSigner createSigner(@NotNull SignatureConfigurationDto signatureConfigurationDto, @Nullable String keyId, @Nullable String keyPin) throws KeyStrategyException {
         try {
+            if (objectMapper == null) {
+                throw new KeyStrategyException(MAPPER_IS_NOT_INITIALIZED);
+            }
             // Deep copy of Signature Configuration, so that we do not override the defaults
             var config = objectMapper.readValue(objectMapper.writeValueAsString(signatureConfigurationDto), SignatureConfigurationDto.class);
             if (StringUtils.isNotEmpty(keyId)) {
@@ -57,11 +62,34 @@ public class JwsSignatureService {
             }
             return buildSigner(config);
         } catch (JsonProcessingException e) {
-            throw new KeyStrategyException("Failed to copy signature configuration", e);
+            throw new KeyStrategyException(FAILED_TO_COPY_SIGNATURE_CONFIGURATION, e);
+        }
+    }
+
+    /**
+     * Creates a JWS signer.
+     *
+     * @param signatureConfigurationDto the signature configuration
+     * @return a JWSSigner instance
+     * @throws KeyStrategyException if signer creation fails
+     */
+    public JWSSigner createSigner(@NotNull SignatureConfigurationDto signatureConfigurationDto) throws KeyStrategyException {
+        try {
+            if (objectMapper == null) {
+                throw new KeyStrategyException(MAPPER_IS_NOT_INITIALIZED);
+            }
+            // Deep copy of Signature Configuration, so that we do not override the defaults
+            var config = objectMapper.readValue(objectMapper.writeValueAsString(signatureConfigurationDto), SignatureConfigurationDto.class);
+            return buildSigner(config);
+        } catch (JsonProcessingException e) {
+            throw new KeyStrategyException(FAILED_TO_COPY_SIGNATURE_CONFIGURATION, e);
         }
     }
 
     private JWSSigner buildSigner(SignatureConfigurationDto signatureConfigurationDto) throws KeyStrategyException {
+        if (strategyFactory == null) {
+            throw new KeyStrategyException("KeyManagementStrategyFactory is not initialized");
+        }
         return strategyFactory
                 .getStrategy(signatureConfigurationDto.getKeyManagementMethod())
                 .createSigner(signatureConfigurationDto);

@@ -7,13 +7,13 @@
     <parent>
         <groupId>io.github.swiyu-admin-ch</groupId>
         <artifactId>swiyu-generic-java-lib-parent</artifactId>
-        <version>0.0.3</version>
+        <version>1.0.0</version>
     </parent>
 
     <packaging>jar</packaging>
     <artifactId>swiyu-generic-java-all</artifactId>
     <groupId>io.github.swiyu-admin-ch</groupId>
-    <version>0.0.3</version>
+    <version>1.0.0</version>
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Aggregator module that includes all Swiyu utility libraries</description>

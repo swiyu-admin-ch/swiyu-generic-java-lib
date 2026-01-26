@@ -13,4 +13,13 @@ public class KeyStrategyException extends Exception {
     public KeyStrategyException(String message, Throwable cause) {
         super(message, cause);
     }
+
+    /**
+     * Constructs a new KeyStrategyException with the specified message.
+     *
+     * @param message the detail message
+     */
+    public KeyStrategyException(String message) {
+        super(message);
+    }
 }

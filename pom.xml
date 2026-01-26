@@ -7,7 +7,7 @@
     <!--     For the sake of Maven Central publishing, it must now match the Maven Central namespace. -->
     <groupId>io.github.swiyu-admin-ch</groupId>
     <artifactId>swiyu-generic-java-lib-parent</artifactId>
-    <version>0.0.3</version>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
 
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
@@ -101,25 +101,6 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-<!--    <distributionManagement>-->
-<!--        <repository>-->
-<!--            <id>central</id>-->
-<!--            <url>https://central.sonatype.com/api/v1/publisher/upload</url>-->
-<!--        </repository>-->
-<!--    </distributionManagement>-->
-
-<!--    <distributionManagement>-->
-<!--        <snapshotRepository>-->
-<!--            <id>ossrh</id>-->
-<!--            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>-->
-<!--        </snapshotRepository>-->
-<!--        <repository>-->
-<!--            <id>ossrh</id>-->
-<!--            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>-->
-<!--        </repository>-->
-<!--    </distributionManagement>-->
-
 
     <build>
         <pluginManagement>
