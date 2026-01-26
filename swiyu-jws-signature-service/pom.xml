@@ -4,16 +4,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>io.github.swiyu-admin-ch</groupId>
-        <artifactId>swiyu-generic-java-lib-parent</artifactId>
-        <version>1.0.0</version>
-    </parent>
-
-    <packaging>jar</packaging>
-    <artifactId>swiyu-jws-signature-service</artifactId>
     <groupId>io.github.swiyu-admin-ch</groupId>
-    <version>1.0.0</version>
+    <artifactId>swiyu-jws-signature-service</artifactId>
+    <version>1.0.1</version>
+    <packaging>jar</packaging>
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <name>${project.groupId}:${project.artifactId}</name>
     <description>
@@ -46,6 +40,22 @@
         <developerConnection>scm:git:ssh://github.com:swiyu-admin-ch/swiyu-generic-java-lib.git</developerConnection>
         <url>https://github.com/swiyu-admin-ch/swiyu-generic-java-lib/tree/main</url>
     </scm>
+
+    <properties>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Dependency versions -->
+        <spring.boot.version>3.3.4</spring.boot.version>
+        <junit.version>5.10.1</junit.version>
+        <mockito.version>5.8.0</mockito.version>
+        <slf4j.version>2.0.9</slf4j.version>
+        <lombok.version>1.18.30</lombok.version>
+        <nimbus-jose-jwt.version>10.6</nimbus-jose-jwt.version>
+        <bouncycastle.version>1.82</bouncycastle.version>
+    </properties>
 
     <dependencies>
         <!-- Logging -->
@@ -123,6 +133,17 @@
 
     <build>
         <plugins>
+            <!-- Compiler plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                </configuration>
+            </plugin>
+
             <!-- required by https://central.sonatype.org/publish/requirements/ -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
