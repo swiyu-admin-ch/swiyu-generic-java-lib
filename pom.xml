@@ -7,7 +7,7 @@
     <!--     For the sake of Maven Central publishing, it must now match the Maven Central namespace. -->
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-generic-java-lib-parent</artifactId>
-    <version>1.0.1</version>
+    <version>1.1.0</version>
     <packaging>pom</packaging>
 
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
@@ -43,6 +43,7 @@
         <module>swiyu-jws-signature-service</module>
         <module>swiyu-client-attestation-validator</module>
         <module>swiyu-generic-java-all</module>
+        <module>swiyu-did-resolver-adapter</module>
     </modules>
 
     <properties>

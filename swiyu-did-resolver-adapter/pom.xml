@@ -4,13 +4,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <packaging>jar</packaging>
-    <artifactId>swiyu-client-attestation-validator</artifactId>
     <groupId>ch.admin.swiyu</groupId>
+    <artifactId>swiyu-did-resolver-adapter</artifactId>
     <version>1.1.0</version>
+    <packaging>jar</packaging>
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <name>${project.groupId}:${project.artifactId}</name>
-    <description>Utilities for validating client attestation tokens and certificates</description>
+    <description>
+        Provides services for resolving Decentralized Identifiers (DIDs) to DID Documents and public keys.
+        Supports DID methods like did:tdw and did:webvh with caching and flexible HTTP client integration.
+    </description>
     <url>https://github.com/swiyu-admin-ch/swiyu-generic-java-lib</url>
 
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
@@ -24,7 +27,7 @@
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <developers>
         <developer>
-            <name>Swiyu Omni Developers</name>
+            <name>Swiyu Omni Developer</name>
             <organization>Swiyu</organization>
             <organizationUrl>https://github.com/swiyu-admin-ch</organizationUrl>
         </developer>
@@ -50,10 +53,16 @@
         <slf4j.version>2.0.9</slf4j.version>
         <lombok.version>1.18.30</lombok.version>
         <nimbus-jose-jwt.version>10.6</nimbus-jose-jwt.version>
-        <bouncycastle.version>1.82</bouncycastle.version>
     </properties>
 
     <dependencies>
+
+        <dependency>
+            <groupId>io.github.swiyu-admin-ch</groupId>
+            <artifactId>didresolver</artifactId>
+            <version>2.3.0</version>
+        </dependency>
+
         <!-- Logging -->
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -74,6 +83,13 @@
             <version>${spring.boot.version}</version>
         </dependency>
 
+        <!-- Spring WebFlux for WebClient -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+            <version>${spring.boot.version}</version>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -88,31 +104,26 @@
             <scope>test</scope>
         </dependency>
 
-        <!--Needed by Client Attestation Service-->
+        <!-- Nimbus JOSE JWT for JWK support -->
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
-            <version>9.37.3</version> <!-- latest as of Aug 2025 -->
+            <version>${nimbus-jose-jwt.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk18on</artifactId>
-            <version>1.78.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk18on</artifactId>
-            <version>1.78.1</version>
-        </dependency>
-        <dependency>
-            <groupId>io.github.erdtman</groupId>
-            <artifactId>java-json-canonicalization</artifactId>
-            <version>1.1</version>
-        </dependency>
+
+        <!-- Jackson for JSON serialization -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>2.19.2</version>
+        </dependency>
+
+        <!-- JNA for didresolver - override scope from runtime to compile -->
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>5.17.0</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
@@ -166,7 +177,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- required by https://central.sonatype.org/publish/requirements/ -->
             <!-- required by https://central.sonatype.org/publish/requirements/ -->
             <!-- Verhindert, dass Maven das alte deploy-Plugin nutzt -->
             <plugin>
@@ -225,4 +235,3 @@
     </profiles>
 
 </project>
-
