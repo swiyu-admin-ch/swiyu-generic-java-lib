@@ -16,7 +16,7 @@ Add the dependency to your `pom.xml`:
 
 ```xml
 <dependency>
-    <groupId>io.github.swiyu-admin-ch</groupId>
+    <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-jws-signature-service</artifactId>
     <version>1.0.1</version>
 </dependency>
