@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
@@ -12,9 +12,9 @@ import java.util.Map;
 
 
 /**
- * WebClient-based implementation for resolving Decentralized Identifier (DID) Documents and trust statements.
+ * RestClient-based implementation for resolving Decentralized Identifier (DID) Documents and trust statements.
  * <p>
- * This adapter uses Spring's {@link WebClient} to load DID Documents and trust statements from remote endpoints.
+ * This adapter uses Spring's {@link RestClient} to load DID Documents and trust statements from remote endpoints.
  * It supports URL rewriting via mappings and is designed for use as a Spring bean.
  * </p>
  * <p>
@@ -49,7 +49,7 @@ public class DidResolverWebClient {
      * @param didUrl the DID URL to resolve
      * @param urlMappings optional URL mappings for rewriting the DID URL (can be null or empty)
      * @return the DID Document as a JSON string
-     * @throws org.springframework.web.reactive.function.client.WebClientResponseException if the HTTP request fails
+     * @throws RestClientResponseException if the HTTP request fails
      */
     public String retrieveDidDocument(String didUrl, Map<String, String> urlMappings) {
         return restClient.get()
@@ -71,7 +71,7 @@ public class DidResolverWebClient {
      * @return the Trust Statement VC as a JSON string
      * @throws HttpClientErrorException if a 4xx error occurs
      * @throws HttpServerErrorException if a 5xx error occurs
-     * @throws org.springframework.web.reactive.function.client.WebClientResponseException if the HTTP request fails
+     * @throws RestClientResponseException if the HTTP request fails
      */
 
     public String retrieveTrustStatement(String trustRegistryIssuanceUrl, String vct, Map<String, String> urlMappings)
