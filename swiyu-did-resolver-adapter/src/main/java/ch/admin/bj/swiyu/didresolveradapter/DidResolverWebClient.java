@@ -3,6 +3,7 @@ package ch.admin.bj.swiyu.didresolveradapter;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -24,18 +25,18 @@ import java.util.Map;
 @Service
 public class DidResolverWebClient {
 
-    private final WebClient webClient;
+    private final RestClient restClient;
 
     /**
-     * Constructs a DidResolverWebClient using the provided {@link WebClient.Builder}.
+     * Constructs a DidResolverWebClient using the provided {@link RestClient.Builder}.
      * <p>
      * The builder is automatically provided by Spring Boot when WebFlux is on the classpath.
      * </p>
      *
-     * @param webClientBuilder the WebClient.Builder bean
+     * @param restClientBuilder the RestClient.Builder bean
      */
-    public DidResolverWebClient(WebClient.Builder webClientBuilder) {
-        this.webClient = webClientBuilder.build();
+    public DidResolverWebClient(RestClient.Builder restClientBuilder) {
+        this.restClient = restClientBuilder.build();
     }
 
     /**
@@ -51,11 +52,10 @@ public class DidResolverWebClient {
      * @throws org.springframework.web.reactive.function.client.WebClientResponseException if the HTTP request fails
      */
     public String retrieveDidDocument(String didUrl, Map<String, String> urlMappings) {
-        return webClient.get()
+        return restClient.get()
                 .uri(UrlRewriteHelper.getRewrittenUrl(didUrl, urlMappings))
                 .retrieve()
-                .bodyToMono(String.class)
-                .block();
+                .body(String.class);
     }
 
     /**
@@ -81,10 +81,9 @@ public class DidResolverWebClient {
                 .queryParam("vcSchemaId", vct)
                 .build(true)
                 .toUri();
-        return webClient.get()
+        return restClient.get()
                 .uri(uri)
                 .retrieve()
-                .bodyToMono(String.class)
-                .block();
+                .body(String.class);
     }
 }
