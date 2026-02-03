@@ -3,11 +3,11 @@ package ch.admin.bj.swiyu.didresolveradapter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -82,7 +82,10 @@ class DidResolverAdapterTest {
         String trustRegistryUrl = "https://trust-registry.example.com";
         String vct = "VerifiableCredentialType";
         when(didResolverWebClient.retrieveTrustStatement(eq(trustRegistryUrl), eq(vct), anyMap()))
-                .thenThrow(WebClientResponseException.create(404, "Not Found", null, null, StandardCharsets.UTF_8));
+                .thenThrow(new RestClientResponseException(
+                    "Not Found",
+                    HttpStatusCode.valueOf(404),
+                "Not Found", null, null, StandardCharsets.UTF_8));
         String result = didResolverAdapter.resolveTrustStatement(trustRegistryUrl, vct, Map.of());
         assertThat(result).isNull();
     }

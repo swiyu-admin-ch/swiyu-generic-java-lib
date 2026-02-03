@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.text.ParseException;
 import java.util.Map;
@@ -23,8 +23,8 @@ import java.util.Map;
  * Adapter for resolving Decentralized Identifier (DID) Documents and related data.
  * <p>
  * This service provides methods to load DID Documents, resolve trust statements, and extract public keys
- * from DID Documents using a WebClient-based resolver. It acts as a bridge between the DID resolution logic
- * and the HTTP/WebClient infrastructure, handling mapping, error handling, and conversion to standard formats.
+ * from DID Documents using a RestClient-based resolver. It acts as a bridge between the DID resolution logic
+ * and the HTTP/RestClient infrastructure, handling mapping, error handling, and conversion to standard formats.
  * </p>
  * <p>
  * Typical usage involves calling {@link #resolveDid(String, Map)}, {@link #resolveTrustStatement(String, String, Map)},
@@ -77,7 +77,7 @@ public class DidResolverAdapter {
     public String resolveTrustStatement(String trustRegistryUrl, String vct, Map<String, String> urlMappings) {
         try {
             return didResolverWebClient.retrieveTrustStatement(trustRegistryUrl, vct, urlMappings);
-        } catch (WebClientResponseException e) {
+        } catch (RestClientResponseException e) {
             HttpStatusCode status = e.getStatusCode();
             if (status == HttpStatus.NOT_FOUND) {
                 log.info("Trust statement not found for {} {} (status: {})", trustRegistryUrl, vct, status);
