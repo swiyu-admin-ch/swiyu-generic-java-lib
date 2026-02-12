@@ -4,13 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <packaging>jar</packaging>
-    <artifactId>swiyu-client-attestation-validator</artifactId>
     <groupId>ch.admin.swiyu</groupId>
+    <artifactId>swiyu-jwe-util</artifactId>
     <version>1.2.0</version>
+    <packaging>jar</packaging>
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <name>${project.groupId}:${project.artifactId}</name>
-    <description>Utilities for validating client attestation tokens and certificates</description>
+    <description>Utility library for JSON Web Encryption (JWE) in the Swiyu ecosystem. Provides static methods for secure payload encryption and decryption.</description>
     <url>https://github.com/swiyu-admin-ch/swiyu-generic-java-lib</url>
 
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
@@ -50,7 +50,7 @@
         <slf4j.version>2.0.9</slf4j.version>
         <lombok.version>1.18.30</lombok.version>
         <nimbus-jose-jwt.version>10.6</nimbus-jose-jwt.version>
-        <bouncycastle.version>1.82</bouncycastle.version>
+
     </properties>
 
     <dependencies>
@@ -88,31 +88,29 @@
             <scope>test</scope>
         </dependency>
 
-        <!--Needed by Client Attestation Service-->
+        <!-- JWS/JWT signing and cryptographic operations -->
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
-            <version>9.37.3</version> <!-- latest as of Aug 2025 -->
-        </dependency>
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk18on</artifactId>
-            <version>1.78.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk18on</artifactId>
-            <version>1.78.1</version>
-        </dependency>
-        <dependency>
-            <groupId>io.github.erdtman</groupId>
-            <artifactId>java-json-canonicalization</artifactId>
-            <version>1.1</version>
+            <version>${nimbus-jose-jwt.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>2.19.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.17.0</version>
+        </dependency>
+
+        <!-- Jakarta @NotNull -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+            <version>3.1.1</version>
         </dependency>
 
         <dependency>
@@ -166,7 +164,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- required by https://central.sonatype.org/publish/requirements/ -->
             <!-- required by https://central.sonatype.org/publish/requirements/ -->
             <!-- Verhindert, dass Maven das alte deploy-Plugin nutzt -->
             <plugin>
