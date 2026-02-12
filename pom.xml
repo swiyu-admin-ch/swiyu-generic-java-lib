@@ -44,11 +44,14 @@
         <module>swiyu-client-attestation-validator</module>
         <module>swiyu-generic-java-all</module>
         <module>swiyu-did-resolver-adapter</module>
+        <module>swiyu-jwe-util</module>
+        <module>swiyu-jwt-util</module>
+        <module>swiyu-dpop-util</module>
     </modules>
 
     <properties>
         <java.version>21</java.version>
-        <spring.boot.version>3.3.4</spring.boot.version>
+        <spring.boot.version>3.5.10</spring.boot.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

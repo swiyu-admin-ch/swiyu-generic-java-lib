@@ -5,15 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ch.admin.swiyu</groupId>
-    <artifactId>swiyu-jws-signature-service</artifactId>
+    <artifactId>swiyu-dpop-util</artifactId>
     <version>1.1.0</version>
     <packaging>jar</packaging>
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <name>${project.groupId}:${project.artifactId}</name>
-    <description>
-        Provides a service and strategies for creating and managing JWS (JSON Web Signature) signers using software keys or HSMs (PKCS#11, Securosys).
-        Supports flexible key management, configuration via DTOs, and integration with Spring Boot for secure digital signatures.
-    </description>
+    <description>Utility library for validating DPoP (Demonstration of Proof-of-Possession) JWTs, including claim, header, and signature validation, for secure proof-of-possession in OAuth2/OpenID Connect flows.</description>
     <url>https://github.com/swiyu-admin-ch/swiyu-generic-java-lib</url>
 
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
@@ -53,30 +50,20 @@
         <slf4j.version>2.0.9</slf4j.version>
         <lombok.version>1.18.30</lombok.version>
         <nimbus-jose-jwt.version>10.6</nimbus-jose-jwt.version>
-        <bouncycastle.version>1.82</bouncycastle.version>
     </properties>
 
     <dependencies>
-        <!-- Logging -->
+        <!-- JWT signing and cryptographic operations -->
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+            <version>${nimbus-jose-jwt.version}</version>
         </dependency>
-
-        <!-- Lombok -->
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.19.2</version>
         </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
-            <version>${spring.boot.version}</version>
-        </dependency>
-
         <!-- Testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -90,44 +77,12 @@
             <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
-
-        <!-- JWS/JWT signing and cryptographic operations -->
         <dependency>
-            <groupId>com.nimbusds</groupId>
-            <artifactId>nimbus-jose-jwt</artifactId>
-            <version>${nimbus-jose-jwt.version}</version>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk18on</artifactId>
-            <version>${bouncycastle.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.19.2</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.17.0</version>
-        </dependency>
-
-        <!-- Jakarta @NotNull -->
-        <dependency>
-            <groupId>jakarta.validation</groupId>
-            <artifactId>jakarta.validation-api</artifactId>
-            <version>3.1.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <version>${spring.boot.version}</version>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
 
     <build>
