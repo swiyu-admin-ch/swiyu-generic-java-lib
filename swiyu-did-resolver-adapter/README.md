@@ -19,7 +19,7 @@ A Spring Boot Auto-Configuration library for resolving Decentralized Identifiers
 <dependency>
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-did-resolver-adapter</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 
