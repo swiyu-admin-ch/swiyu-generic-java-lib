@@ -62,7 +62,7 @@ public class JweUtil {
      * Decrypts the given JWE string.
      *
      * @param jweString           JWE as a String
-     * @param recipientPrivateKey Empfänger-Privater Schlüssel (ECKey)
+     * @param recipientPrivateKey private key (ECKey) of the recipient
      * @param maxCompressedCipherTextLength Optional maximum length for compressed ciphertexts Default value (if null) is 100000
      * @return plaintext payload
      */
