@@ -26,6 +26,16 @@ class JweUtilTest {
     }
 
     @Test
+    void encryptDecrypt_roundTrip_thenError() throws Exception {
+        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec1").generate();
+        String payload = new java.security.SecureRandom().ints(200000, 0, 52)
+                .mapToObj(i -> String.valueOf((char)(i < 26 ? 'A' + i : 'a' + (i - 26))))
+                .collect(java.util.stream.Collectors.joining());
+        String encrypted = JweUtil.encrypt(payload, ecKey.toPublicJWK());
+        assertThrows(JweUtilException.class, () -> JweUtil.decrypt(encrypted, ecKey, 30000));
+    }
+
+    @Test
     void encrypt_nullPayload_throws() throws JOSEException {
         ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec2").generate();
         assertThrows(JweUtilException.class, () -> {

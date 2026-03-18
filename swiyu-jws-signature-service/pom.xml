@@ -6,7 +6,7 @@
 
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-jws-signature-service</artifactId>
-    <version>1.3.o</version>
+    <version>1.3.0</version>
     <packaging>jar</packaging>
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <name>${project.groupId}:${project.artifactId}</name>
