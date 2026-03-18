@@ -16,6 +16,7 @@ class JweUtilTest {
     @Test
     void encryptDecrypt_roundTrip_success() throws Exception {
         ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec1").generate();
+        // generates a string consisting of random letters (a-z, A-Z)
         String payload = new java.security.SecureRandom().ints(230000, 0, 52)
                 .mapToObj(i -> String.valueOf((char)(i < 26 ? 'A' + i : 'a' + (i - 26))))
                 .collect(java.util.stream.Collectors.joining());
