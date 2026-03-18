@@ -53,14 +53,15 @@
         <slf4j.version>2.0.9</slf4j.version>
         <lombok.version>1.18.30</lombok.version>
         <nimbus-jose-jwt.version>10.6</nimbus-jose-jwt.version>
+        <didresolver.version>2.6.0</didresolver.version>
     </properties>
 
     <dependencies>
 
         <dependency>
-            <groupId>io.github.swiyu-admin-ch</groupId>
+            <groupId>ch.admin.swiyu</groupId>
             <artifactId>didresolver</artifactId>
-            <version>2.3.0</version>
+            <version>${didresolver.version}</version>
         </dependency>
 
         <!-- Logging -->
