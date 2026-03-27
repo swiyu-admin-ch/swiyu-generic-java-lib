@@ -1,5 +1,8 @@
 package ch.admin.bj.swiyu.tsbuilder;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * Builder for Verification Query Public Statements (vqPS).
  * <p>
@@ -14,12 +17,19 @@ package ch.admin.bj.swiyu.tsbuilder;
  */
 public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
 
+    private static final String TYP = "swiyu-verification-query-public-statement+jwt";
+    private static final int MAX_PURPOSE_NAME_LENGTH = 50;
+    private static final int MAX_PURPOSE_DESC_LENGTH = 500;
+
+    private boolean hasPurposeName = false;
+    private boolean hasPurposeDesc = false;
+
     /**
      * Creates a new {@code VqPsBuilder} and sets the {@code typ} header to
      * {@code swiyu-verification-query-public-statement+jwt}.
      */
     public VqPsBuilder() {
-        // TODO – setTypHeader("swiyu-verification-query-public-statement+jwt")
+        setTypHeader(TYP);
     }
 
     /**
@@ -41,7 +51,8 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
      * @throws TrustStatementValidationException if {@code uuid} is not a valid UUIDv4
      */
     public VqPsBuilder withJti(String uuid) {
-        // TODO – validate UUIDv4
+        validateUuidV4(uuid, "jti");
+        product.addPayloadClaim("jti", uuid);
         return self();
     }
 
@@ -57,8 +68,7 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
      * @throws TrustStatementValidationException if {@code name} exceeds 50 characters
      */
     public VqPsBuilder addPurposeName(String name) {
-        // TODO – max 50
-        return self();
+        return addPurposeName(null, name);
     }
 
     /**
@@ -74,7 +84,12 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
      * @throws TrustStatementValidationException if {@code name} exceeds 50 characters
      */
     public VqPsBuilder addPurposeName(String locale, String name) {
-        // TODO – max 50
+        if (name == null || name.isBlank()) {
+            throw new TrustStatementValidationException("purpose_name must not be null or blank");
+        }
+        validateMaxLength(name, MAX_PURPOSE_NAME_LENGTH, "purpose_name");
+        product.addPayloadClaim(localizedKey("purpose_name", locale), name);
+        hasPurposeName = true;
         return self();
     }
 
@@ -90,8 +105,7 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
      * @throws TrustStatementValidationException if {@code desc} exceeds 500 characters
      */
     public VqPsBuilder addPurposeDesc(String desc) {
-        // TODO – max 500
-        return self();
+        return addPurposeDesc(null, desc);
     }
 
     /**
@@ -107,7 +121,12 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
      * @throws TrustStatementValidationException if {@code desc} exceeds 500 characters
      */
     public VqPsBuilder addPurposeDesc(String locale, String desc) {
-        // TODO – max 500
+        if (desc == null || desc.isBlank()) {
+            throw new TrustStatementValidationException("purpose_description must not be null or blank");
+        }
+        validateMaxLength(desc, MAX_PURPOSE_DESC_LENGTH, "purpose_description");
+        product.addPayloadClaim(localizedKey("purpose_description", locale), desc);
+        hasPurposeDesc = true;
         return self();
     }
 
@@ -130,7 +149,17 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
      * @return this builder for fluent chaining
      */
     public VqPsBuilder withRequest(String scope, String dcqlQuery) {
-        // TODO – set type=DCQL, scope and query in request object
+        if (scope == null || scope.isBlank()) {
+            throw new TrustStatementValidationException("request scope must not be null or blank");
+        }
+        if (dcqlQuery == null || dcqlQuery.isBlank()) {
+            throw new TrustStatementValidationException("request dcqlQuery must not be null or blank");
+        }
+        Map<String, Object> request = new LinkedHashMap<>();
+        request.put("type", "DCQL");
+        request.put("scope", scope);
+        request.put("query", dcqlQuery);
+        product.addPayloadClaim("request", request);
         return self();
     }
 
@@ -148,7 +177,18 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
      */
     @Override
     public TrustStatementJwt build() throws TrustStatementValidationException {
-        // TODO
-        return null;
+        super.build();
+        validateRequired("sub", "sub (subject) payload claim is required");
+        validateRequired("jti", "jti payload claim is required – call withJti()");
+        if (!hasPurposeName) {
+            throw new TrustStatementValidationException(
+                    "at least one purpose_name claim is required – call addPurposeName()");
+        }
+        if (!hasPurposeDesc) {
+            throw new TrustStatementValidationException(
+                    "at least one purpose_description claim is required – call addPurposeDesc()");
+        }
+        validateRequired("request", "request payload claim is required – call withRequest()");
+        return product;
     }
 }

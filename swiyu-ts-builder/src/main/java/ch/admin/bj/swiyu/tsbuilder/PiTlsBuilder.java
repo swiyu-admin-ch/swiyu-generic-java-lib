@@ -16,12 +16,14 @@ import java.util.List;
  */
 public class PiTlsBuilder extends AbstractTrustStatementBuilder<PiTlsBuilder> {
 
+    private static final String TYP = "swiyu-protected-issuance-trust-list-statement+jwt";
+
     /**
      * Creates a new {@code PiTlsBuilder} and sets the {@code typ} header to
      * {@code swiyu-protected-issuance-trust-list-statement+jwt}.
      */
     public PiTlsBuilder() {
-        // TODO – setTypHeader("swiyu-protected-issuance-trust-list-statement+jwt")
+        setTypHeader(TYP);
     }
 
     /**
@@ -43,7 +45,8 @@ public class PiTlsBuilder extends AbstractTrustStatementBuilder<PiTlsBuilder> {
      * @throws TrustStatementValidationException if {@code uuid} is not a valid UUIDv4
      */
     public PiTlsBuilder withJti(String uuid) {
-        // TODO – validate UUIDv4
+        validateUuidV4(uuid, "jti");
+        product.addPayloadClaim("jti", uuid);
         return self();
     }
 
@@ -62,7 +65,10 @@ public class PiTlsBuilder extends AbstractTrustStatementBuilder<PiTlsBuilder> {
      * @throws TrustStatementValidationException if {@code vctValues} is {@code null} or empty
      */
     public PiTlsBuilder withVctValues(List<String> vctValues) {
-        // TODO – validate not empty
+        if (vctValues == null || vctValues.isEmpty()) {
+            throw new TrustStatementValidationException("vct_values must not be null or empty");
+        }
+        product.addPayloadClaim("vct_values", vctValues);
         return self();
     }
 
@@ -79,7 +85,9 @@ public class PiTlsBuilder extends AbstractTrustStatementBuilder<PiTlsBuilder> {
      */
     @Override
     public TrustStatementJwt build() throws TrustStatementValidationException {
-        // TODO
-        return null;
+        super.build();
+        validateRequired("jti", "jti payload claim is required – call withJti()");
+        validateRequired("vct_values", "vct_values payload claim is required – call withVctValues()");
+        return product;
     }
 }

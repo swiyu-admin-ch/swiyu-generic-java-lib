@@ -1,5 +1,10 @@
 package ch.admin.bj.swiyu.tsbuilder;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Builder for Protected Issuance Authorization Trust Statements (piaTS).
  * <p>
@@ -15,12 +20,18 @@ package ch.admin.bj.swiyu.tsbuilder;
  */
 public class PiaTsBuilder extends AbstractTrustStatementBuilder<PiaTsBuilder> {
 
+    private static final String TYP = "swiyu-protected-issuance-authorization-trust-statement+jwt";
+    private static final int MAX_VCT_NAME_LENGTH = 500;
+    private static final int MAX_REASON_LENGTH = 50;
+
+    private final List<Map<String, Object>> canIssueEntries = new ArrayList<>();
+
     /**
      * Creates a new {@code PiaTsBuilder} and sets the {@code typ} header to
      * {@code swiyu-protected-issuance-authorization-trust-statement+jwt}.
      */
     public PiaTsBuilder() {
-        // TODO – setTypHeader("swiyu-protected-issuance-authorization-trust-statement+jwt")
+        setTypHeader(TYP);
     }
 
     /**
@@ -62,7 +73,24 @@ public class PiaTsBuilder extends AbstractTrustStatementBuilder<PiaTsBuilder> {
      *                                           or {@code reason} exceeds 50 characters
      */
     public PiaTsBuilder addCanIssue(String vct, String locale, String vctName, String reason) {
-        // TODO – validate vctName max 500, reason max 50; assemble can_issue object
+        if (vct == null || vct.isBlank()) {
+            throw new TrustStatementValidationException("can_issue vct must not be null or blank");
+        }
+        if (vctName == null || vctName.isBlank()) {
+            throw new TrustStatementValidationException("can_issue vct_name must not be null or blank");
+        }
+        validateMaxLength(vctName, MAX_VCT_NAME_LENGTH, "can_issue vct_name");
+        if (reason != null) {
+            validateMaxLength(reason, MAX_REASON_LENGTH, "can_issue reason");
+        }
+
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("vct", vct);
+        entry.put(localizedKey("vct_name", locale), vctName);
+        if (reason != null && !reason.isBlank()) {
+            entry.put(localizedKey("reason", locale), reason);
+        }
+        canIssueEntries.add(entry);
         return self();
     }
 
@@ -79,7 +107,13 @@ public class PiaTsBuilder extends AbstractTrustStatementBuilder<PiaTsBuilder> {
      */
     @Override
     public TrustStatementJwt build() throws TrustStatementValidationException {
-        // TODO
-        return null;
+        super.build();
+        validateRequired("sub", "sub (subject) payload claim is required");
+        if (canIssueEntries.isEmpty()) {
+            throw new TrustStatementValidationException(
+                    "at least one can_issue entry is required – call addCanIssue()");
+        }
+        product.addPayloadClaim("can_issue", canIssueEntries);
+        return product;
     }
 }

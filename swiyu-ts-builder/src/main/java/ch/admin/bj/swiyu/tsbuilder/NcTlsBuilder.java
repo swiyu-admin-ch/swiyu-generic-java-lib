@@ -1,5 +1,12 @@
 package ch.admin.bj.swiyu.tsbuilder;
 
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Builder for Non-Compliance Trust List Statements (ncTLS).
  * <p>
@@ -15,12 +22,16 @@ package ch.admin.bj.swiyu.tsbuilder;
  */
 public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> {
 
+    private static final String TYP = "swiyu-non-compliance-trust-list-statement+jwt";
+
+    private final List<Map<String, Object>> nonCompliantActors = new ArrayList<>();
+
     /**
      * Creates a new {@code NcTlsBuilder} and sets the {@code typ} header to
      * {@code swiyu-non-compliance-trust-list-statement+jwt}.
      */
     public NcTlsBuilder() {
-        // TODO – setTypHeader("swiyu-non-compliance-trust-list-statement+jwt")
+        setTypHeader(TYP);
     }
 
     /**
@@ -60,7 +71,31 @@ public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> {
      * @throws TrustStatementValidationException if {@code flaggedAt} does not conform to RFC 3339
      */
     public NcTlsBuilder addNonCompliantActor(String did, String flaggedAt, String locale, String reason) {
-        // TODO – validate flaggedAt RFC 3339; assemble non_compliant_actors entry
+        if (did == null || did.isBlank()) {
+            throw new TrustStatementValidationException(
+                    "non_compliant_actor did must not be null or blank");
+        }
+        if (flaggedAt == null || flaggedAt.isBlank()) {
+            throw new TrustStatementValidationException(
+                    "non_compliant_actor flagged_at must not be null or blank");
+        }
+        try {
+            DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(flaggedAt);
+        } catch (DateTimeParseException e) {
+            throw new TrustStatementValidationException(
+                    "non_compliant_actor flagged_at must be a valid RFC 3339 timestamp (e.g. 2026-02-25T07:07:35Z), got: "
+                            + flaggedAt);
+        }
+        if (reason == null || reason.isBlank()) {
+            throw new TrustStatementValidationException(
+                    "non_compliant_actor reason must not be null or blank");
+        }
+
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("actor", did);
+        entry.put("flagged_at", flaggedAt);
+        entry.put(localizedKey("reason", locale), reason);
+        nonCompliantActors.add(entry);
         return self();
     }
 
@@ -77,7 +112,12 @@ public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> {
      */
     @Override
     public TrustStatementJwt build() throws TrustStatementValidationException {
-        // TODO
-        return null;
+        super.build();
+        if (nonCompliantActors.isEmpty()) {
+            throw new TrustStatementValidationException(
+                    "at least one non_compliant_actors entry is required – call addNonCompliantActor()");
+        }
+        product.addPayloadClaim("non_compliant_actors", nonCompliantActors);
+        return product;
     }
 }

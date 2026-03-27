@@ -1,5 +1,10 @@
 package ch.admin.bj.swiyu.tsbuilder;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Builder for Identity Trust Statements (idTS).
  * <p>
@@ -14,12 +19,18 @@ package ch.admin.bj.swiyu.tsbuilder;
  */
 public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
 
+    private static final String TYP = "swiyu-identity-trust-statement+jwt";
+
+    private final List<Map<String, String>> registryIds = new ArrayList<>();
+    private boolean hasEntityName = false;
+    private boolean hasIsStateActor = false;
+
     /**
      * Creates a new {@code IdTsBuilder} and sets the {@code typ} header to
      * {@code swiyu-identity-trust-statement+jwt}.
      */
     public IdTsBuilder() {
-        // TODO – setTypHeader("swiyu-identity-trust-statement+jwt")
+        setTypHeader(TYP);
     }
 
     /**
@@ -40,8 +51,7 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
      * @return this builder for fluent chaining
      */
     public IdTsBuilder addEntityName(String name) {
-        // TODO
-        return self();
+        return addEntityName(null, name);
     }
 
     /**
@@ -57,7 +67,11 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
      * @return this builder for fluent chaining
      */
     public IdTsBuilder addEntityName(String locale, String name) {
-        // TODO
+        if (name == null || name.isBlank()) {
+            throw new TrustStatementValidationException("entity_name must not be null or blank");
+        }
+        product.addPayloadClaim(localizedKey("entity_name", locale), name);
+        hasEntityName = true;
         return self();
     }
 
@@ -68,7 +82,11 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
      * @return this builder for fluent chaining
      */
     public IdTsBuilder withIsStateActor(Boolean isStateActor) {
-        // TODO
+        if (isStateActor == null) {
+            throw new TrustStatementValidationException("is_state_actor must not be null");
+        }
+        product.addPayloadClaim("is_state_actor", isStateActor);
+        hasIsStateActor = true;
         return self();
     }
 
@@ -87,7 +105,16 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
      * @return this builder for fluent chaining
      */
     public IdTsBuilder addRegistryId(String type, String value) {
-        // TODO
+        if (type == null || type.isBlank()) {
+            throw new TrustStatementValidationException("registry_id type must not be null or blank");
+        }
+        if (value == null || value.isBlank()) {
+            throw new TrustStatementValidationException("registry_id value must not be null or blank");
+        }
+        Map<String, String> entry = new LinkedHashMap<>();
+        entry.put("type", type);
+        entry.put("value", value);
+        registryIds.add(entry);
         return self();
     }
 
@@ -104,7 +131,21 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
      */
     @Override
     public TrustStatementJwt build() throws TrustStatementValidationException {
-        // TODO
-        return null;
+        super.build();
+        validateRequired("sub", "sub (subject) payload claim is required");
+        if (!hasEntityName) {
+            throw new TrustStatementValidationException(
+                    "at least one entity_name claim is required – call addEntityName()");
+        }
+        if (!hasIsStateActor) {
+            throw new TrustStatementValidationException(
+                    "is_state_actor claim is required – call withIsStateActor()");
+        }
+        if (registryIds.isEmpty()) {
+            throw new TrustStatementValidationException(
+                    "at least one registry_id entry is required – call addRegistryId()");
+        }
+        product.addPayloadClaim("registry_ids", registryIds);
+        return product;
     }
 }

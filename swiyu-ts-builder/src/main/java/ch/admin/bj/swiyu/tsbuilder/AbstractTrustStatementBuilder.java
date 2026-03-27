@@ -1,6 +1,8 @@
 package ch.admin.bj.swiyu.tsbuilder;
 
 import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Abstract base class for all Trust Statement builders.
@@ -30,14 +32,20 @@ import java.time.Instant;
  */
 public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustStatementBuilder<T>> {
 
+    private static final String PROFILE_VERSION = "swiss-profile-trust:1.0.0";
+    private static final String ALG = "ES256";
+
     /** The Trust Statement JWT product being assembled by this builder. */
     protected TrustStatementJwt product;
 
     /**
-     * Initialises a new builder instance with an empty {@link TrustStatementJwt} product.
+     * Initialises a new builder instance with an empty {@link TrustStatementJwt} product
+     * and sets the fixed {@code alg} and {@code profile_version} header claims.
      */
     protected AbstractTrustStatementBuilder() {
-        // TODO – initialise product
+        this.product = new TrustStatementJwt();
+        product.addHeaderClaim("alg", ALG);
+        product.addHeaderClaim("profile_version", PROFILE_VERSION);
     }
 
     /**
@@ -54,14 +62,14 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
     /**
      * Sets the {@code typ} header claim on the current product.
      * <p>
-     * Called internally by each concrete builder in its constructor or {@code build()} method
+     * Called internally by each concrete builder in its constructor
      * using the fixed value defined in the Swiss Trust Protocol 2.0 specification.
      * </p>
      *
      * @param typ the {@code typ} header value (e.g. {@code swiyu-identity-trust-statement+jwt})
      */
     protected void setTypHeader(String typ) {
-        // TODO
+        product.addHeaderClaim("typ", typ);
     }
 
     /**
@@ -77,7 +85,14 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      *                                           or contains no {@code #} key reference fragment
      */
     public T withKid(String kid) {
-        // TODO – validate format: starts with "did:" and contains "#"
+        if (kid == null || kid.isBlank()) {
+            throw new TrustStatementValidationException("kid must not be null or blank");
+        }
+        if (!kid.startsWith("did:") || !kid.contains("#")) {
+            throw new TrustStatementValidationException(
+                    "kid must be an absolute DID with a key reference fragment (e.g. did:tdw:...#key-1), got: " + kid);
+        }
+        product.addHeaderClaim("kid", kid);
         return self();
     }
 
@@ -92,7 +107,8 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * @throws TrustStatementValidationException if {@code issuer} does not start with {@code did:}
      */
     public T withIssuer(String issuer) {
-        // TODO – validate DID format
+        validateDid(issuer, "iss");
+        product.addPayloadClaim("iss", issuer);
         return self();
     }
 
@@ -107,7 +123,8 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * @throws TrustStatementValidationException if {@code subject} does not start with {@code did:}
      */
     public T withSubject(String subject) {
-        // TODO – validate DID format
+        validateDid(subject, "sub");
+        product.addPayloadClaim("sub", subject);
         return self();
     }
 
@@ -127,7 +144,19 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * @throws TrustStatementValidationException if {@code expiresAt} is before {@code issuedAt}
      */
     public T withValidity(Instant issuedAt, Instant expiresAt) {
-        // TODO – validate issuedAt <= expiresAt; set iat, nbf, exp as epoch seconds
+        if (issuedAt == null) {
+            throw new TrustStatementValidationException("issuedAt must not be null");
+        }
+        if (expiresAt == null) {
+            throw new TrustStatementValidationException("expiresAt must not be null");
+        }
+        if (expiresAt.isBefore(issuedAt)) {
+            throw new TrustStatementValidationException(
+                    "expiresAt must not be before issuedAt (iat=" + issuedAt + ", exp=" + expiresAt + ")");
+        }
+        product.addPayloadClaim("iat", issuedAt.getEpochSecond());
+        product.addPayloadClaim("nbf", issuedAt.getEpochSecond());
+        product.addPayloadClaim("exp", expiresAt.getEpochSecond());
         return self();
     }
 
@@ -151,26 +180,41 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * @throws TrustStatementValidationException if {@code idx} is negative or {@code uri} is blank
      */
     public T withStatus(int idx, String uri) {
-        // TODO – assemble status object and add to payload
+        if (idx < 0) {
+            throw new TrustStatementValidationException("status idx must be >= 0, got: " + idx);
+        }
+        if (uri == null || uri.isBlank()) {
+            throw new TrustStatementValidationException("status uri must not be null or blank");
+        }
+        Map<String, Object> statusList = new LinkedHashMap<>();
+        statusList.put("idx", idx);
+        statusList.put("uri", uri);
+
+        Map<String, Object> status = new LinkedHashMap<>();
+        status.put("status_list", statusList);
+
+        product.addPayloadClaim("status", status);
         return self();
     }
 
     /**
      * Validates that a required claim is present in the product payload.
      * <p>
-     * Throws {@link TrustStatementValidationException} if the claim is absent or blank.
+     * Throws {@link TrustStatementValidationException} if the claim is absent.
      * </p>
      *
      * @param claimKey     the payload claim key to check
      * @param errorMessage the exception message to use if validation fails
-     * @throws TrustStatementValidationException if the required claim is missing or blank
+     * @throws TrustStatementValidationException if the required claim is missing
      */
     protected void validateRequired(String claimKey, String errorMessage) {
-        // TODO
+        if (!product.getPayload().containsKey(claimKey)) {
+            throw new TrustStatementValidationException(errorMessage);
+        }
     }
 
     /**
-     * Validates all required claims and assembles the final {@link TrustStatementJwt}.
+     * Validates all required base claims and assembles the final {@link TrustStatementJwt}.
      * <p>
      * Subclasses must call {@code super.build()} at the start of their own {@code build()}
      * override to trigger base-class validation (e.g. {@code kid}, {@code iss}, {@code exp})
@@ -181,8 +225,83 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * @throws TrustStatementValidationException if any required base claim is missing or invalid
      */
     public TrustStatementJwt build() throws TrustStatementValidationException {
-        // TODO
-        return null;
+        if (!product.getHeader().containsKey("kid")) {
+            throw new TrustStatementValidationException("kid header claim is required");
+        }
+        validateRequired("iss", "iss (issuer) payload claim is required");
+        validateRequired("iat", "iat (issued-at) payload claim is required – call withValidity()");
+        validateRequired("exp", "exp (expiration) payload claim is required – call withValidity()");
+        validateRequired("status", "status payload claim is required – call withStatus()");
+        return product;
+    }
+
+    // ── Internal helpers ──────────────────────────────────────────────────────
+
+    /**
+     * Validates that the given value is a syntactically valid DID (starts with {@code did:}).
+     *
+     * @param did       the DID value to validate
+     * @param claimName the claim name used in the error message
+     * @throws TrustStatementValidationException if {@code did} is blank or does not start with
+     *                                           {@code did:}
+     */
+    protected void validateDid(String did, String claimName) {
+        if (did == null || did.isBlank()) {
+            throw new TrustStatementValidationException(claimName + " must not be null or blank");
+        }
+        if (!did.startsWith("did:")) {
+            throw new TrustStatementValidationException(
+                    claimName + " must be a valid DID starting with 'did:', got: " + did);
+        }
+    }
+
+    /**
+     * Validates that the given string is a valid UUIDv4.
+     *
+     * @param uuid      the UUID string to validate
+     * @param claimName the claim name used in the error message
+     * @throws TrustStatementValidationException if {@code uuid} is blank or not a valid UUIDv4
+     */
+    protected void validateUuidV4(String uuid, String claimName) {
+        if (uuid == null || uuid.isBlank()) {
+            throw new TrustStatementValidationException(claimName + " must not be null or blank");
+        }
+        if (!uuid.matches("[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}")) {
+            throw new TrustStatementValidationException(
+                    claimName + " must be a valid UUIDv4 (RFC 9562), got: " + uuid);
+        }
+    }
+
+    /**
+     * Validates that the given string does not exceed a maximum length.
+     *
+     * @param value     the string to check
+     * @param max       the maximum allowed length (inclusive)
+     * @param claimName the claim name used in the error message
+     * @throws TrustStatementValidationException if {@code value} exceeds {@code max} characters
+     */
+    protected void validateMaxLength(String value, int max, String claimName) {
+        if (value != null && value.length() > max) {
+            throw new TrustStatementValidationException(
+                    claimName + " must not exceed " + max + " characters, got " + value.length());
+        }
+    }
+
+    /**
+     * Resolves the localized claim key following the BCP 47 convention used by TP2.
+     * <p>
+     * If {@code locale} is {@code null} or blank, returns {@code baseName} unchanged.
+     * Otherwise returns {@code baseName + "#" + locale} (e.g. {@code "entity_name#de-CH"}).
+     * </p>
+     *
+     * @param baseName the base claim name (e.g. {@code "entity_name"})
+     * @param locale   the BCP 47 language tag, may be {@code null}
+     * @return the locale-suffixed claim key
+     */
+    protected String localizedKey(String baseName, String locale) {
+        if (locale == null || locale.isBlank()) {
+            return baseName;
+        }
+        return baseName + "#" + locale;
     }
 }
-

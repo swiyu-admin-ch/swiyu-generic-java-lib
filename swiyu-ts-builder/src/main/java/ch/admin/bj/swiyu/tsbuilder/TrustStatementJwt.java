@@ -1,5 +1,9 @@
 package ch.admin.bj.swiyu.tsbuilder;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.util.Base64URL;
+
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -12,6 +16,8 @@ import java.util.Map;
  * </p>
  */
 public final class TrustStatementJwt {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final Map<String, String> header;
     private final Map<String, Object> payload;
@@ -31,7 +37,7 @@ public final class TrustStatementJwt {
      * @param value the header claim value, must not be {@code null}
      */
     public void addHeaderClaim(String key, String value) {
-        // TODO
+        header.put(key, value);
     }
 
     /**
@@ -41,7 +47,7 @@ public final class TrustStatementJwt {
      * @param value the payload claim value, must not be {@code null}
      */
     public void addPayloadClaim(String key, Object value) {
-        // TODO
+        payload.put(key, value);
     }
 
     /**
@@ -67,10 +73,15 @@ public final class TrustStatementJwt {
      * ({@code BASE64URL(header).BASE64URL(payload)}) that a {@code JWSSigner} must sign.
      *
      * @return the unsigned payload string ready for signing
+     * @throws TrustStatementValidationException if JSON serialization fails
      */
     public String getPayloadToSign() {
-        // TODO
-        return null;
+        try {
+            String headerJson = OBJECT_MAPPER.writeValueAsString(header);
+            String payloadJson = OBJECT_MAPPER.writeValueAsString(payload);
+            return Base64URL.encode(headerJson) + "." + Base64URL.encode(payloadJson);
+        } catch (JsonProcessingException e) {
+            throw new TrustStatementValidationException("Failed to serialize JWT: " + e.getMessage());
+        }
     }
 }
-

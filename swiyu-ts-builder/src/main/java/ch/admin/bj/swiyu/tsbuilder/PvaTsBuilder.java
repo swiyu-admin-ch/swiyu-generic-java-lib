@@ -17,12 +17,14 @@ import java.util.List;
  */
 public class PvaTsBuilder extends AbstractTrustStatementBuilder<PvaTsBuilder> {
 
+    private static final String TYP = "swiyu-protected-verification-authorization-trust-statement+jwt";
+
     /**
      * Creates a new {@code PvaTsBuilder} and sets the {@code typ} header to
      * {@code swiyu-protected-verification-authorization-trust-statement+jwt}.
      */
     public PvaTsBuilder() {
-        // TODO – setTypHeader("swiyu-protected-verification-authorization-trust-statement+jwt")
+        setTypHeader(TYP);
     }
 
     /**
@@ -44,7 +46,8 @@ public class PvaTsBuilder extends AbstractTrustStatementBuilder<PvaTsBuilder> {
      * @throws TrustStatementValidationException if {@code uuid} is not a valid UUIDv4
      */
     public PvaTsBuilder withJti(String uuid) {
-        // TODO – validate UUIDv4
+        validateUuidV4(uuid, "jti");
+        product.addPayloadClaim("jti", uuid);
         return self();
     }
 
@@ -62,7 +65,11 @@ public class PvaTsBuilder extends AbstractTrustStatementBuilder<PvaTsBuilder> {
      * @throws TrustStatementValidationException if {@code fields} is {@code null} or empty
      */
     public PvaTsBuilder withAuthorizedFields(List<String> fields) {
-        // TODO – validate not empty
+        if (fields == null || fields.isEmpty()) {
+            throw new TrustStatementValidationException(
+                    "authorized_fields must not be null or empty");
+        }
+        product.addPayloadClaim("authorized_fields", fields);
         return self();
     }
 
@@ -79,7 +86,11 @@ public class PvaTsBuilder extends AbstractTrustStatementBuilder<PvaTsBuilder> {
      */
     @Override
     public TrustStatementJwt build() throws TrustStatementValidationException {
-        // TODO
-        return null;
+        super.build();
+        validateRequired("sub", "sub (subject) payload claim is required");
+        validateRequired("jti", "jti payload claim is required – call withJti()");
+        validateRequired("authorized_fields",
+                "authorized_fields payload claim is required – call withAuthorizedFields()");
+        return product;
     }
 }
