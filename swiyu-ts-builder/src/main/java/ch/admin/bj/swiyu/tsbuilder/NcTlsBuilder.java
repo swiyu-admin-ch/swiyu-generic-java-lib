@@ -16,6 +16,14 @@ package ch.admin.bj.swiyu.tsbuilder;
 public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> {
 
     /**
+     * Creates a new {@code NcTlsBuilder} and sets the {@code typ} header to
+     * {@code swiyu-non-compliance-trust-list-statement+jwt}.
+     */
+    public NcTlsBuilder() {
+        // TODO – setTypHeader("swiyu-non-compliance-trust-list-statement+jwt")
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

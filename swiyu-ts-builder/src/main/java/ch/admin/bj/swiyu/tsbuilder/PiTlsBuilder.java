@@ -17,6 +17,14 @@ import java.util.List;
 public class PiTlsBuilder extends AbstractTrustStatementBuilder<PiTlsBuilder> {
 
     /**
+     * Creates a new {@code PiTlsBuilder} and sets the {@code typ} header to
+     * {@code swiyu-protected-issuance-trust-list-statement+jwt}.
+     */
+    public PiTlsBuilder() {
+        // TODO – setTypHeader("swiyu-protected-issuance-trust-list-statement+jwt")
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

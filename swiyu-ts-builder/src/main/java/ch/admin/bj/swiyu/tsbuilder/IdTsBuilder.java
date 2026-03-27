@@ -15,6 +15,14 @@ package ch.admin.bj.swiyu.tsbuilder;
 public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
 
     /**
+     * Creates a new {@code IdTsBuilder} and sets the {@code typ} header to
+     * {@code swiyu-identity-trust-statement+jwt}.
+     */
+    public IdTsBuilder() {
+        // TODO – setTypHeader("swiyu-identity-trust-statement+jwt")
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

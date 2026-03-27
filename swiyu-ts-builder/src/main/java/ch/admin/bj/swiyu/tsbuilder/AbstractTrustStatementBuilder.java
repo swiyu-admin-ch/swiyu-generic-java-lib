@@ -11,14 +11,13 @@ import java.time.Instant;
  * inherited methods without losing type information.
  * </p>
  *
- * <p>Handles all mandatory JOSE header claims and standard JWT payload claims that are common
+ * Handles all mandatory JOSE header claims and standard JWT payload claims that are common
  * to every Trust Statement type:
  * <ul>
  *   <li>Header: {@code alg} (fixed {@code ES256}), {@code kid}, {@code profile_version}
  *       (fixed {@code swiss-profile-trust:1.0.0}), {@code typ} (set by concrete subclass)</li>
  *   <li>Payload: {@code iss}, {@code sub}, {@code iat}, {@code nbf}, {@code exp}</li>
  * </ul>
- * </p>
  *
  * <p>Example usage in a subclass:</p>
  * <pre>{@code
@@ -33,6 +32,13 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
 
     /** The Trust Statement JWT product being assembled by this builder. */
     protected TrustStatementJwt product;
+
+    /**
+     * Initialises a new builder instance with an empty {@link TrustStatementJwt} product.
+     */
+    protected AbstractTrustStatementBuilder() {
+        // TODO – initialise product
+    }
 
     /**
      * Returns the concrete builder instance ({@code this}) typed as {@code T}.

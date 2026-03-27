@@ -18,6 +18,14 @@ import java.util.List;
 public class PvaTsBuilder extends AbstractTrustStatementBuilder<PvaTsBuilder> {
 
     /**
+     * Creates a new {@code PvaTsBuilder} and sets the {@code typ} header to
+     * {@code swiyu-protected-verification-authorization-trust-statement+jwt}.
+     */
+    public PvaTsBuilder() {
+        // TODO – setTypHeader("swiyu-protected-verification-authorization-trust-statement+jwt")
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

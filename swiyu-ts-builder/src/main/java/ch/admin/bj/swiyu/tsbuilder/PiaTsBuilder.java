@@ -16,6 +16,14 @@ package ch.admin.bj.swiyu.tsbuilder;
 public class PiaTsBuilder extends AbstractTrustStatementBuilder<PiaTsBuilder> {
 
     /**
+     * Creates a new {@code PiaTsBuilder} and sets the {@code typ} header to
+     * {@code swiyu-protected-issuance-authorization-trust-statement+jwt}.
+     */
+    public PiaTsBuilder() {
+        // TODO – setTypHeader("swiyu-protected-issuance-authorization-trust-statement+jwt")
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

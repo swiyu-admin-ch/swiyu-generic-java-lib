@@ -15,6 +15,14 @@ package ch.admin.bj.swiyu.tsbuilder;
 public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
 
     /**
+     * Creates a new {@code VqPsBuilder} and sets the {@code typ} header to
+     * {@code swiyu-verification-query-public-statement+jwt}.
+     */
+    public VqPsBuilder() {
+        // TODO – setTypHeader("swiyu-verification-query-public-statement+jwt")
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
