@@ -47,6 +47,7 @@
         <module>swiyu-jwe-util</module>
         <module>swiyu-jwt-util</module>
         <module>swiyu-dpop-util</module>
+        <module>swiyu-ts-builder</module>
     </modules>
 
     <properties>

@@ -1,0 +1,114 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "generic-java-lib" {
+
+  package "swiyu-ts-service" {
+
+    class TrustStatementException <<RuntimeException>> {
+      + TrustStatementException(message: String)
+    }
+
+    abstract class AbstractTrustStatementBuilder<T> {
+      # product: TrustStatementJwt
+      # setTypHeader(typ: String)
+      # validateRequired(claimKey: String, errorMessage: String)
+      + build(): TrustStatementJwt throws TrustStatementException
+    }
+
+    class IdTsBuilder {
+      + withSub(sub: String): IdTsBuilder
+      + withStatus(status: String): IdTsBuilder
+      + addEntityName(locale: String, name: String): IdTsBuilder
+      + withIsStateActor(isStateActor: Boolean): IdTsBuilder
+      + addRegistryId(type: String, value: String): IdTsBuilder
+      + build(): TrustStatementJwt throws TrustStatementException
+    }
+
+    class VqPsBuilder {
+      + withSub(sub: String): VqPsBuilder
+      + withJti(uuid: String): VqPsBuilder <<validates UUIDv4>>
+      + addPurposeName(locale: String, name: String): VqPsBuilder <<max 50>>
+      + addPurposeDesc(locale: String, desc: String): VqPsBuilder <<max 500>>
+      + withRequest(scope: String, dcqlQuery: String): VqPsBuilder <<sets type=DCQL>>
+      + build(): TrustStatementJwt throws TrustStatementException
+    }
+
+    class PvaTsBuilder {
+      + withStatus(status: String): PvaTsBuilder
+      + withSub(sub: String): PvaTsBuilder
+      + withJti(uuid: String): PvaTsBuilder <<validates UUIDv4>>
+      + withAuthorizedFields(fields: List<String>): PvaTsBuilder <<not empty>>
+      + build(): TrustStatementJwt throws TrustStatementException
+    }
+
+    class PiaTsBuilder {
+      + withStatus(status: String): PiaTsBuilder
+      + withSub(sub: String): PiaTsBuilder
+      + withCanIssue(vct: String, vctName: String, locale: String, reason: String): PiaTsBuilder
+      + build(): TrustStatementJwt throws TrustStatementException
+    }
+
+    class PiTlsBuilder {
+      + withStatus(status: String): PiTlsBuilder
+      + withJti(uuid: String): PiTlsBuilder <<validates UUIDv4>>
+      + withVctValues(vctValues: List<String>): PiTlsBuilder
+      + build(): TrustStatementJwt throws TrustStatementException
+    }
+
+    class NcTlsBuilder {
+      + withStatus(status: String): NcTlsBuilder
+      + addNonCompliantActor(did: String, flaggedAt: String, reason: String, locale: String): NcTlsBuilder <<validates RFC3339>>
+      + build(): TrustStatementJwt throws TrustStatementException
+    }
+
+    class TrustStatementJwt {
+      - header: Map<String, String>
+      - payload: Map<String, Object>
+      + addHeaderClaim(key: String, value: String)
+      + addPayloadClaim(key: String, value: Object)
+      + getPayloadToSign(): String
+    }
+
+    AbstractTrustStatementBuilder <|-- IdTsBuilder
+    AbstractTrustStatementBuilder <|-- VqPsBuilder
+    AbstractTrustStatementBuilder <|-- PvaTsBuilder
+    AbstractTrustStatementBuilder <|-- PiaTsBuilder
+    AbstractTrustStatementBuilder <|-- PiTlsBuilder
+    AbstractTrustStatementBuilder <|-- NcTlsBuilder
+
+    AbstractTrustStatementBuilder -> TrustStatementJwt : encapsulates and populates
+    AbstractTrustStatementBuilder .> TrustStatementException : throws
+  }
+
+  package "swiyu-jws-signature-service" {
+
+    interface JWSSigner <<Strategy>> {
+      + sign(payload: String): String
+    }
+
+  }
+
+}
+
+package "Tergum" {
+
+  class TergumTrustService {
+    - signerFactory: TergumSigningService
+    + constructIdentityTrustStatement(data: IdTsRequest): String
+    + constructVerificationQueryStatement(data: VqPsRequest): String
+  }
+
+  class TergumSigningService <<Factory>> {
+    + createSigner(): JWSSigner
+  }
+}
+
+' Dependencies
+TergumTrustService ..> IdTsBuilder : uses for idTS
+TergumTrustService ..> VqPsBuilder : uses for vqPS
+TergumTrustService --> TergumSigningService : uses
+TergumSigningService ..> JWSSigner : provides
+
+@enduml
