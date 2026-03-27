@@ -88,6 +88,7 @@ public class PvaTsBuilder extends AbstractTrustStatementBuilder<PvaTsBuilder> {
     public TrustStatementJwt build() throws TrustStatementValidationException {
         super.build();
         validateRequired("sub", "sub (subject) payload claim is required");
+        validateRequired("status", "status payload claim is required – call withStatus()");
         validateRequired("jti", "jti payload claim is required – call withJti()");
         validateRequired("authorized_fields",
                 "authorized_fields payload claim is required – call withAuthorizedFields()");

@@ -9,7 +9,7 @@ import java.util.List;
  * is protected within the Swiss trust infrastructure.
  * </p>
  *
- * <p>Required claims: {@code jti}, {@code iss}, {@code iat}, {@code nbf}, {@code exp},
+ * <p>Required claims: {@code jti}, {@code iat}, {@code nbf}, {@code exp},
  * {@code status}, {@code vct_values}.</p>
  *
  * <p>Fixed header {@code typ}: {@code swiyu-protected-issuance-trust-list-statement+jwt}</p>
@@ -76,7 +76,7 @@ public class PiTlsBuilder extends AbstractTrustStatementBuilder<PiTlsBuilder> {
      * Validates all required claims and builds the unsigned Protected Issuance Trust List
      * Statement JWT.
      * <p>
-     * Required: {@code kid}, {@code iss}, {@code jti}, {@code iat}, {@code nbf}, {@code exp},
+     * Required: {@code kid}, {@code jti}, {@code iat}, {@code nbf}, {@code exp},
      * {@code status}, {@code vct_values} (non-empty).
      * </p>
      *
@@ -86,6 +86,7 @@ public class PiTlsBuilder extends AbstractTrustStatementBuilder<PiTlsBuilder> {
     @Override
     public TrustStatementJwt build() throws TrustStatementValidationException {
         super.build();
+        validateRequired("status", "status payload claim is required – call withStatus()");
         validateRequired("jti", "jti payload claim is required – call withJti()");
         validateRequired("vct_values", "vct_values payload claim is required – call withVctValues()");
         return product;

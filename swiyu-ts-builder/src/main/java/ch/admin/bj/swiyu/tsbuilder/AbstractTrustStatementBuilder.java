@@ -96,21 +96,6 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
         return self();
     }
 
-    /**
-     * Sets the {@code iss} (issuer) payload claim.
-     * <p>
-     * The value MUST be a valid DID (e.g. {@code did:tdw:...}).
-     * </p>
-     *
-     * @param issuer the issuer DID, must not be {@code null} or blank
-     * @return this builder for fluent chaining
-     * @throws TrustStatementValidationException if {@code issuer} does not start with {@code did:}
-     */
-    public T withIssuer(String issuer) {
-        validateDid(issuer, "iss");
-        product.addPayloadClaim("iss", issuer);
-        return self();
-    }
 
     /**
      * Sets the {@code sub} (subject) payload claim.
@@ -144,18 +129,46 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * @throws TrustStatementValidationException if {@code expiresAt} is before {@code issuedAt}
      */
     public T withValidity(Instant issuedAt, Instant expiresAt) {
+        return withValidity(issuedAt, issuedAt, expiresAt);
+    }
+
+    /**
+     * Sets the validity window of the trust statement with an explicit {@code nbf} instant.
+     * <p>
+     * Use this overload when the not-before time must differ from the issuance time
+     * (e.g., for {@code piaTS} where {@code nbf} may be later than {@code iat}).
+     * The constraints {@code issuedAt <= notBefore} and {@code notBefore <= expiresAt}
+     * are enforced immediately.
+     * </p>
+     *
+     * @param issuedAt   the issuance instant (sets {@code iat}), must not be {@code null}
+     * @param notBefore  the not-before instant (sets {@code nbf}), must not be {@code null}
+     *                   and must not be before {@code issuedAt}
+     * @param expiresAt  the expiration instant (sets {@code exp}), must not be {@code null}
+     *                   and must not be before {@code notBefore}
+     * @return this builder for fluent chaining
+     * @throws TrustStatementValidationException if temporal ordering constraints are violated
+     */
+    public T withValidity(Instant issuedAt, Instant notBefore, Instant expiresAt) {
         if (issuedAt == null) {
             throw new TrustStatementValidationException("issuedAt must not be null");
+        }
+        if (notBefore == null) {
+            throw new TrustStatementValidationException("notBefore must not be null");
         }
         if (expiresAt == null) {
             throw new TrustStatementValidationException("expiresAt must not be null");
         }
-        if (expiresAt.isBefore(issuedAt)) {
+        if (notBefore.isBefore(issuedAt)) {
             throw new TrustStatementValidationException(
-                    "expiresAt must not be before issuedAt (iat=" + issuedAt + ", exp=" + expiresAt + ")");
+                    "notBefore must not be before issuedAt (iat=" + issuedAt + ", nbf=" + notBefore + ")");
+        }
+        if (expiresAt.isBefore(notBefore)) {
+            throw new TrustStatementValidationException(
+                    "expiresAt must not be before notBefore (nbf=" + notBefore + ", exp=" + expiresAt + ")");
         }
         product.addPayloadClaim("iat", issuedAt.getEpochSecond());
-        product.addPayloadClaim("nbf", issuedAt.getEpochSecond());
+        product.addPayloadClaim("nbf", notBefore.getEpochSecond());
         product.addPayloadClaim("exp", expiresAt.getEpochSecond());
         return self();
     }
@@ -217,8 +230,13 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * Validates all required base claims and assembles the final {@link TrustStatementJwt}.
      * <p>
      * Subclasses must call {@code super.build()} at the start of their own {@code build()}
-     * override to trigger base-class validation (e.g. {@code kid}, {@code iss}, {@code exp})
+     * override to trigger base-class validation (e.g. {@code kid}, {@code exp})
      * before adding type-specific claim validation.
+     * </p>
+     * <p>
+     * Note: the {@code iss} claim is intentionally not validated here. As per the
+     * Trust Protocol 2.0 migration notes, {@code iss} is no longer supported – the issuer
+     * is unambiguously identified by the mandatory {@code kid} header.
      * </p>
      *
      * @return the fully assembled, unsigned {@link TrustStatementJwt}
@@ -228,10 +246,9 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
         if (!product.getHeader().containsKey("kid")) {
             throw new TrustStatementValidationException("kid header claim is required");
         }
-        validateRequired("iss", "iss (issuer) payload claim is required");
         validateRequired("iat", "iat (issued-at) payload claim is required – call withValidity()");
+        validateRequired("nbf", "nbf (not-before) payload claim is required – call withValidity()");
         validateRequired("exp", "exp (expiration) payload claim is required – call withValidity()");
-        validateRequired("status", "status payload claim is required – call withStatus()");
         return product;
     }
 

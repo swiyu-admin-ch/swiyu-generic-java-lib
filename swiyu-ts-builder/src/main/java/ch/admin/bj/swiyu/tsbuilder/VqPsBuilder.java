@@ -1,6 +1,7 @@
 package ch.admin.bj.swiyu.tsbuilder;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -131,7 +132,7 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
     }
 
     /**
-     * Sets the credential request on the trust statement using a DCQL query expression.
+     * Sets the credential request on the trust statement using a DCQL query object.
      * <p>
      * The request is serialized as:
      * </p>
@@ -139,22 +140,83 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
      * "request": {
      *   "type": "DCQL",
      *   "scope": "<scope>",
-     *   "query": <dcqlQuery>
+     *   "query": {
+     *     "credentials": [
+     *       {
+     *         "id": "...",
+     *         "format": "dc+sd-jwt",
+     *         "meta": { "vct_values": ["..."] },
+     *         "claims": [...]
+     *       }
+     *     ]
+     *   }
      * }
      * }</pre>
+     * <p>
+     * The {@code dcqlQuery} MUST contain a {@code credentials} array where each entry
+     * has a {@code meta} object with a non-empty {@code vct_values} array, as required
+     * by the Swiss Trust Protocol 2.0 DCQL restrictions.
+     * </p>
      *
-     * @param scope     the OpenID4VP scope associated with this request, must not be {@code null}
-     *                  or blank
-     * @param dcqlQuery the DCQL JSON query string, must not be {@code null} or blank
+     * @param scope     the OpenID4VP scope string, must not be {@code null} or blank
+     * @param dcqlQuery the DCQL query as a structured map (parsed JSON object),
+     *                  must not be {@code null}; each credential query MUST contain
+     *                  a {@code meta.vct_values} non-empty array
      * @return this builder for fluent chaining
+     * @throws TrustStatementValidationException if {@code scope} is blank, {@code dcqlQuery}
+     *                                           is {@code null}, or any credential query
+     *                                           is missing a non-empty {@code meta.vct_values}
      */
-    public VqPsBuilder withRequest(String scope, String dcqlQuery) {
+    @SuppressWarnings("unchecked")
+    public VqPsBuilder withRequest(String scope, Map<String, Object> dcqlQuery) {
         if (scope == null || scope.isBlank()) {
             throw new TrustStatementValidationException("request scope must not be null or blank");
         }
-        if (dcqlQuery == null || dcqlQuery.isBlank()) {
-            throw new TrustStatementValidationException("request dcqlQuery must not be null or blank");
+        if (dcqlQuery == null) {
+            throw new TrustStatementValidationException("request dcqlQuery must not be null");
         }
+
+        // Validate DCQL structure: each credential query must have meta.vct_values (non-empty)
+        Object credentialsObj = dcqlQuery.get("credentials");
+        if (!(credentialsObj instanceof List<?> credentials) || credentials.isEmpty()) {
+            throw new TrustStatementValidationException(
+                    "dcqlQuery must contain a non-empty 'credentials' array");
+        }
+        for (int i = 0; i < credentials.size(); i++) {
+            Object credObj = credentials.get(i);
+            if (!(credObj instanceof Map<?, ?> cred)) {
+                throw new TrustStatementValidationException(
+                        "dcqlQuery credentials[" + i + "] must be an object");
+            }
+            // id: REQUIRED, non-empty, alphanumeric / underscore / hyphen (DCQL §6.1)
+            Object idObj = cred.get("id");
+            if (!(idObj instanceof String id) || id.isBlank()) {
+                throw new TrustStatementValidationException(
+                        "dcqlQuery credentials[" + i + "].id must be a non-empty string");
+            }
+            if (!id.matches("[A-Za-z0-9_\\-]+")) {
+                throw new TrustStatementValidationException(
+                        "dcqlQuery credentials[" + i + "].id must consist of alphanumeric, underscore, or hyphen characters only, got: " + id);
+            }
+            // format: REQUIRED, non-blank (DCQL §6.1)
+            Object formatObj = cred.get("format");
+            if (!(formatObj instanceof String format) || format.isBlank()) {
+                throw new TrustStatementValidationException(
+                        "dcqlQuery credentials[" + i + "].format must be a non-empty string");
+            }
+            // meta: REQUIRED; TP2 restriction: meta.vct_values must be a non-empty array
+            Object metaObj = cred.get("meta");
+            if (!(metaObj instanceof Map<?, ?> meta)) {
+                throw new TrustStatementValidationException(
+                        "dcqlQuery credentials[" + i + "] must contain a 'meta' object");
+            }
+            Object vctValues = meta.get("vct_values");
+            if (!(vctValues instanceof List<?> vct) || vct.isEmpty()) {
+                throw new TrustStatementValidationException(
+                        "dcqlQuery credentials[" + i + "].meta.vct_values must be a non-empty array");
+            }
+        }
+
         Map<String, Object> request = new LinkedHashMap<>();
         request.put("type", "DCQL");
         request.put("scope", scope);

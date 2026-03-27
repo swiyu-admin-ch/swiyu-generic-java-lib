@@ -133,6 +133,7 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
     public TrustStatementJwt build() throws TrustStatementValidationException {
         super.build();
         validateRequired("sub", "sub (subject) payload claim is required");
+        validateRequired("status", "status payload claim is required – call withStatus()");
         if (!hasEntityName) {
             throw new TrustStatementValidationException(
                     "at least one entity_name claim is required – call addEntityName()");
