@@ -1,5 +1,6 @@
 package ch.admin.bj.swiyu.dpop;
 
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 import java.nio.charset.StandardCharsets;
@@ -24,7 +25,7 @@ public final class DpopHashUtil {
      * @return the base64url-encoded SHA-256 hash
      * @throws IllegalStateException if the SHA-256 algorithm is not available
      */
-    public static String sha256(String input) {
+    public static String sha256(@NonNull String input) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] inputBytes = input.getBytes(StandardCharsets.US_ASCII);
@@ -43,7 +44,7 @@ public final class DpopHashUtil {
      * @throws DpopValidationException if the hash does not match
      */
     public static void validateAccessTokenHash(String expectedAccessToken, String dpopAccessTokenHash) {
-        if (dpopAccessTokenHash == null ) {
+        if (expectedAccessToken == null || dpopAccessTokenHash == null ) {
             throw new DpopValidationException("Access token may not be null");
         }
         // Remove padding to prevent mismatches due to padding issues

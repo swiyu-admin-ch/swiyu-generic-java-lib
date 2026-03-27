@@ -34,5 +34,12 @@ class DpopHashUtilTest {
     void validatesKnownVectorWithPadding() {
         assertDoesNotThrow(() -> DpopHashUtil.validateAccessTokenHash(KNWON_VECTOR_ACCESS_TOKEN, KNOWN_VECTOR));
     }
+
+    @Test
+    void validateAccessTokenHash_doesNotThrowNullpointer() {
+        assertThrows(DpopValidationException.class, () -> DpopHashUtil.validateAccessTokenHash(null, KNOWN_VECTOR));
+        assertThrows(DpopValidationException.class, () -> DpopHashUtil.validateAccessTokenHash(KNWON_VECTOR_ACCESS_TOKEN, null));
+        assertThrows(DpopValidationException.class, () -> DpopHashUtil.validateAccessTokenHash(null, null));
+    }
 }
 
