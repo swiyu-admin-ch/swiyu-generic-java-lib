@@ -115,6 +115,10 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
         entry.put("type", type);
         entry.put("value", value);
         registryIds.add(entry);
+        // Eagerly overwrite the claim so the product always reflects the current state.
+        // The built-flag in AbstractTrustStatementBuilder prevents a second build() call,
+        // so overwriting is safe and keeps eager/lazy strategy consistent across all setters.
+        product.addPayloadClaim("registry_ids", registryIds);
         return self();
     }
 
@@ -146,7 +150,6 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
             throw new TrustStatementValidationException(
                     "at least one registry_id entry is required – call addRegistryId()");
         }
-        product.addPayloadClaim("registry_ids", registryIds);
         return product;
     }
 }

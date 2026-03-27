@@ -10,7 +10,7 @@
     <packaging>jar</packaging>
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <name>${project.groupId}:${project.artifactId}</name>
-    <description>TODO</description>
+    <description>Java builder library for generating signed Trust Statements (JWTs) conforming to the Swiss Trust Protocol 2.0 (swiyu ecosystem). Provides fluent, type-safe builders for all 6 Trust Statement types: idTS, vqPS, pvaTS, piaTS, piTLS and ncTLS.</description>
     <url>https://github.com/swiyu-admin-ch/swiyu-generic-java-lib</url>
 
     <!-- required by https://central.sonatype.org/publish/requirements/ -->

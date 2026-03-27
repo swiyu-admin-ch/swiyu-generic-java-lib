@@ -35,7 +35,6 @@ import java.util.Map;
  *     )
  *     .build();
  * }</pre>
- * </p>
  */
 public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> {
 
@@ -164,6 +163,8 @@ public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> {
                     "actorBuilder must not be null");
         }
         nonCompliantActors.add(actorBuilder.build());
+        // Eagerly overwrite so the product always reflects the current list.
+        product.addPayloadClaim("non_compliant_actors", nonCompliantActors);
         return self();
     }
 
@@ -186,7 +187,6 @@ public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> {
             throw new TrustStatementValidationException(
                     "at least one non_compliant_actors entry is required – call addNonCompliantActor()");
         }
-        product.addPayloadClaim("non_compliant_actors", nonCompliantActors);
         return product;
     }
 }

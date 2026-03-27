@@ -18,8 +18,13 @@ import java.util.Map;
  * <ul>
  *   <li>Header: {@code alg} (fixed {@code ES256}), {@code kid}, {@code profile_version}
  *       (fixed {@code swiss-profile-trust:1.0.0}), {@code typ} (set by concrete subclass)</li>
- *   <li>Payload: {@code iss}, {@code sub}, {@code iat}, {@code nbf}, {@code exp}</li>
+ *   <li>Payload: {@code sub}, {@code iat}, {@code nbf}, {@code exp}</li>
  * </ul>
+ * <p>
+ * Note: {@code iss} is intentionally absent. As per the Trust Protocol 2.0 migration notes,
+ * {@code iss} is no longer supported – the issuer is unambiguously identified by the
+ * mandatory {@code kid} header.
+ * </p>
  *
  * <p>Example usage in a subclass:</p>
  * <pre>{@code
@@ -37,6 +42,9 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
 
     /** The Trust Statement JWT product being assembled by this builder. */
     protected TrustStatementJwt product;
+
+    /** Guards against calling {@link #build()} more than once on the same builder instance. */
+    private boolean built = false;
 
     /**
      * Initialises a new builder instance with an empty {@link TrustStatementJwt} product
@@ -238,11 +246,21 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * Trust Protocol 2.0 migration notes, {@code iss} is no longer supported – the issuer
      * is unambiguously identified by the mandatory {@code kid} header.
      * </p>
+     * <p>
+     * Note: each builder instance is single-use. Calling {@code build()} more than once
+     * on the same instance throws {@link TrustStatementValidationException}.
+     * </p>
      *
      * @return the fully assembled, unsigned {@link TrustStatementJwt}
-     * @throws TrustStatementValidationException if any required base claim is missing or invalid
+     * @throws TrustStatementValidationException if any required base claim is missing or invalid,
+     *                                           or if {@code build()} has already been called
      */
     public TrustStatementJwt build() throws TrustStatementValidationException {
+        if (built) {
+            throw new TrustStatementValidationException(
+                    "This builder instance has already been used. Create a new instance for each Trust Statement.");
+        }
+        built = true;
         if (!product.getHeader().containsKey("kid")) {
             throw new TrustStatementValidationException("kid header claim is required");
         }

@@ -4,70 +4,87 @@ skinparam packageStyle rectangle
 
 package "generic-java-lib" {
 
-  package "swiyu-ts-service" {
+  package "swiyu-ts-builder" {
 
-    class TrustStatementException <<RuntimeException>> {
-      + TrustStatementException(message: String)
+    class TrustStatementValidationException <<RuntimeException>> {
+      + TrustStatementValidationException(message: String)
     }
 
-    abstract class AbstractTrustStatementBuilder<T> {
+    abstract class AbstractTrustStatementBuilder<T extends AbstractTrustStatementBuilder<T>> {
       # product: TrustStatementJwt
+      # {abstract} self(): T
       # setTypHeader(typ: String)
       # validateRequired(claimKey: String, errorMessage: String)
-      + build(): TrustStatementJwt throws TrustStatementException
+      # validateDid(did: String, claimName: String)
+      # validateUuidV4(uuid: String, claimName: String)
+      # validateMaxLength(value: String, max: int, claimName: String)
+      # localizedKey(baseName: String, locale: String): String
+      + withKid(kid: String): T
+      + withSubject(subject: String): T
+      + withValidity(issuedAt: Instant, expiresAt: Instant): T
+      + withValidity(issuedAt: Instant, notBefore: Instant, expiresAt: Instant): T
+      + withStatus(idx: int, uri: String): T
+      + build(): TrustStatementJwt
     }
 
     class IdTsBuilder {
-      + withSub(sub: String): IdTsBuilder
-      + withStatus(status: String): IdTsBuilder
+      + addEntityName(name: String): IdTsBuilder
       + addEntityName(locale: String, name: String): IdTsBuilder
       + withIsStateActor(isStateActor: Boolean): IdTsBuilder
       + addRegistryId(type: String, value: String): IdTsBuilder
-      + build(): TrustStatementJwt throws TrustStatementException
+      + build(): TrustStatementJwt
     }
 
     class VqPsBuilder {
-      + withSub(sub: String): VqPsBuilder
       + withJti(uuid: String): VqPsBuilder <<validates UUIDv4>>
+      + addPurposeName(name: String): VqPsBuilder <<max 50>>
       + addPurposeName(locale: String, name: String): VqPsBuilder <<max 50>>
+      + addPurposeDesc(desc: String): VqPsBuilder <<max 500>>
       + addPurposeDesc(locale: String, desc: String): VqPsBuilder <<max 500>>
-      + withRequest(scope: String, dcqlQuery: String): VqPsBuilder <<sets type=DCQL>>
-      + build(): TrustStatementJwt throws TrustStatementException
+      + withRequest(scope: String, dcqlQuery: Map<String,Object>): VqPsBuilder <<validates DCQL>>
+      + build(): TrustStatementJwt
     }
 
     class PvaTsBuilder {
-      + withStatus(status: String): PvaTsBuilder
-      + withSub(sub: String): PvaTsBuilder
       + withJti(uuid: String): PvaTsBuilder <<validates UUIDv4>>
       + withAuthorizedFields(fields: List<String>): PvaTsBuilder <<not empty>>
-      + build(): TrustStatementJwt throws TrustStatementException
+      + build(): TrustStatementJwt
     }
 
     class PiaTsBuilder {
-      + withStatus(status: String): PiaTsBuilder
-      + withSub(sub: String): PiaTsBuilder
-      + withCanIssue(vct: String, vctName: String, locale: String, reason: String): PiaTsBuilder
-      + build(): TrustStatementJwt throws TrustStatementException
+      + withCanIssue(vct: String, locale: String, vctName: String, reason: String): PiaTsBuilder
+      + build(): TrustStatementJwt
     }
 
+    note right of PiaTsBuilder
+      can_issue is a single JSON object.
+      vct_name: max 500 chars, localizable.
+      reason: optional, max 50 chars, localizable.
+    end note
+
     class PiTlsBuilder {
-      + withStatus(status: String): PiTlsBuilder
       + withJti(uuid: String): PiTlsBuilder <<validates UUIDv4>>
-      + withVctValues(vctValues: List<String>): PiTlsBuilder
-      + build(): TrustStatementJwt throws TrustStatementException
+      + withVctValues(vctValues: List<String>): PiTlsBuilder <<not empty>>
+      + build(): TrustStatementJwt
     }
 
     class NcTlsBuilder {
-      + withStatus(status: String): NcTlsBuilder
-      + addNonCompliantActor(did: String, flaggedAt: String, reason: String, locale: String): NcTlsBuilder <<validates RFC3339>>
-      + build(): TrustStatementJwt throws TrustStatementException
+      + addNonCompliantActor(actorBuilder: NonCompliantActorBuilder): NcTlsBuilder
+      + build(): TrustStatementJwt
+    }
+
+    class "NcTlsBuilder.NonCompliantActorBuilder" as NonCompliantActorBuilder {
+      + NonCompliantActorBuilder(did: String, flaggedAt: String, reason: String) <<validates RFC3339>>
+      + addReason(locale: String, reason: String): NonCompliantActorBuilder
     }
 
     class TrustStatementJwt {
       - header: Map<String, String>
       - payload: Map<String, Object>
-      + addHeaderClaim(key: String, value: String)
-      + addPayloadClaim(key: String, value: Object)
+      ~ addHeaderClaim(key: String, value: String)
+      ~ addPayloadClaim(key: String, value: Object)
+      + getHeader(): Map<String, String>
+      + getPayload(): Map<String, Object>
       + getPayloadToSign(): String
     }
 
@@ -78,8 +95,10 @@ package "generic-java-lib" {
     AbstractTrustStatementBuilder <|-- PiTlsBuilder
     AbstractTrustStatementBuilder <|-- NcTlsBuilder
 
+    NcTlsBuilder +-- NonCompliantActorBuilder
+
     AbstractTrustStatementBuilder -> TrustStatementJwt : encapsulates and populates
-    AbstractTrustStatementBuilder .> TrustStatementException : throws
+    AbstractTrustStatementBuilder .> TrustStatementValidationException : throws
   }
 
   package "swiyu-jws-signature-service" {

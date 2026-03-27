@@ -367,6 +367,14 @@ class IdTsBuilderTest {
                 () -> new IdTsBuilder().addRegistryId("UID", "  "));
     }
 
+    @Test
+    void build_calledTwiceOnSameInstance_throwsValidationException() {
+        IdTsBuilder builder = validBuilder();
+        builder.build(); // first call succeeds
+        assertThrows(TrustStatementValidationException.class, builder::build,
+                "second call on same builder instance must throw – builders are single-use");
+    }
+
     // ── getPayloadToSign ──────────────────────────────────────────────────────
 
     @Test
