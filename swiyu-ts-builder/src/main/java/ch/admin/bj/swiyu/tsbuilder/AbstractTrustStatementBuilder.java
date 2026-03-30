@@ -158,23 +158,11 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * @throws TrustStatementValidationException if temporal ordering constraints are violated
      */
     public T withValidity(Instant issuedAt, Instant notBefore, Instant expiresAt) {
-        if (issuedAt == null) {
-            throw new TrustStatementValidationException("issuedAt must not be null");
-        }
-        if (notBefore == null) {
-            throw new TrustStatementValidationException("notBefore must not be null");
-        }
-        if (expiresAt == null) {
-            throw new TrustStatementValidationException("expiresAt must not be null");
-        }
-        if (notBefore.isBefore(issuedAt)) {
-            throw new TrustStatementValidationException(
-                    "notBefore must not be before issuedAt (iat=" + issuedAt + ", nbf=" + notBefore + ")");
-        }
-        if (expiresAt.isBefore(notBefore)) {
-            throw new TrustStatementValidationException(
-                    "expiresAt must not be before notBefore (nbf=" + notBefore + ", exp=" + expiresAt + ")");
-        }
+        validateInstantNotNull(issuedAt, "issuedAt");
+        validateInstantNotNull(notBefore, "notBefore");
+        validateInstantNotNull(expiresAt, "expiresAt");
+        validateTemporalOrder(issuedAt, notBefore, "notBefore", "issuedAt");
+        validateTemporalOrder(notBefore, expiresAt, "expiresAt", "notBefore");
         product.addPayloadClaim("iat", issuedAt.getEpochSecond());
         product.addPayloadClaim("nbf", notBefore.getEpochSecond());
         product.addPayloadClaim("exp", expiresAt.getEpochSecond());
@@ -271,6 +259,37 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
     }
 
     // ── Internal helpers ──────────────────────────────────────────────────────
+
+    /**
+     * Asserts that the given {@link Instant} is not {@code null}.
+     *
+     * @param instant   the instant to check
+     * @param fieldName the field name used in the error message
+     * @throws TrustStatementValidationException if {@code instant} is {@code null}
+     */
+    private void validateInstantNotNull(Instant instant, String fieldName) {
+        if (instant == null) {
+            throw new TrustStatementValidationException(fieldName + " must not be null");
+        }
+    }
+
+    /**
+     * Asserts that {@code later} does not precede {@code earlier}.
+     *
+     * @param earlier      the reference instant (must come first chronologically)
+     * @param later        the instant that must not be before {@code earlier}
+     * @param laterName    field name of {@code later}, used in the error message
+     * @param earlierName  field name of {@code earlier}, used in the error message
+     * @throws TrustStatementValidationException if {@code later} is before {@code earlier}
+     */
+    private void validateTemporalOrder(Instant earlier, Instant later,
+                                       String laterName, String earlierName) {
+        if (later.isBefore(earlier)) {
+            throw new TrustStatementValidationException(
+                    laterName + " must not be before " + earlierName
+                            + " (" + earlierName + "=" + earlier + ", " + laterName + "=" + later + ")");
+        }
+    }
 
     /**
      * Validates that the given value is a syntactically valid DID (starts with {@code did:}).

@@ -282,7 +282,6 @@ class TMS_IT {
      */
     private static String buildPublicKeyJson(ECPublicKey pub) {
         // Extract raw x/y coordinates from the uncompressed EC point (04 || x || y)
-        byte[] encoded = pub.getW().getAffineX().toByteArray();
         byte[] x = toUnsigned32(pub.getW().getAffineX().toByteArray());
         byte[] y = toUnsigned32(pub.getW().getAffineY().toByteArray());
         String xB64 = Base64.getUrlEncoder().withoutPadding().encodeToString(x);

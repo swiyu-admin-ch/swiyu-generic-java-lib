@@ -69,6 +69,22 @@ public class PiaTsBuilder extends AbstractTrustStatementBuilder<PiaTsBuilder> {
      *                                           or {@code reason} exceeds 50 characters
      */
     public PiaTsBuilder withCanIssue(String vct, String locale, String vctName, String reason) {
+        validateCanIssueFields(vct, vctName, reason);
+        product.addPayloadClaim("can_issue", buildCanIssueMap(vct, locale, vctName, reason));
+        return self();
+    }
+
+    /**
+     * Validates the required and optional fields of the {@code can_issue} object.
+     *
+     * @param vct     the VCT identifier, must not be {@code null} or blank
+     * @param vctName the human-readable VCT name, must not be {@code null} or blank
+     *                and must not exceed {@value #MAX_VCT_NAME_LENGTH} characters
+     * @param reason  the optional reason string; if non-null must not exceed
+     *                {@value #MAX_REASON_LENGTH} characters
+     * @throws TrustStatementValidationException if any constraint is violated
+     */
+    private void validateCanIssueFields(String vct, String vctName, String reason) {
         if (vct == null || vct.isBlank()) {
             throw new TrustStatementValidationException("can_issue vct must not be null or blank");
         }
@@ -79,15 +95,26 @@ public class PiaTsBuilder extends AbstractTrustStatementBuilder<PiaTsBuilder> {
         if (reason != null) {
             validateMaxLength(reason, MAX_REASON_LENGTH, "can_issue reason");
         }
+    }
 
+    /**
+     * Builds the {@code can_issue} map from the validated fields.
+     *
+     * @param vct     the VCT identifier
+     * @param locale  the optional BCP 47 locale tag; {@code null} for the default claim
+     * @param vctName the human-readable VCT name
+     * @param reason  the optional reason string; {@code null} or blank entries are omitted
+     * @return the assembled {@code can_issue} map
+     */
+    private Map<String, Object> buildCanIssueMap(String vct, String locale,
+                                                  String vctName, String reason) {
         Map<String, Object> canIssue = new LinkedHashMap<>();
         canIssue.put("vct", vct);
         canIssue.put(localizedKey("vct_name", locale), vctName);
         if (reason != null && !reason.isBlank()) {
             canIssue.put(localizedKey("reason", locale), reason);
         }
-        product.addPayloadClaim("can_issue", canIssue);
-        return self();
+        return canIssue;
     }
 
     /**
