@@ -11,6 +11,8 @@ package ch.admin.bj.swiyu.tsbuilder;
  */
 public class TrustStatementValidationException extends RuntimeException {
 
+    private static final long serialVersionUID = 1L;
+
     /**
      * Creates a new {@code TrustStatementValidationException} with the given detail message.
      *
