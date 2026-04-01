@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Verifies the full happy-path pipeline of building a Trust Statement JWT with each concrete
  * builder, signing it via the {@link JwsSignatureService} using a software EC key (ES256),
  * and confirming the resulting compact JWS is cryptographically valid. This test ensures
- * that the builder output ({@link TrustStatementJwt#getPayloadToSign()}) and the signing
+ * that the builder output ({@link TrustStatementJwt#getJwsHeader()}/{@link TrustStatementJwt#getClaimsSet()}) and the signing
  * service are correctly wired together end-to-end.
  *
  * <p><b>Boundary conditions:</b><br>
@@ -231,14 +231,7 @@ class TMS_IT {
      * @return the signed {@link SignedJWT}
      */
     private SignedJWT signAndParse(TrustStatementJwt ts) throws Exception {
-        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.ES256)
-                .type(new com.nimbusds.jose.JOSEObjectType(ts.getHeader().get("typ")))
-                .keyID(ts.getHeader().get("kid"))
-                .customParam("profile_version", ts.getHeader().get("profile_version"))
-                .build();
-        JWTClaimsSet claimsSet = JWTClaimsSet.parse(
-                new ObjectMapper().writeValueAsString(ts.getPayload()));
-        SignedJWT jwt = new SignedJWT(header, claimsSet);
+        SignedJWT jwt = new SignedJWT(ts.getJwsHeader(), ts.getClaimsSet());
         jwt.sign(jwsSignatureService.createSigner(signatureConfig));
         return jwt;
     }

@@ -47,7 +47,7 @@ public class PvaTsBuilder extends AbstractTrustStatementBuilder<PvaTsBuilder> {
      */
     public PvaTsBuilder withJti(String uuid) {
         validateUuidV4(uuid, "jti");
-        product.addPayloadClaim("jti", uuid);
+        claimsBuilder.jwtID(uuid);
         return self();
     }
 
@@ -69,7 +69,7 @@ public class PvaTsBuilder extends AbstractTrustStatementBuilder<PvaTsBuilder> {
             throw new TrustStatementValidationException(
                     "authorized_fields must not be null or empty");
         }
-        product.addPayloadClaim("authorized_fields", fields);
+        claimsBuilder.claim("authorized_fields", fields);
         return self();
     }
 
@@ -86,12 +86,12 @@ public class PvaTsBuilder extends AbstractTrustStatementBuilder<PvaTsBuilder> {
      */
     @Override
     public TrustStatementJwt build() throws TrustStatementValidationException {
-        super.build();
+        TrustStatementJwt ts = super.build();
         validateRequired("sub", "sub (subject) payload claim is required");
         validateRequired("status", "status payload claim is required – call withStatus()");
         validateRequired("jti", "jti payload claim is required – call withJti()");
         validateRequired("authorized_fields",
                 "authorized_fields payload claim is required – call withAuthorizedFields()");
-        return product;
+        return ts;
     }
 }

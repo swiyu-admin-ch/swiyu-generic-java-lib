@@ -53,7 +53,7 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
      */
     public VqPsBuilder withJti(String uuid) {
         validateUuidV4(uuid, "jti");
-        product.addPayloadClaim("jti", uuid);
+        claimsBuilder.jwtID(uuid);
         return self();
     }
 
@@ -89,7 +89,7 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
             throw new TrustStatementValidationException("purpose_name must not be null or blank");
         }
         validateMaxLength(name, MAX_PURPOSE_NAME_LENGTH, "purpose_name");
-        product.addPayloadClaim(localizedKey("purpose_name", locale), name);
+        claimsBuilder.claim(localizedKey("purpose_name", locale), name);
         hasPurposeName = true;
         return self();
     }
@@ -126,7 +126,7 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
             throw new TrustStatementValidationException("purpose_description must not be null or blank");
         }
         validateMaxLength(desc, MAX_PURPOSE_DESC_LENGTH, "purpose_description");
-        product.addPayloadClaim(localizedKey("purpose_description", locale), desc);
+        claimsBuilder.claim(localizedKey("purpose_description", locale), desc);
         hasPurposeDesc = true;
         return self();
     }
@@ -181,7 +181,7 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
         request.put("type", "DCQL");
         request.put("scope", scope);
         request.put("query", dcqlQuery);
-        product.addPayloadClaim("request", request);
+        claimsBuilder.claim("request", request);
         return self();
     }
 
@@ -280,7 +280,7 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
      */
     @Override
     public TrustStatementJwt build() throws TrustStatementValidationException {
-        super.build();
+        TrustStatementJwt ts = super.build();
         validateRequired("sub", "sub (subject) payload claim is required");
         validateRequired("jti", "jti payload claim is required – call withJti()");
         if (!hasPurposeName) {
@@ -292,6 +292,6 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
                     "at least one purpose_description claim is required – call addPurposeDesc()");
         }
         validateRequired("request", "request payload claim is required – call withRequest()");
-        return product;
+        return ts;
     }
 }

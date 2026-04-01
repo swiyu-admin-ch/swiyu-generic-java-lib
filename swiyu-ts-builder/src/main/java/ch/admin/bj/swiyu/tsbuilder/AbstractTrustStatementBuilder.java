@@ -1,6 +1,12 @@
 package ch.admin.bj.swiyu.tsbuilder;
 
+import com.nimbusds.jose.JOSEObjectType;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jwt.JWTClaimsSet;
+
 import java.time.Instant;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -38,22 +44,31 @@ import java.util.Map;
 public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustStatementBuilder<T>> {
 
     private static final String PROFILE_VERSION = "swiss-profile-trust:1.0.0";
-    private static final String ALG = "ES256";
+    private static final JWSAlgorithm ALG = JWSAlgorithm.ES256;
 
-    /** The Trust Statement JWT product being assembled by this builder. */
-    protected TrustStatementJwt product;
+    /**
+     * Nimbus header builder – accumulates header claims set by this builder and subclasses.
+     * Package-private so subclasses in this package can access it directly.
+     */
+    final JWSHeader.Builder headerBuilder;
+
+    /**
+     * Nimbus claims set builder – accumulates payload claims set by this builder and subclasses.
+     * Package-private so subclasses in this package can access it directly.
+     */
+    final JWTClaimsSet.Builder claimsBuilder;
 
     /** Guards against calling {@link #build()} more than once on the same builder instance. */
     private boolean built = false;
 
     /**
-     * Initialises a new builder instance with an empty {@link TrustStatementJwt} product
-     * and sets the fixed {@code alg} and {@code profile_version} header claims.
+     * Initialises a new builder instance with pre-populated {@code alg} and
+     * {@code profile_version} header claims (fixed per Trust Protocol 2.0).
      */
     protected AbstractTrustStatementBuilder() {
-        this.product = new TrustStatementJwt();
-        product.addHeaderClaim("alg", ALG);
-        product.addHeaderClaim("profile_version", PROFILE_VERSION);
+        this.headerBuilder = new JWSHeader.Builder(ALG)
+                .customParam("profile_version", PROFILE_VERSION);
+        this.claimsBuilder = new JWTClaimsSet.Builder();
     }
 
     /**
@@ -68,7 +83,7 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
     protected abstract T self();
 
     /**
-     * Sets the {@code typ} header claim on the current product.
+     * Sets the {@code typ} header claim.
      * <p>
      * Called internally by each concrete builder in its constructor
      * using the fixed value defined in the Swiss Trust Protocol 2.0 specification.
@@ -77,7 +92,7 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * @param typ the {@code typ} header value (e.g. {@code swiyu-identity-trust-statement+jwt})
      */
     protected void setTypHeader(String typ) {
-        product.addHeaderClaim("typ", typ);
+        headerBuilder.type(new JOSEObjectType(typ));
     }
 
     /**
@@ -100,10 +115,9 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
             throw new TrustStatementValidationException(
                     "kid must be an absolute DID with a key reference fragment (e.g. did:tdw:...#key-1), got: " + kid);
         }
-        product.addHeaderClaim("kid", kid);
+        headerBuilder.keyID(kid);
         return self();
     }
-
 
     /**
      * Sets the {@code sub} (subject) payload claim.
@@ -117,7 +131,7 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      */
     public T withSubject(String subject) {
         validateDid(subject, "sub");
-        product.addPayloadClaim("sub", subject);
+        claimsBuilder.subject(subject);
         return self();
     }
 
@@ -163,9 +177,9 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
         validateInstantNotNull(expiresAt, "expiresAt");
         validateTemporalOrder(issuedAt, notBefore, "notBefore", "issuedAt");
         validateTemporalOrder(notBefore, expiresAt, "expiresAt", "notBefore");
-        product.addPayloadClaim("iat", issuedAt.getEpochSecond());
-        product.addPayloadClaim("nbf", notBefore.getEpochSecond());
-        product.addPayloadClaim("exp", expiresAt.getEpochSecond());
+        claimsBuilder.issueTime(Date.from(issuedAt));
+        claimsBuilder.notBeforeTime(Date.from(notBefore));
+        claimsBuilder.expirationTime(Date.from(expiresAt));
         return self();
     }
 
@@ -202,12 +216,12 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
         Map<String, Object> status = new LinkedHashMap<>();
         status.put("status_list", statusList);
 
-        product.addPayloadClaim("status", status);
+        claimsBuilder.claim("status", status);
         return self();
     }
 
     /**
-     * Validates that a required claim is present in the product payload.
+     * Validates that a required claim is present in the claims builder snapshot.
      * <p>
      * Throws {@link TrustStatementValidationException} if the claim is absent.
      * </p>
@@ -217,7 +231,8 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * @throws TrustStatementValidationException if the required claim is missing
      */
     protected void validateRequired(String claimKey, String errorMessage) {
-        if (!product.getPayload().containsKey(claimKey)) {
+        JWTClaimsSet snapshot = claimsBuilder.build();
+        if (snapshot.getClaim(claimKey) == null) {
             throw new TrustStatementValidationException(errorMessage);
         }
     }
@@ -249,13 +264,21 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
                     "This builder instance has already been used. Create a new instance for each Trust Statement.");
         }
         built = true;
-        if (!product.getHeader().containsKey("kid")) {
+        JWSHeader header = headerBuilder.build();
+        if (header.getKeyID() == null || header.getKeyID().isBlank()) {
             throw new TrustStatementValidationException("kid header claim is required");
         }
-        validateRequired("iat", "iat (issued-at) payload claim is required – call withValidity()");
-        validateRequired("nbf", "nbf (not-before) payload claim is required – call withValidity()");
-        validateRequired("exp", "exp (expiration) payload claim is required – call withValidity()");
-        return product;
+        JWTClaimsSet claims = claimsBuilder.build();
+        if (claims.getIssueTime() == null) {
+            throw new TrustStatementValidationException("iat (issued-at) payload claim is required – call withValidity()");
+        }
+        if (claims.getNotBeforeTime() == null) {
+            throw new TrustStatementValidationException("nbf (not-before) payload claim is required – call withValidity()");
+        }
+        if (claims.getExpirationTime() == null) {
+            throw new TrustStatementValidationException("exp (expiration) payload claim is required – call withValidity()");
+        }
+        return new TrustStatementJwt(header, claims);
     }
 
     // ── Internal helpers ──────────────────────────────────────────────────────

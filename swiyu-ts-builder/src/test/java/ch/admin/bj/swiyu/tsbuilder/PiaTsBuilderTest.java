@@ -51,25 +51,25 @@ class PiaTsBuilderTest {
         TrustStatementJwt jwt = validBuilder().build();
         assertEquals(
                 "swiyu-protected-issuance-authorization-trust-statement+jwt",
-                jwt.getHeader().get("typ"));
+                jwt.getJwsHeader().getType().getType());
     }
 
     @Test
     void build_validInput_headerContainsAlgES256() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals("ES256", jwt.getHeader().get("alg"));
+        assertEquals("ES256", jwt.getJwsHeader().getAlgorithm().getName());
     }
 
     @Test
     void build_validInput_headerContainsKid() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(VALID_KID, jwt.getHeader().get("kid"));
+        assertEquals(VALID_KID, jwt.getJwsHeader().getKeyID());
     }
 
     @Test
     void build_validInput_headerContainsProfileVersion() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals("swiss-profile-trust:1.0.0", jwt.getHeader().get("profile_version"));
+        assertEquals("swiss-profile-trust:1.0.0", jwt.getJwsHeader().getCustomParam("profile_version"));
     }
 
     // ── Payload – iss MUST NOT be present (TP2: iss no longer supported) ────────
@@ -77,7 +77,7 @@ class PiaTsBuilderTest {
     @Test
     void build_validInput_payloadDoesNotContainIss() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertFalse(jwt.getPayload().containsKey("iss"),
+        assertFalse(jwt.getClaimsSet().getClaim("iss") != null,
                 "iss must not be present – TP2 removes iss in favour of kid header");
     }
 
@@ -86,32 +86,32 @@ class PiaTsBuilderTest {
     @Test
     void build_validInput_payloadContainsSub() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(VALID_SUBJECT, jwt.getPayload().get("sub"));
+        assertEquals(VALID_SUBJECT, jwt.getClaimsSet().getSubject());
     }
 
     @Test
     void build_validInput_payloadContainsIatAsEpochSeconds() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(1690360968L, jwt.getPayload().get("iat"));
+        assertEquals(1690360968L, jwt.getClaimsSet().getIssueTime().toInstant().getEpochSecond());
     }
 
     @Test
     void build_validInput_payloadContainsNbfAsEpochSeconds() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(1721896968L, jwt.getPayload().get("nbf"));
+        assertEquals(1721896968L, jwt.getClaimsSet().getNotBeforeTime().toInstant().getEpochSecond());
     }
 
     @Test
     void build_validInput_payloadNbfCanDifferFromIat() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertNotEquals(jwt.getPayload().get("iat"), jwt.getPayload().get("nbf"),
+        assertNotEquals(jwt.getClaimsSet().getIssueTime().toInstant().getEpochSecond(), jwt.getClaimsSet().getNotBeforeTime().toInstant().getEpochSecond(),
                 "piaTS allows nbf to differ from iat (delayed activation)");
     }
 
     @Test
     void build_validInput_payloadContainsExpAsEpochSeconds() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(1753432968L, jwt.getPayload().get("exp"));
+        assertEquals(1753432968L, jwt.getClaimsSet().getExpirationTime().toInstant().getEpochSecond());
     }
 
     @Test
@@ -124,7 +124,7 @@ class PiaTsBuilderTest {
                 .withCanIssue(VALID_VCT, null, "Beta credential", null)
                 .build();
 
-        assertEquals(jwt.getPayload().get("iat"), jwt.getPayload().get("nbf"));
+        assertEquals(jwt.getClaimsSet().getIssueTime().toInstant().getEpochSecond(), jwt.getClaimsSet().getNotBeforeTime().toInstant().getEpochSecond());
     }
 
     // ── Payload – status ──────────────────────────────────────────────────────
@@ -134,7 +134,7 @@ class PiaTsBuilderTest {
     void build_validInput_payloadStatusHasCorrectStructure() {
         TrustStatementJwt jwt = validBuilder().build();
 
-        Map<String, Object> status = (Map<String, Object>) jwt.getPayload().get("status");
+        Map<String, Object> status = (Map<String, Object>) jwt.getClaimsSet().getClaim("status");
         assertNotNull(status, "status claim must be present");
 
         Map<String, Object> statusList = (Map<String, Object>) status.get("status_list");
@@ -149,7 +149,7 @@ class PiaTsBuilderTest {
     @SuppressWarnings("unchecked")
     void build_validInput_canIssueIsObjectNotArray() {
         TrustStatementJwt jwt = validBuilder().build();
-        Object canIssue = jwt.getPayload().get("can_issue");
+        Object canIssue = jwt.getClaimsSet().getClaims().get("can_issue");
         assertNotNull(canIssue);
         assertInstanceOf(Map.class, canIssue,
                 "can_issue must be a single JSON object, not an array");
@@ -159,7 +159,7 @@ class PiaTsBuilderTest {
     @SuppressWarnings("unchecked")
     void build_validInput_canIssueContainsVct() {
         TrustStatementJwt jwt = validBuilder().build();
-        Map<String, Object> canIssue = (Map<String, Object>) jwt.getPayload().get("can_issue");
+        Map<String, Object> canIssue = (Map<String, Object>) jwt.getClaimsSet().getClaims().get("can_issue");
         assertEquals(VALID_VCT, canIssue.get("vct"));
     }
 
@@ -173,7 +173,7 @@ class PiaTsBuilderTest {
                 .withCanIssue(VALID_VCT, null, "Beta credential", null)
                 .build();
 
-        Map<String, Object> canIssue = (Map<String, Object>) jwt.getPayload().get("can_issue");
+        Map<String, Object> canIssue = (Map<String, Object>) jwt.getClaimsSet().getClaims().get("can_issue");
         assertEquals("Beta credential", canIssue.get("vct_name"));
         assertFalse(canIssue.containsKey("reason"),
                 "reason must be absent when not provided");
@@ -189,7 +189,7 @@ class PiaTsBuilderTest {
                 .withCanIssue(VALID_VCT, "de-CH", "Beta-Ausweis", null)
                 .build();
 
-        Map<String, Object> canIssue = (Map<String, Object>) jwt.getPayload().get("can_issue");
+        Map<String, Object> canIssue = (Map<String, Object>) jwt.getClaimsSet().getClaims().get("can_issue");
         assertEquals("Beta-Ausweis", canIssue.get("vct_name#de-CH"));
         assertFalse(canIssue.containsKey("vct_name"),
                 "non-localized vct_name must be absent when locale is provided");
@@ -206,7 +206,7 @@ class PiaTsBuilderTest {
                         "Eligible per AwG Art.6b")
                 .build();
 
-        Map<String, Object> canIssue = (Map<String, Object>) jwt.getPayload().get("can_issue");
+        Map<String, Object> canIssue = (Map<String, Object>) jwt.getClaimsSet().getClaims().get("can_issue");
         assertEquals("Eligible per AwG Art.6b", canIssue.get("reason"));
     }
 
@@ -221,7 +221,7 @@ class PiaTsBuilderTest {
                         "Berechtigt gemäss AwG Art.6b")
                 .build();
 
-        Map<String, Object> canIssue = (Map<String, Object>) jwt.getPayload().get("can_issue");
+        Map<String, Object> canIssue = (Map<String, Object>) jwt.getClaimsSet().getClaims().get("can_issue");
         assertEquals("Berechtigt gemäss AwG Art.6b", canIssue.get("reason#de-CH"));
     }
 
@@ -331,5 +331,4 @@ class PiaTsBuilderTest {
                 () -> new PiaTsBuilder().withValidity(IAT, EXP, NBF));
     }
 }
-
 

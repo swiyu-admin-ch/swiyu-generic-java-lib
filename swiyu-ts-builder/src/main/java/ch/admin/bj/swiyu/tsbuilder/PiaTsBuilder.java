@@ -70,7 +70,7 @@ public class PiaTsBuilder extends AbstractTrustStatementBuilder<PiaTsBuilder> {
      */
     public PiaTsBuilder withCanIssue(String vct, String locale, String vctName, String reason) {
         validateCanIssueFields(vct, vctName, reason);
-        product.addPayloadClaim("can_issue", buildCanIssueMap(vct, locale, vctName, reason));
+        claimsBuilder.claim("can_issue", buildCanIssueMap(vct, locale, vctName, reason));
         return self();
     }
 
@@ -130,10 +130,10 @@ public class PiaTsBuilder extends AbstractTrustStatementBuilder<PiaTsBuilder> {
      */
     @Override
     public TrustStatementJwt build() throws TrustStatementValidationException {
-        super.build();
+        TrustStatementJwt ts = super.build();
         validateRequired("sub", "sub (subject) payload claim is required");
         validateRequired("status", "status payload claim is required – call withStatus()");
         validateRequired("can_issue", "can_issue payload claim is required – call withCanIssue()");
-        return product;
+        return ts;
     }
 }

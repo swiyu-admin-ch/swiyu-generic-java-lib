@@ -57,25 +57,25 @@ class NcTlsBuilderTest {
     void build_validInput_headerContainsTypNcTls() {
         TrustStatementJwt jwt = validBuilder().build();
         assertEquals("swiyu-non-compliance-trust-list-statement+jwt",
-                jwt.getHeader().get("typ"));
+                jwt.getJwsHeader().getType().getType());
     }
 
     @Test
     void build_validInput_headerContainsAlgES256() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals("ES256", jwt.getHeader().get("alg"));
+        assertEquals("ES256", jwt.getJwsHeader().getAlgorithm().getName());
     }
 
     @Test
     void build_validInput_headerContainsKid() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(VALID_KID, jwt.getHeader().get("kid"));
+        assertEquals(VALID_KID, jwt.getJwsHeader().getKeyID());
     }
 
     @Test
     void build_validInput_headerContainsProfileVersion() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals("swiss-profile-trust:1.0.0", jwt.getHeader().get("profile_version"));
+        assertEquals("swiss-profile-trust:1.0.0", jwt.getJwsHeader().getCustomParam("profile_version"));
     }
 
     // ── Payload – iss MUST NOT be present (TP2: iss no longer supported) ────────
@@ -83,7 +83,7 @@ class NcTlsBuilderTest {
     @Test
     void build_validInput_payloadDoesNotContainIss() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertFalse(jwt.getPayload().containsKey("iss"),
+        assertFalse(jwt.getClaimsSet().getClaim("iss") != null,
                 "iss must not be present – TP2 removes iss in favour of kid header");
     }
 
@@ -98,7 +98,7 @@ class NcTlsBuilderTest {
     @Test
     void build_withoutSub_payloadDoesNotContainSub() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertFalse(jwt.getPayload().containsKey("sub"),
+        assertFalse(jwt.getClaimsSet().getClaims().containsKey("sub"),
                 "sub must not be present when not explicitly set");
     }
 
@@ -107,19 +107,19 @@ class NcTlsBuilderTest {
     @Test
     void build_validInput_payloadContainsIatAsEpochSeconds() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(1690360968L, jwt.getPayload().get("iat"));
+        assertEquals(1690360968L, jwt.getClaimsSet().getIssueTime().toInstant().getEpochSecond());
     }
 
     @Test
     void build_validInput_payloadContainsExpAsEpochSeconds() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(1753432968L, jwt.getPayload().get("exp"));
+        assertEquals(1753432968L, jwt.getClaimsSet().getExpirationTime().toInstant().getEpochSecond());
     }
 
     @Test
     void build_twoParamValidity_payloadNbfEqualsIat() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(jwt.getPayload().get("iat"), jwt.getPayload().get("nbf"),
+        assertEquals(jwt.getClaimsSet().getIssueTime().toInstant().getEpochSecond(), jwt.getClaimsSet().getNotBeforeTime().toInstant().getEpochSecond(),
                 "2-param withValidity must set nbf == iat");
     }
 
@@ -130,7 +130,7 @@ class NcTlsBuilderTest {
     void build_validInput_payloadStatusHasCorrectStructure() {
         TrustStatementJwt jwt = validBuilder().build();
 
-        Map<String, Object> status = (Map<String, Object>) jwt.getPayload().get("status");
+        Map<String, Object> status = (Map<String, Object>) jwt.getClaimsSet().getClaim("status");
         assertNotNull(status, "status claim must be present");
 
         Map<String, Object> statusList = (Map<String, Object>) status.get("status_list");
@@ -147,7 +147,7 @@ class NcTlsBuilderTest {
         TrustStatementJwt jwt = validBuilder().build();
 
         List<Map<String, Object>> actors =
-                (List<Map<String, Object>>) jwt.getPayload().get("non_compliant_actors");
+                (List<Map<String, Object>>) jwt.getClaimsSet().getClaims().get("non_compliant_actors");
         assertNotNull(actors);
         assertEquals(1, actors.size());
     }
@@ -158,7 +158,7 @@ class NcTlsBuilderTest {
         TrustStatementJwt jwt = validBuilder().build();
 
         List<Map<String, Object>> actors =
-                (List<Map<String, Object>>) jwt.getPayload().get("non_compliant_actors");
+                (List<Map<String, Object>>) jwt.getClaimsSet().getClaim("non_compliant_actors");
         Map<String, Object> entry = actors.get(0);
 
         assertTrue(entry.containsKey("actor"),
@@ -174,7 +174,7 @@ class NcTlsBuilderTest {
         TrustStatementJwt jwt = validBuilder().build();
 
         List<Map<String, Object>> actors =
-                (List<Map<String, Object>>) jwt.getPayload().get("non_compliant_actors");
+                (List<Map<String, Object>>) jwt.getClaimsSet().getClaims().get("non_compliant_actors");
         assertEquals(VALID_FLAGGED_AT, actors.get(0).get("flagged_at"));
     }
 
@@ -184,7 +184,7 @@ class NcTlsBuilderTest {
         TrustStatementJwt jwt = validBuilder().build();
 
         List<Map<String, Object>> actors =
-                (List<Map<String, Object>>) jwt.getPayload().get("non_compliant_actors");
+                (List<Map<String, Object>>) jwt.getClaimsSet().getClaims().get("non_compliant_actors");
         assertEquals(VALID_REASON, actors.get(0).get("reason"));
     }
 
@@ -207,7 +207,7 @@ class NcTlsBuilderTest {
                 .build();
 
         List<Map<String, Object>> actors =
-                (List<Map<String, Object>>) jwt.getPayload().get("non_compliant_actors");
+                (List<Map<String, Object>>) jwt.getClaimsSet().getClaims().get("non_compliant_actors");
         Map<String, Object> entry = actors.get(0);
 
         assertEquals("The issuer is not who they claim to be (DE)", entry.get("reason"));
@@ -232,7 +232,7 @@ class NcTlsBuilderTest {
                 .build();
 
         List<Map<String, Object>> actors =
-                (List<Map<String, Object>>) jwt.getPayload().get("non_compliant_actors");
+                (List<Map<String, Object>>) jwt.getClaimsSet().getClaims().get("non_compliant_actors");
         assertEquals(2, actors.size());
         assertEquals("did:example:badActor1", actors.get(0).get("actor"));
         assertEquals("did:example:badActor2", actors.get(1).get("actor"));

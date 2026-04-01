@@ -70,7 +70,7 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
         if (name == null || name.isBlank()) {
             throw new TrustStatementValidationException("entity_name must not be null or blank");
         }
-        product.addPayloadClaim(localizedKey("entity_name", locale), name);
+        claimsBuilder.claim(localizedKey("entity_name", locale), name);
         hasEntityName = true;
         return self();
     }
@@ -85,7 +85,7 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
         if (isStateActor == null) {
             throw new TrustStatementValidationException("is_state_actor must not be null");
         }
-        product.addPayloadClaim("is_state_actor", isStateActor);
+        claimsBuilder.claim("is_state_actor", isStateActor);
         hasIsStateActor = true;
         return self();
     }
@@ -115,27 +115,20 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
         entry.put("type", type);
         entry.put("value", value);
         registryIds.add(entry);
-        // Eagerly overwrite the claim so the product always reflects the current state.
-        // The built-flag in AbstractTrustStatementBuilder prevents a second build() call,
-        // so overwriting is safe and keeps eager/lazy strategy consistent across all setters.
-        product.addPayloadClaim("registry_ids", registryIds);
+        // Eagerly overwrite the claim so the builder always reflects the current state.
+        claimsBuilder.claim("registry_ids", registryIds);
         return self();
     }
 
     /**
      * Validates all required claims and builds the unsigned Identity Trust Statement JWT.
-     * <p>
-     * Required: {@code kid}, {@code iss}, {@code sub}, {@code iat}, {@code exp},
-     * {@code status}, at least one {@code entity_name}, {@code is_state_actor},
-     * at least one entry in {@code registry_ids}.
-     * </p>
      *
      * @return the assembled, unsigned {@link TrustStatementJwt}
      * @throws TrustStatementValidationException if any required claim is missing or invalid
      */
     @Override
     public TrustStatementJwt build() throws TrustStatementValidationException {
-        super.build();
+        TrustStatementJwt ts = super.build();
         validateRequired("sub", "sub (subject) payload claim is required");
         validateRequired("status", "status payload claim is required – call withStatus()");
         if (!hasEntityName) {
@@ -150,6 +143,6 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
             throw new TrustStatementValidationException(
                     "at least one registry_id entry is required – call addRegistryId()");
         }
-        return product;
+        return ts;
     }
 }

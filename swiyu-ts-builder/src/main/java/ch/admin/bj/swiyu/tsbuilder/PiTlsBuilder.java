@@ -46,7 +46,7 @@ public class PiTlsBuilder extends AbstractTrustStatementBuilder<PiTlsBuilder> {
      */
     public PiTlsBuilder withJti(String uuid) {
         validateUuidV4(uuid, "jti");
-        product.addPayloadClaim("jti", uuid);
+        claimsBuilder.jwtID(uuid);
         return self();
     }
 
@@ -68,7 +68,7 @@ public class PiTlsBuilder extends AbstractTrustStatementBuilder<PiTlsBuilder> {
         if (vctValues == null || vctValues.isEmpty()) {
             throw new TrustStatementValidationException("vct_values must not be null or empty");
         }
-        product.addPayloadClaim("vct_values", vctValues);
+        claimsBuilder.claim("vct_values", vctValues);
         return self();
     }
 
@@ -85,10 +85,10 @@ public class PiTlsBuilder extends AbstractTrustStatementBuilder<PiTlsBuilder> {
      */
     @Override
     public TrustStatementJwt build() throws TrustStatementValidationException {
-        super.build();
+        TrustStatementJwt ts = super.build();
         validateRequired("status", "status payload claim is required – call withStatus()");
         validateRequired("jti", "jti payload claim is required – call withJti()");
         validateRequired("vct_values", "vct_values payload claim is required – call withVctValues()");
-        return product;
+        return ts;
     }
 }

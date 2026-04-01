@@ -1,99 +1,71 @@
 package ch.admin.bj.swiyu.tsbuilder;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jwt.JWTClaimsSet;
 
 /**
- * Represents an unsigned Trust Statement JWT, consisting of a JOSE header and a payload.
+ * Represents an unsigned Trust Statement JWT, consisting of a Nimbus {@link JWSHeader}
+ * and a Nimbus {@link JWTClaimsSet}.
  * <p>
- * This class acts as the product of the builder pipeline. It accumulates header and payload claims
- * and exposes a serialized form of the payload ready to be signed by a {@code JWSSigner}.
+ * This class acts as the product of the builder pipeline. It is a thin, immutable wrapper
+ * around the two Nimbus types that together form an unsigned JWT, ready to be signed by a
+ * {@code JWSSigner}.
  * </p>
  * <p>
+ * External consumers sign the statement by constructing a {@link com.nimbusds.jwt.SignedJWT}
+ * directly from the exposed header and claims:
+ * </p>
+ * <pre>{@code
+ * TrustStatementJwt ts = new IdTsBuilder()...build();
+ * SignedJWT signed = new SignedJWT(ts.getJwsHeader(), ts.getClaimsSet());
+ * signed.sign(signer);
+ * String compact = signed.serialize();
+ * }</pre>
+ * <p>
  * Mutation methods are intentionally package-private: only builders within the same package
- * may populate claims. External consumers receive a fully assembled, read-only view via
- * {@link #getHeader()} and {@link #getPayload()}.
+ * may assemble the header and claims.
  * </p>
  */
 public final class TrustStatementJwt {
 
-    private static final ObjectWriter WRITER = new ObjectMapper().writer();
-
-    private final Map<String, String> header;
-    private final Map<String, Object> payload;
+    private final JWSHeader jwsHeader;
+    private final JWTClaimsSet claimsSet;
 
     /**
-     * Creates an empty {@code TrustStatementJwt} with no claims.
-     */
-    public TrustStatementJwt() {
-        this.header = new LinkedHashMap<>();
-        this.payload = new LinkedHashMap<>();
-    }
-
-    /**
-     * Adds or replaces a claim in the JOSE header.
+     * Creates a {@code TrustStatementJwt} from the fully assembled Nimbus header and claims.
      * <p>
-     * Package-private: only the builder pipeline within this package may modify the header.
+     * Package-private: called exclusively by {@link AbstractTrustStatementBuilder#build()}.
      * </p>
      *
-     * @param key   the header claim name, must not be {@code null}
-     * @param value the header claim value, must not be {@code null}
+     * @param jwsHeader  the fully assembled JOSE header, must not be {@code null}
+     * @param claimsSet  the fully assembled JWT claims set, must not be {@code null}
      */
-    void addHeaderClaim(String key, String value) {
-        header.put(key, value);
+    TrustStatementJwt(JWSHeader jwsHeader, JWTClaimsSet claimsSet) {
+        this.jwsHeader = jwsHeader;
+        this.claimsSet = claimsSet;
     }
 
     /**
-     * Adds or replaces a claim in the JWT payload.
+     * Returns the Nimbus {@link JWSHeader} for this trust statement.
      * <p>
-     * Package-private: only the builder pipeline within this package may modify the payload.
+     * Pass this directly to {@link com.nimbusds.jwt.SignedJWT#SignedJWT(JWSHeader, JWTClaimsSet)}.
      * </p>
      *
-     * @param key   the payload claim name, must not be {@code null}
-     * @param value the payload claim value, must not be {@code null}
+     * @return the JOSE header
      */
-    void addPayloadClaim(String key, Object value) {
-        payload.put(key, value);
+    public JWSHeader getJwsHeader() {
+        return jwsHeader;
     }
 
     /**
-     * Returns an unmodifiable view of the JOSE header claims.
+     * Returns the Nimbus {@link JWTClaimsSet} for this trust statement.
+     * <p>
+     * Pass this directly to {@link com.nimbusds.jwt.SignedJWT#SignedJWT(JWSHeader, JWTClaimsSet)}.
+     * </p>
      *
-     * @return the header claims
+     * @return the JWT claims set
      */
-    public Map<String, String> getHeader() {
-        return Collections.unmodifiableMap(header);
-    }
-
-    /**
-     * Returns an unmodifiable view of the JWT payload claims.
-     *
-     * @return the payload claims
-     */
-    public Map<String, Object> getPayload() {
-        return Collections.unmodifiableMap(payload);
-    }
-
-    /**
-     * Serializes the JWT header and payload into the unsigned compact form
-     * ({@code BASE64URL(header).BASE64URL(payload)}) that a {@code JWSSigner} must sign.
-     *
-     * @return the unsigned payload string ready for signing
-     * @throws TrustStatementValidationException if JSON serialization fails
-     */
-    public String getPayloadToSign() {
-        try {
-            String headerJson = WRITER.writeValueAsString(header);
-            String payloadJson = WRITER.writeValueAsString(payload);
-            return com.nimbusds.jose.util.Base64URL.encode(headerJson)
-                    + "." + com.nimbusds.jose.util.Base64URL.encode(payloadJson);
-        } catch (JsonProcessingException e) {
-            throw new TrustStatementValidationException("Failed to serialize JWT: " + e.getMessage());
-        }
+    public JWTClaimsSet getClaimsSet() {
+        return claimsSet;
     }
 }

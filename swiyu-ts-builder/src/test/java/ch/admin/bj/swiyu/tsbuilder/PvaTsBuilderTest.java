@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class PvaTsBuilderTest {
 
     private static final String VALID_KID     = "did:tdw:example.ch:verifier#assert-key-01";
-    
     private static final String VALID_SUBJECT = "did:tdw:example.ch:verifier";
     private static final String VALID_JTI     = "550e8400-e29b-41d4-a716-446655440000";
     private static final Instant IAT          = Instant.ofEpochSecond(1690360968L);
@@ -31,7 +30,6 @@ class PvaTsBuilderTest {
     private PvaTsBuilder validBuilder() {
         return new PvaTsBuilder()
                 .withKid(VALID_KID)
-                
                 .withSubject(VALID_SUBJECT)
                 .withValidity(IAT, EXP)
                 .withStatus(7, "https://example.com/statuslists/1")
@@ -46,25 +44,26 @@ class PvaTsBuilderTest {
         TrustStatementJwt jwt = validBuilder().build();
         assertEquals(
                 "swiyu-protected-verification-authorization-trust-statement+jwt",
-                jwt.getHeader().get("typ"));
+                jwt.getJwsHeader().getType().getType());
     }
 
     @Test
     void build_validInput_headerContainsAlgES256() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals("ES256", jwt.getHeader().get("alg"));
+        assertEquals("ES256", jwt.getJwsHeader().getAlgorithm().getName());
     }
 
     @Test
     void build_validInput_headerContainsKid() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(VALID_KID, jwt.getHeader().get("kid"));
+        assertEquals(VALID_KID, jwt.getJwsHeader().getKeyID());
     }
 
     @Test
     void build_validInput_headerContainsProfileVersion() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals("swiss-profile-trust:1.0.0", jwt.getHeader().get("profile_version"));
+        assertEquals("swiss-profile-trust:1.0.0",
+                jwt.getJwsHeader().getCustomParam("profile_version"));
     }
 
     // ── Payload – iss MUST NOT be present (TP2: iss no longer supported) ────────
@@ -72,7 +71,7 @@ class PvaTsBuilderTest {
     @Test
     void build_validInput_payloadDoesNotContainIss() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertFalse(jwt.getPayload().containsKey("iss"),
+        assertNull(jwt.getClaimsSet().getIssuer(),
                 "iss must not be present – TP2 removes iss in favour of kid header");
     }
 
@@ -81,38 +80,37 @@ class PvaTsBuilderTest {
     @Test
     void build_validInput_payloadContainsSub() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(VALID_SUBJECT, jwt.getPayload().get("sub"));
+        assertEquals(VALID_SUBJECT, jwt.getClaimsSet().getSubject());
     }
-
 
     @Test
     void build_validInput_payloadContainsIatAsEpochSeconds() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(1690360968L, jwt.getPayload().get("iat"));
+        assertEquals(1690360968L, jwt.getClaimsSet().getIssueTime().toInstant().getEpochSecond());
     }
 
     @Test
     void build_validInput_payloadContainsNbfAsEpochSeconds() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(1690360968L, jwt.getPayload().get("nbf"));
+        assertEquals(1690360968L, jwt.getClaimsSet().getNotBeforeTime().toInstant().getEpochSecond());
     }
 
     @Test
     void build_validInput_payloadNbfEqualsIat() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(jwt.getPayload().get("iat"), jwt.getPayload().get("nbf"));
+        assertEquals(jwt.getClaimsSet().getIssueTime(), jwt.getClaimsSet().getNotBeforeTime());
     }
 
     @Test
     void build_validInput_payloadContainsExpAsEpochSeconds() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(1753432968L, jwt.getPayload().get("exp"));
+        assertEquals(1753432968L, jwt.getClaimsSet().getExpirationTime().toInstant().getEpochSecond());
     }
 
     @Test
     void build_validInput_payloadContainsJti() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(VALID_JTI, jwt.getPayload().get("jti"));
+        assertEquals(VALID_JTI, jwt.getClaimsSet().getJWTID());
     }
 
     // ── Payload – status ──────────────────────────────────────────────────────
@@ -122,7 +120,7 @@ class PvaTsBuilderTest {
     void build_validInput_payloadStatusHasCorrectStructure() {
         TrustStatementJwt jwt = validBuilder().build();
 
-        Map<String, Object> status = (Map<String, Object>) jwt.getPayload().get("status");
+        Map<String, Object> status = (Map<String, Object>) jwt.getClaimsSet().getClaim("status");
         assertNotNull(status, "status claim must be present");
 
         Map<String, Object> statusList = (Map<String, Object>) status.get("status_list");
@@ -138,10 +136,10 @@ class PvaTsBuilderTest {
     void build_singleAuthorizedField_payloadContainsArrayWithOneEntry() {
         TrustStatementJwt jwt = validBuilder().build();
 
-        List<String> fields = (List<String>) jwt.getPayload().get("authorized_fields");
+        List<String> fields = (List<String>) jwt.getClaimsSet().getClaim("authorized_fields");
         assertNotNull(fields);
         assertEquals(1, fields.size());
-        assertEquals("personal_administrative_number", fields.get(0));
+        assertEquals("personal_administrative_number", fields.getFirst());
     }
 
     @Test
@@ -154,7 +152,7 @@ class PvaTsBuilderTest {
                 .withAuthorizedFields(List.of("personal_administrative_number", "date_of_birth"))
                 .build();
 
-        List<String> fields = (List<String>) jwt.getPayload().get("authorized_fields");
+        List<String> fields = (List<String>) jwt.getClaimsSet().getClaim("authorized_fields");
         assertEquals(2, fields.size());
         assertTrue(fields.contains("personal_administrative_number"));
         assertTrue(fields.contains("date_of_birth"));
@@ -169,7 +167,6 @@ class PvaTsBuilderTest {
                 .withValidity(IAT, EXP).withStatus(7, "https://example.com/statuslists/1")
                 .withJti(VALID_JTI)
                 .withAuthorizedFields(List.of("personal_administrative_number"));
-
         assertThrows(TrustStatementValidationException.class, builder::build);
     }
 
@@ -180,7 +177,6 @@ class PvaTsBuilderTest {
                 .withValidity(IAT, EXP).withStatus(7, "https://example.com/statuslists/1")
                 .withJti(VALID_JTI)
                 .withAuthorizedFields(List.of("personal_administrative_number"));
-
         assertThrows(TrustStatementValidationException.class, builder::build);
     }
 
@@ -191,7 +187,6 @@ class PvaTsBuilderTest {
                 .withStatus(7, "https://example.com/statuslists/1")
                 .withJti(VALID_JTI)
                 .withAuthorizedFields(List.of("personal_administrative_number"));
-
         assertThrows(TrustStatementValidationException.class, builder::build);
     }
 
@@ -202,7 +197,6 @@ class PvaTsBuilderTest {
                 .withValidity(IAT, EXP)
                 .withJti(VALID_JTI)
                 .withAuthorizedFields(List.of("personal_administrative_number"));
-
         assertThrows(TrustStatementValidationException.class, builder::build);
     }
 
@@ -212,7 +206,6 @@ class PvaTsBuilderTest {
                 .withKid(VALID_KID).withSubject(VALID_SUBJECT)
                 .withValidity(IAT, EXP).withStatus(7, "https://example.com/statuslists/1")
                 .withAuthorizedFields(List.of("personal_administrative_number"));
-
         assertThrows(TrustStatementValidationException.class, builder::build);
     }
 
@@ -222,7 +215,6 @@ class PvaTsBuilderTest {
                 .withKid(VALID_KID).withSubject(VALID_SUBJECT)
                 .withValidity(IAT, EXP).withStatus(7, "https://example.com/statuslists/1")
                 .withJti(VALID_JTI);
-
         assertThrows(TrustStatementValidationException.class, builder::build);
     }
 
@@ -275,7 +267,8 @@ class PvaTsBuilderTest {
     @Test
     void build_validInput_payloadContainsNbf() {
         TrustStatementJwt jwt = validBuilder().build();
-        assertNotNull(jwt.getPayload().get("nbf"), "nbf claim must be present (required by RFC 7519)");
+        assertNotNull(jwt.getClaimsSet().getNotBeforeTime(),
+                "nbf claim must be present (required by RFC 7519)");
     }
 }
 

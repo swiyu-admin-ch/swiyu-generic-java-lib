@@ -163,8 +163,8 @@ public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> {
                     "actorBuilder must not be null");
         }
         nonCompliantActors.add(actorBuilder.build());
-        // Eagerly overwrite so the product always reflects the current list.
-        product.addPayloadClaim("non_compliant_actors", nonCompliantActors);
+        // Eagerly overwrite so the builder always reflects the current list.
+        claimsBuilder.claim("non_compliant_actors", nonCompliantActors);
         return self();
     }
 
@@ -181,12 +181,12 @@ public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> {
      */
     @Override
     public TrustStatementJwt build() throws TrustStatementValidationException {
-        super.build();
+        TrustStatementJwt ts = super.build();
         validateRequired("status", "status payload claim is required – call withStatus()");
         if (nonCompliantActors.isEmpty()) {
             throw new TrustStatementValidationException(
                     "at least one non_compliant_actors entry is required – call addNonCompliantActor()");
         }
-        return product;
+        return ts;
     }
 }
