@@ -1,5 +1,7 @@
 package ch.admin.bj.swiyu.tsbuilder;
 
+import com.nimbusds.jwt.JWTClaimsSet;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -121,16 +123,16 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
     }
 
     /**
-     * Validates all required claims and builds the unsigned Identity Trust Statement JWT.
+     * Validates all required claims for the Identity Trust Statement.
+     * Called by {@link AbstractTrustStatementBuilder#build()} before constructing the JWT.
      *
-     * @return the assembled, unsigned {@link TrustStatementJwt}
-     * @throws TrustStatementValidationException if any required claim is missing or invalid
+     * @param claims the fully-built claims snapshot
+     * @throws TrustStatementValidationException if any required claim is missing
      */
     @Override
-    public TrustStatementJwt build() throws TrustStatementValidationException {
-        TrustStatementJwt ts = super.build();
-        validateRequired("sub", "sub (subject) payload claim is required");
-        validateRequired("status", "status payload claim is required – call withStatus()");
+    protected void validateSubclass(JWTClaimsSet claims) {
+        validateRequired(claims, "sub", "sub (subject) payload claim is required");
+        validateRequired(claims, "status", "status payload claim is required – call withStatus()");
         if (!hasEntityName) {
             throw new TrustStatementValidationException(
                     "at least one entity_name claim is required – call addEntityName()");
@@ -143,6 +145,5 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
             throw new TrustStatementValidationException(
                     "at least one registry_id entry is required – call addRegistryId()");
         }
-        return ts;
     }
 }

@@ -1,5 +1,7 @@
 package ch.admin.bj.swiyu.tsbuilder;
 
+import com.nimbusds.jwt.JWTClaimsSet;
+
 import java.util.List;
 
 /**
@@ -36,22 +38,6 @@ public class PvaTsBuilder extends AbstractTrustStatementBuilder<PvaTsBuilder> {
     }
 
     /**
-     * Sets the {@code jti} claim with a UUIDv4 identifier for this trust statement.
-     * <p>
-     * The provided value is validated immediately against UUID version 4 format (RFC 9562).
-     * </p>
-     *
-     * @param uuid a valid UUIDv4 string, must not be {@code null} or blank
-     * @return this builder for fluent chaining
-     * @throws TrustStatementValidationException if {@code uuid} is not a valid UUIDv4
-     */
-    public PvaTsBuilder withJti(String uuid) {
-        validateUuidV4(uuid, "jti");
-        claimsBuilder.jwtID(uuid);
-        return self();
-    }
-
-    /**
      * Sets the list of credential fields the verifier is authorized to request.
      * <p>
      * Serialized as a non-empty JSON array under the {@code authorized_fields} claim.
@@ -74,24 +60,22 @@ public class PvaTsBuilder extends AbstractTrustStatementBuilder<PvaTsBuilder> {
     }
 
     /**
-     * Validates all required claims and builds the unsigned Protected Verification Authorization
-     * Trust Statement JWT.
+     * Validates all required claims for the Protected Verification Authorization Trust Statement.
+     * Called by {@link AbstractTrustStatementBuilder#build()} before constructing the JWT.
      * <p>
-     * Required: {@code kid}, {@code iss}, {@code sub}, {@code jti}, {@code iat}, {@code exp},
+     * Required: {@code kid}, {@code sub}, {@code jti}, {@code iat}, {@code exp},
      * {@code status}, {@code authorized_fields} (non-empty).
      * </p>
      *
-     * @return the assembled, unsigned {@link TrustStatementJwt}
-     * @throws TrustStatementValidationException if any required claim is missing or invalid
+     * @param claims the fully-built claims snapshot
+     * @throws TrustStatementValidationException if any required claim is missing
      */
     @Override
-    public TrustStatementJwt build() throws TrustStatementValidationException {
-        TrustStatementJwt ts = super.build();
-        validateRequired("sub", "sub (subject) payload claim is required");
-        validateRequired("status", "status payload claim is required – call withStatus()");
-        validateRequired("jti", "jti payload claim is required – call withJti()");
-        validateRequired("authorized_fields",
+    protected void validateSubclass(JWTClaimsSet claims) {
+        validateRequired(claims, "sub", "sub (subject) payload claim is required");
+        validateRequired(claims, "status", "status payload claim is required – call withStatus()");
+        validateRequired(claims, "jti", "jti payload claim is required – call withJti()");
+        validateRequired(claims, "authorized_fields",
                 "authorized_fields payload claim is required – call withAuthorizedFields()");
-        return ts;
     }
 }

@@ -32,13 +32,6 @@ import java.util.Map;
  * mandatory {@code kid} header.
  * </p>
  *
- * <p>Example usage in a subclass:</p>
- * <pre>{@code
- * public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
- *     protected IdTsBuilder self() { return this; }
- * }
- * }</pre>
- *
  * @param <T> the concrete builder type, must extend {@code AbstractTrustStatementBuilder<T>}
  */
 public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustStatementBuilder<T>> {
@@ -221,63 +214,104 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
     }
 
     /**
-     * Validates that a required claim is present in the claims builder snapshot.
+     * Sets the {@code jti} (JWT ID) payload claim with a UUIDv4 value.
      * <p>
-     * Throws {@link TrustStatementValidationException} if the claim is absent.
+     * The provided value is validated immediately against UUID version 4 format (RFC 9562).
      * </p>
      *
+     * @param uuid a valid UUIDv4 string, must not be {@code null} or blank
+     * @return this builder for fluent chaining
+     * @throws TrustStatementValidationException if {@code uuid} is not a valid UUIDv4
+     */
+    public T withJti(String uuid) {
+        validateUuidV4(uuid, "jti");
+        claimsBuilder.jwtID(uuid);
+        return self();
+    }
+
+    /**
+     * Extension point for subclass-specific claim validation.
+     * <p>
+     * Called by {@link #build()} after base-claim validation but <em>before</em> the
+     * {@link TrustStatementJwt} is constructed. Subclasses override this method to add
+     * type-specific required-claim checks against the provided {@code claims} snapshot.
+     * The default implementation does nothing.
+     * </p>
+     *
+     * @param claims a fully-built snapshot of the current claims set, ready for inspection
+     * @throws TrustStatementValidationException if any subclass-specific required claim
+     *                                           is missing or invalid
+     */
+    protected void validateSubclass(JWTClaimsSet claims) {
+        // default: no additional validation
+    }
+
+    /**
+     * Validates that a required claim is present in the given claims snapshot.
+     *
+     * @param claims       the claims snapshot to inspect
      * @param claimKey     the payload claim key to check
      * @param errorMessage the exception message to use if validation fails
      * @throws TrustStatementValidationException if the required claim is missing
      */
-    protected void validateRequired(String claimKey, String errorMessage) {
-        JWTClaimsSet snapshot = claimsBuilder.build();
-        if (snapshot.getClaim(claimKey) == null) {
+    protected void validateRequired(JWTClaimsSet claims, String claimKey, String errorMessage) {
+        if (claims.getClaim(claimKey) == null) {
             throw new TrustStatementValidationException(errorMessage);
         }
     }
 
     /**
-     * Validates all required base claims and assembles the final {@link TrustStatementJwt}.
+     * Validates all required base claims, calls {@link #validateSubclass(JWTClaimsSet)} for
+     * type-specific validation, and then assembles the final {@link TrustStatementJwt}.
      * <p>
-     * Subclasses must call {@code super.build()} at the start of their own {@code build()}
-     * override to trigger base-class validation (e.g. {@code kid}, {@code exp})
-     * before adding type-specific claim validation.
+     * The {@link TrustStatementJwt} is only constructed after <em>all</em> validations
+     * (base and subclass) have passed. Subclasses must <strong>not</strong> override this
+     * method – override {@link #validateSubclass(JWTClaimsSet)} instead.
      * </p>
      * <p>
-     * Note: the {@code iss} claim is intentionally not validated here. As per the
-     * Trust Protocol 2.0 migration notes, {@code iss} is no longer supported – the issuer
-     * is unambiguously identified by the mandatory {@code kid} header.
+     * Note: {@code iss} is intentionally not validated. Per Trust Protocol 2.0,
+     * {@code iss} is no longer supported – the issuer is identified by {@code kid}.
      * </p>
      * <p>
      * Note: each builder instance is single-use. Calling {@code build()} more than once
-     * on the same instance throws {@link TrustStatementValidationException}.
+     * throws {@link TrustStatementValidationException}.
      * </p>
      *
      * @return the fully assembled, unsigned {@link TrustStatementJwt}
-     * @throws TrustStatementValidationException if any required base claim is missing or invalid,
+     * @throws TrustStatementValidationException if any required claim is missing or invalid,
      *                                           or if {@code build()} has already been called
      */
-    public TrustStatementJwt build() throws TrustStatementValidationException {
+    public final TrustStatementJwt build() throws TrustStatementValidationException {
         if (built) {
             throw new TrustStatementValidationException(
                     "This builder instance has already been used. Create a new instance for each Trust Statement.");
         }
         built = true;
+
+        // ── Base header validation ────────────────────────────────────────────
         JWSHeader header = headerBuilder.build();
         if (header.getKeyID() == null || header.getKeyID().isBlank()) {
             throw new TrustStatementValidationException("kid header claim is required");
         }
+
+        // ── Base claims validation ────────────────────────────────────────────
         JWTClaimsSet claims = claimsBuilder.build();
         if (claims.getIssueTime() == null) {
-            throw new TrustStatementValidationException("iat (issued-at) payload claim is required – call withValidity()");
+            throw new TrustStatementValidationException(
+                    "iat (issued-at) payload claim is required – call withValidity()");
         }
         if (claims.getNotBeforeTime() == null) {
-            throw new TrustStatementValidationException("nbf (not-before) payload claim is required – call withValidity()");
+            throw new TrustStatementValidationException(
+                    "nbf (not-before) payload claim is required – call withValidity()");
         }
         if (claims.getExpirationTime() == null) {
-            throw new TrustStatementValidationException("exp (expiration) payload claim is required – call withValidity()");
+            throw new TrustStatementValidationException(
+                    "exp (expiration) payload claim is required – call withValidity()");
         }
+
+        // ── Subclass-specific validation (before object construction) ─────────
+        validateSubclass(claims);
+
         return new TrustStatementJwt(header, claims);
     }
 

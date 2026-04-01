@@ -1,5 +1,7 @@
 package ch.admin.bj.swiyu.tsbuilder;
 
+import com.nimbusds.jwt.JWTClaimsSet;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,22 +41,6 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
     @Override
     protected VqPsBuilder self() {
         return this;
-    }
-
-    /**
-     * Sets the {@code jti} claim with a UUIDv4 identifier for this trust statement.
-     * <p>
-     * The provided value is validated immediately against UUID version 4 format (RFC 9562).
-     * </p>
-     *
-     * @param uuid a valid UUIDv4 string, must not be {@code null} or blank
-     * @return this builder for fluent chaining
-     * @throws TrustStatementValidationException if {@code uuid} is not a valid UUIDv4
-     */
-    public VqPsBuilder withJti(String uuid) {
-        validateUuidV4(uuid, "jti");
-        claimsBuilder.jwtID(uuid);
-        return self();
     }
 
     /**
@@ -140,27 +126,12 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
      * "request": {
      *   "type": "DCQL",
      *   "scope": "<scope>",
-     *   "query": {
-     *     "credentials": [
-     *       {
-     *         "id": "...",
-     *         "format": "dc+sd-jwt",
-     *         "meta": { "vct_values": ["..."] },
-     *         "claims": [...]
-     *       }
-     *     ]
-     *   }
+     *   "query": { "credentials": [...] }
      * }
      * }</pre>
-     * <p>
-     * The {@code dcqlQuery} MUST contain a {@code credentials} array where each entry
-     * has a {@code meta} object with a non-empty {@code vct_values} array, as required
-     * by the Swiss Trust Protocol 2.0 DCQL restrictions.
-     * </p>
      *
      * @param scope     the OpenID4VP scope string, must not be {@code null} or blank
-     * @param dcqlQuery the DCQL query as a structured map (parsed JSON object),
-     *                  must not be {@code null}; each credential query MUST contain
+     * @param dcqlQuery the DCQL query as a structured map; each credential query MUST contain
      *                  a {@code meta.vct_values} non-empty array
      * @return this builder for fluent chaining
      * @throws TrustStatementValidationException if {@code scope} is blank, {@code dcqlQuery}
@@ -267,22 +238,21 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
     }
 
     /**
-     * Validates all required claims and builds the unsigned Verification Query Public
-     * Statement JWT.
+     * Validates all required claims for the Verification Query Public Statement.
+     * Called by {@link AbstractTrustStatementBuilder#build()} before constructing the JWT.
      * <p>
-     * Required: {@code kid}, {@code iss}, {@code sub}, {@code jti}, {@code iat}, {@code exp},
+     * Required: {@code kid}, {@code sub}, {@code jti}, {@code iat}, {@code exp},
      * at least one {@code purpose_name}, at least one {@code purpose_description},
      * {@code request}.
      * </p>
      *
-     * @return the assembled, unsigned {@link TrustStatementJwt}
-     * @throws TrustStatementValidationException if any required claim is missing or invalid
+     * @param claims the fully-built claims snapshot
+     * @throws TrustStatementValidationException if any required claim is missing
      */
     @Override
-    public TrustStatementJwt build() throws TrustStatementValidationException {
-        TrustStatementJwt ts = super.build();
-        validateRequired("sub", "sub (subject) payload claim is required");
-        validateRequired("jti", "jti payload claim is required – call withJti()");
+    protected void validateSubclass(JWTClaimsSet claims) {
+        validateRequired(claims, "sub", "sub (subject) payload claim is required");
+        validateRequired(claims, "jti", "jti payload claim is required – call withJti()");
         if (!hasPurposeName) {
             throw new TrustStatementValidationException(
                     "at least one purpose_name claim is required – call addPurposeName()");
@@ -291,7 +261,6 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
             throw new TrustStatementValidationException(
                     "at least one purpose_description claim is required – call addPurposeDesc()");
         }
-        validateRequired("request", "request payload claim is required – call withRequest()");
-        return ts;
+        validateRequired(claims, "request", "request payload claim is required – call withRequest()");
     }
 }

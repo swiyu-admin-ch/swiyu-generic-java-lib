@@ -1,5 +1,7 @@
 package ch.admin.bj.swiyu.tsbuilder;
 
+import com.nimbusds.jwt.JWTClaimsSet;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -118,22 +120,16 @@ public class PiaTsBuilder extends AbstractTrustStatementBuilder<PiaTsBuilder> {
     }
 
     /**
-     * Validates all required claims and builds the unsigned Protected Issuance Authorization
-     * Trust Statement JWT.
-     * <p>
-     * Required: {@code kid}, {@code sub}, {@code iat}, {@code nbf}, {@code exp},
-     * {@code status}, {@code can_issue}.
-     * </p>
+     * Validates all required claims for the Protected Issuance Authorization Trust Statement.
+     * Called by {@link AbstractTrustStatementBuilder#build()} before constructing the JWT.
      *
-     * @return the assembled, unsigned {@link TrustStatementJwt}
-     * @throws TrustStatementValidationException if any required claim is missing or invalid
+     * @param claims the fully-built claims snapshot
+     * @throws TrustStatementValidationException if any required claim is missing
      */
     @Override
-    public TrustStatementJwt build() throws TrustStatementValidationException {
-        TrustStatementJwt ts = super.build();
-        validateRequired("sub", "sub (subject) payload claim is required");
-        validateRequired("status", "status payload claim is required – call withStatus()");
-        validateRequired("can_issue", "can_issue payload claim is required – call withCanIssue()");
-        return ts;
+    protected void validateSubclass(JWTClaimsSet claims) {
+        validateRequired(claims, "sub", "sub (subject) payload claim is required");
+        validateRequired(claims, "status", "status payload claim is required – call withStatus()");
+        validateRequired(claims, "can_issue", "can_issue payload claim is required – call withCanIssue()");
     }
 }

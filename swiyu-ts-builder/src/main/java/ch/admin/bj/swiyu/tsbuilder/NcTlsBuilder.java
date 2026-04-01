@@ -1,5 +1,7 @@
 package ch.admin.bj.swiyu.tsbuilder;
 
+import com.nimbusds.jwt.JWTClaimsSet;
+
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -169,24 +171,22 @@ public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> {
     }
 
     /**
-     * Validates all required claims and builds the unsigned Non-Compliance Trust List Statement
-     * JWT.
+     * Validates all required claims for the Non-Compliance Trust List Statement.
+     * Called by {@link AbstractTrustStatementBuilder#build()} before constructing the JWT.
      * <p>
      * Required: {@code kid}, {@code iat}, {@code exp}, {@code status},
      * at least one entry in {@code non_compliant_actors}.
      * </p>
      *
-     * @return the assembled, unsigned {@link TrustStatementJwt}
-     * @throws TrustStatementValidationException if any required claim is missing or invalid
+     * @param claims the fully-built claims snapshot
+     * @throws TrustStatementValidationException if any required claim is missing
      */
     @Override
-    public TrustStatementJwt build() throws TrustStatementValidationException {
-        TrustStatementJwt ts = super.build();
-        validateRequired("status", "status payload claim is required – call withStatus()");
+    protected void validateSubclass(JWTClaimsSet claims) {
+        validateRequired(claims, "status", "status payload claim is required – call withStatus()");
         if (nonCompliantActors.isEmpty()) {
             throw new TrustStatementValidationException(
                     "at least one non_compliant_actors entry is required – call addNonCompliantActor()");
         }
-        return ts;
     }
 }
