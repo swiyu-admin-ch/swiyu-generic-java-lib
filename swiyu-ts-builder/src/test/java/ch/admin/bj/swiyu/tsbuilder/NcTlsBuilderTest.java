@@ -102,6 +102,13 @@ class NcTlsBuilderTest {
                 "sub must not be present when not explicitly set");
     }
 
+    @Test
+    void withSubject_always_throwsValidationException() {
+        assertThrows(TrustStatementValidationException.class,
+                () -> new NcTlsBuilder().withSubject("did:example:actor"),
+                "sub is not supported for ncTLS and must always throw");
+    }
+
     // ── Payload – standard claims ──────────────────────────────────────────────
 
     @Test

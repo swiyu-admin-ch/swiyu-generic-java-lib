@@ -60,6 +60,19 @@ public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> {
         return this;
     }
 
+    /**
+     * Not supported for ncTLS – the {@code sub} claim is not defined for this trust statement
+     * type by the Swiss Trust Protocol 2.0 specification.
+     *
+     * @throws TrustStatementValidationException always
+     */
+    @Override
+    public NcTlsBuilder withSubject(String subject) {
+        throw new TrustStatementValidationException(
+                "sub (subject) is not supported for ncTLS – the non-compliance trust list " +
+                "statement does not identify a single subject");
+    }
+
     // ── Inner Builder ─────────────────────────────────────────────────────────
 
     /**
