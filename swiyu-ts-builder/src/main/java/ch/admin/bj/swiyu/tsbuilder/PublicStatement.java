@@ -5,13 +5,11 @@ package ch.admin.bj.swiyu.tsbuilder;
  * <p>
  * Public Statements attest that self-declared information about a subject has been recorded
  * in a public register. The self-declared content is <em>not reviewed</em>.
- * </p>
  * <p>
  * Builders in this category:
  * <ul>
  *   <li>{@link VqPsBuilder} – Verification Query Public Statement (vqPS)</li>
  * </ul>
- * </p>
  * <p>
  * Common characteristics:
  * <ul>
@@ -19,7 +17,6 @@ package ch.admin.bj.swiyu.tsbuilder;
  *   <li>{@code jti} is <strong>required</strong> – unique identifier per statement</li>
  *   <li>{@code status} is <strong>not required</strong></li>
  * </ul>
- * </p>
  */
 public interface PublicStatement {
 }
