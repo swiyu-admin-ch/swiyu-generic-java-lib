@@ -55,7 +55,7 @@ public class PvaTsBuilder extends AbstractTrustStatementBuilder<PvaTsBuilder> {
             throw new TrustStatementValidationException(
                     "authorized_fields must not be null or empty");
         }
-        claimsBuilder.claim("authorized_fields", fields);
+        claim("authorized_fields", fields);
         return self();
     }
 

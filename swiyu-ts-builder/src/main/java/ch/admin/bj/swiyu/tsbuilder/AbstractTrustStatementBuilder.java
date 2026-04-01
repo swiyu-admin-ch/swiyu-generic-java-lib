@@ -38,18 +38,19 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
 
     private static final String PROFILE_VERSION = "swiss-profile-trust:1.0.0";
     private static final JWSAlgorithm ALG = JWSAlgorithm.ES256;
+    private static final String NOT_BEFORE = "notBefore";
+    private static final String ISSUED_AT = "issuedAt";
+    private static final String EXPIRES_AT = "expiresAt";
 
     /**
      * Nimbus header builder – accumulates header claims set by this builder and subclasses.
-     * Package-private so subclasses in this package can access it directly.
      */
-    final JWSHeader.Builder headerBuilder;
+    private final JWSHeader.Builder headerBuilder;
 
     /**
      * Nimbus claims set builder – accumulates payload claims set by this builder and subclasses.
-     * Package-private so subclasses in this package can access it directly.
      */
-    final JWTClaimsSet.Builder claimsBuilder;
+    private final JWTClaimsSet.Builder claimsBuilder;
 
     /** Guards against calling {@link #build()} more than once on the same builder instance. */
     private boolean built = false;
@@ -165,11 +166,11 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * @throws TrustStatementValidationException if temporal ordering constraints are violated
      */
     public T withValidity(Instant issuedAt, Instant notBefore, Instant expiresAt) {
-        validateInstantNotNull(issuedAt, "issuedAt");
-        validateInstantNotNull(notBefore, "notBefore");
-        validateInstantNotNull(expiresAt, "expiresAt");
-        validateTemporalOrder(issuedAt, notBefore, "notBefore", "issuedAt");
-        validateTemporalOrder(notBefore, expiresAt, "expiresAt", "notBefore");
+        validateInstantNotNull(issuedAt, ISSUED_AT);
+        validateInstantNotNull(notBefore, NOT_BEFORE);
+        validateInstantNotNull(expiresAt, EXPIRES_AT);
+        validateTemporalOrder(issuedAt, notBefore, NOT_BEFORE, ISSUED_AT);
+        validateTemporalOrder(notBefore, expiresAt, EXPIRES_AT, NOT_BEFORE);
         claimsBuilder.issueTime(Date.from(issuedAt));
         claimsBuilder.notBeforeTime(Date.from(notBefore));
         claimsBuilder.expirationTime(Date.from(expiresAt));
@@ -226,6 +227,23 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
     public T withJti(String uuid) {
         validateUuidV4(uuid, "jti");
         claimsBuilder.jwtID(uuid);
+        return self();
+    }
+
+    /**
+     * Sets a custom payload claim by key and value.
+     * <p>
+     * This is the single, controlled access point through which subclasses may add
+     * type-specific claims to the JWT payload, without exposing the underlying
+     * {@link JWTClaimsSet.Builder} directly.
+     * </p>
+     *
+     * @param key   the claim key, must not be {@code null} or blank
+     * @param value the claim value
+     * @return this builder for fluent chaining
+     */
+    protected T claim(String key, Object value) {
+        claimsBuilder.claim(key, value);
         return self();
     }
 

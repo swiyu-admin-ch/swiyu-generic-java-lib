@@ -72,7 +72,7 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
         if (name == null || name.isBlank()) {
             throw new TrustStatementValidationException("entity_name must not be null or blank");
         }
-        claimsBuilder.claim(localizedKey("entity_name", locale), name);
+        claim(localizedKey("entity_name", locale), name);
         hasEntityName = true;
         return self();
     }
@@ -87,7 +87,7 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
         if (isStateActor == null) {
             throw new TrustStatementValidationException("is_state_actor must not be null");
         }
-        claimsBuilder.claim("is_state_actor", isStateActor);
+        claim("is_state_actor", isStateActor);
         hasIsStateActor = true;
         return self();
     }
@@ -117,8 +117,7 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
         entry.put("type", type);
         entry.put("value", value);
         registryIds.add(entry);
-        // Eagerly overwrite the claim so the builder always reflects the current state.
-        claimsBuilder.claim("registry_ids", registryIds);
+        claim("registry_ids", registryIds);
         return self();
     }
 

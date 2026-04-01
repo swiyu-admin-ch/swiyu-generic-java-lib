@@ -54,7 +54,7 @@ public class PiTlsBuilder extends AbstractTrustStatementBuilder<PiTlsBuilder> {
         if (vctValues == null || vctValues.isEmpty()) {
             throw new TrustStatementValidationException("vct_values must not be null or empty");
         }
-        claimsBuilder.claim("vct_values", vctValues);
+        claim("vct_values", vctValues);
         return self();
     }
 

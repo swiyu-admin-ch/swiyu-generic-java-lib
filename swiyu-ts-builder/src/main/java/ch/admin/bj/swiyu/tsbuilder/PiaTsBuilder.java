@@ -72,7 +72,7 @@ public class PiaTsBuilder extends AbstractTrustStatementBuilder<PiaTsBuilder> {
      */
     public PiaTsBuilder withCanIssue(String vct, String locale, String vctName, String reason) {
         validateCanIssueFields(vct, vctName, reason);
-        claimsBuilder.claim("can_issue", buildCanIssueMap(vct, locale, vctName, reason));
+        claim("can_issue", buildCanIssueMap(vct, locale, vctName, reason));
         return self();
     }
 

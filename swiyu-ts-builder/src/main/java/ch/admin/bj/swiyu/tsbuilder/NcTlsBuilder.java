@@ -165,8 +165,7 @@ public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> {
                     "actorBuilder must not be null");
         }
         nonCompliantActors.add(actorBuilder.build());
-        // Eagerly overwrite so the builder always reflects the current list.
-        claimsBuilder.claim("non_compliant_actors", nonCompliantActors);
+        claim("non_compliant_actors", nonCompliantActors);
         return self();
     }
 

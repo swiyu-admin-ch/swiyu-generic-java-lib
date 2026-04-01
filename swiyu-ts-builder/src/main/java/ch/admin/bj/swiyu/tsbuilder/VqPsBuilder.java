@@ -75,7 +75,7 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
             throw new TrustStatementValidationException("purpose_name must not be null or blank");
         }
         validateMaxLength(name, MAX_PURPOSE_NAME_LENGTH, "purpose_name");
-        claimsBuilder.claim(localizedKey("purpose_name", locale), name);
+        claim(localizedKey("purpose_name", locale), name);
         hasPurposeName = true;
         return self();
     }
@@ -112,7 +112,7 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
             throw new TrustStatementValidationException("purpose_description must not be null or blank");
         }
         validateMaxLength(desc, MAX_PURPOSE_DESC_LENGTH, "purpose_description");
-        claimsBuilder.claim(localizedKey("purpose_description", locale), desc);
+        claim(localizedKey("purpose_description", locale), desc);
         hasPurposeDesc = true;
         return self();
     }
@@ -152,7 +152,7 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
         request.put("type", "DCQL");
         request.put("scope", scope);
         request.put("query", dcqlQuery);
-        claimsBuilder.claim("request", request);
+        claim("request", request);
         return self();
     }
 
@@ -178,7 +178,7 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> {
                 throw new TrustStatementValidationException(
                         "dcqlQuery credentials[" + i + "] must be an object");
             }
-            validateCredentialQuery((Map<?, ?>) cred, i);
+            validateCredentialQuery(cred, i);
         }
     }
 
