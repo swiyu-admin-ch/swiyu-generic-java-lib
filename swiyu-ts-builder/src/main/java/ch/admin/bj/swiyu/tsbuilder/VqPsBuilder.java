@@ -176,10 +176,18 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> impl
             Object credObj = credentials.get(i);
             if (!(credObj instanceof Map<?, ?> cred)) {
                 throw new TrustStatementValidationException(
-                        "dcqlQuery credentials[" + i + "] must be an object");
+                        credentialPath(i) + " must be an object");
             }
             validateCredentialQuery(cred, i);
         }
+    }
+
+    /**
+     * Returns the error message prefix for a credential entry at the given index,
+     * e.g. {@code "dcqlQuery credentials[2]"}.
+     */
+    private static String credentialPath(int index) {
+        return "dcqlQuery credentials[" + index + "]";
     }
 
     /**
@@ -207,11 +215,11 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> impl
         Object idObj = cred.get("id");
         if (!(idObj instanceof String id) || id.isBlank()) {
             throw new TrustStatementValidationException(
-                    "dcqlQuery credentials[" + index + "].id must be a non-empty string");
+                    credentialPath(index) + ".id must be a non-empty string");
         }
         if (!id.matches("[A-Za-z0-9_\\-]+")) {
             throw new TrustStatementValidationException(
-                    "dcqlQuery credentials[" + index + "].id must consist of alphanumeric, "
+                    credentialPath(index) + ".id must consist of alphanumeric, "
                             + "underscore, or hyphen characters only, got: " + id);
         }
     }
@@ -220,7 +228,7 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> impl
         Object formatObj = cred.get("format");
         if (!(formatObj instanceof String format) || format.isBlank()) {
             throw new TrustStatementValidationException(
-                    "dcqlQuery credentials[" + index + "].format must be a non-empty string");
+                    credentialPath(index) + ".format must be a non-empty string");
         }
     }
 
@@ -228,12 +236,12 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> impl
         Object metaObj = cred.get("meta");
         if (!(metaObj instanceof Map<?, ?> meta)) {
             throw new TrustStatementValidationException(
-                    "dcqlQuery credentials[" + index + "] must contain a 'meta' object");
+                    credentialPath(index) + " must contain a 'meta' object");
         }
         Object vctValues = meta.get("vct_values");
         if (!(vctValues instanceof List<?> vct) || vct.isEmpty()) {
             throw new TrustStatementValidationException(
-                    "dcqlQuery credentials[" + index + "].meta.vct_values must be a non-empty array");
+                    credentialPath(index) + ".meta.vct_values must be a non-empty array");
         }
     }
 
