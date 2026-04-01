@@ -16,7 +16,7 @@ import java.util.List;
  *
  * <p>Fixed header {@code typ}: {@code swiyu-protected-issuance-trust-list-statement+jwt}</p>
  */
-public class PiTlsBuilder extends AbstractTrustStatementBuilder<PiTlsBuilder> {
+public class PiTlsBuilder extends AbstractTrustStatementBuilder<PiTlsBuilder> implements TrustListStatement {
 
     private static final String TYP = "swiyu-protected-issuance-trust-list-statement+jwt";
 

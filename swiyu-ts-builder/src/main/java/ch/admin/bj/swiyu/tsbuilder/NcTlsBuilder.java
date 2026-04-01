@@ -38,7 +38,7 @@ import java.util.Map;
  *     .build();
  * }</pre>
  */
-public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> {
+public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> implements TrustListStatement {
 
     private static final String TYP = "swiyu-non-compliance-trust-list-statement+jwt";
 

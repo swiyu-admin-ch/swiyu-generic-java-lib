@@ -19,7 +19,7 @@ import java.util.Map;
  *
  * <p>Fixed header {@code typ}: {@code swiyu-identity-trust-statement+jwt}</p>
  */
-public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> {
+public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> implements TrustStatement {
 
     private static final String TYP = "swiyu-identity-trust-statement+jwt";
 

@@ -17,7 +17,7 @@ import java.util.List;
  * <p>Fixed header {@code typ}:
  * {@code swiyu-protected-verification-authorization-trust-statement+jwt}</p>
  */
-public class PvaTsBuilder extends AbstractTrustStatementBuilder<PvaTsBuilder> {
+public class PvaTsBuilder extends AbstractTrustStatementBuilder<PvaTsBuilder> implements TrustStatement {
 
     private static final String TYP = "swiyu-protected-verification-authorization-trust-statement+jwt";
 

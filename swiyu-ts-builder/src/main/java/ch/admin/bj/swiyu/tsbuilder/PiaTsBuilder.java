@@ -18,7 +18,7 @@ import java.util.Map;
  * <p>Fixed header {@code typ}:
  * {@code swiyu-protected-issuance-authorization-trust-statement+jwt}</p>
  */
-public class PiaTsBuilder extends AbstractTrustStatementBuilder<PiaTsBuilder> {
+public class PiaTsBuilder extends AbstractTrustStatementBuilder<PiaTsBuilder> implements TrustStatement {
 
     private static final String TYP = "swiyu-protected-issuance-authorization-trust-statement+jwt";
     private static final int MAX_VCT_NAME_LENGTH = 500;
