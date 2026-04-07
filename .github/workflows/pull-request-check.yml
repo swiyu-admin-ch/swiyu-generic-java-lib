@@ -23,7 +23,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: java
           config-file: ./.github/codeql/codeql-config.yml
@@ -54,7 +54,43 @@ jobs:
           rulesets: '.github/rulesets/java/pmd_omni_ruleset.xml'
 
       - name: Upload PMD SARIF to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: pmd-report.sarif
-
+      - name: Run Snyk to check for vulnerabilities 🔍
+        uses: snyk/actions/maven-3-jdk-21@master
+        continue-on-error: false
+        env:
+          JAVA_HOME: '' # Snyk action sets JAVA_HOME to a path that is not compatible with the setup-java action, so we need to reset it here
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          SNYK_API: https://api.eu.snyk.io
+          SNYK_ORG: ${{ secrets.SNYK_ORG }}
+        with:
+          # report only vulnerabilities with level high or critical, as we want to avoid noise in the PR checks
+          args: --maven-aggregate-project --severity-threshold=high --sarif-file-output=snyk.sarif
+      - name: Upload result as sarif to GitHub Code Scanning 📦
+        if: always() # We want to upload the SARIF file even if the Snyk action fails, to have the results in the Code Scanning tab of GitHub
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: snyk.sarif
+      # Build image and check for vulnerabilities with Snyk
+      - name: Build and push docker image
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          pull: true # Prevent old images to be used, which may trigger CVE findings
+          tags: pull_request_check:latest
+          build-args: SOURCE_IMAGE=eclipse-temurin:21-jre-ubi9-minimal
+          file: Dockerfile
+      - name: Scan Docker image with Snyk 🐳
+        uses: snyk/actions/docker@master
+        continue-on-error: false
+        with:
+          image: pull_request_check:latest
+          args: --file=Dockerfile --severity-threshold=high
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          SNYK_API: https://api.eu.snyk.io
+          SNYK_ORG: ${{ secrets.SNYK_ORG }}

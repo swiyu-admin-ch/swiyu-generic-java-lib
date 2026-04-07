@@ -44,7 +44,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Dependency versions -->
-        <spring.boot.version>3.5.10</spring.boot.version>
+        <spring.boot.version>3.5.13</spring.boot.version>
         <junit.version>5.10.1</junit.version>
         <mockito.version>5.8.0</mockito.version>
         <slf4j.version>2.0.9</slf4j.version>
@@ -225,4 +225,3 @@
     </profiles>
 
 </project>
-
