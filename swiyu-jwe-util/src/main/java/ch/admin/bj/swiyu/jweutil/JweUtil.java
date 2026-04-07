@@ -3,9 +3,13 @@ package ch.admin.bj.swiyu.jweutil;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.ECDHDecrypter;
 import com.nimbusds.jose.crypto.ECDHEncrypter;
+import com.nimbusds.jose.crypto.opts.MaxCompressedCipherTextLength;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
 import lombok.experimental.UtilityClass;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Service for JSON Web Encryption (JWE) operations in the Swiyu ecosystem.
@@ -48,15 +52,34 @@ public class JweUtil {
      *
      * @param jweString           JWE as a String
      * @param recipientPrivateKey Empfänger-Privater Schlüssel (ECKey)
-     * @return Klartext-Payload
+     * @return plaintext payload
      */
     public static String decrypt(String jweString, JWK recipientPrivateKey) {
+        return decrypt(jweString, recipientPrivateKey, null);
+    }
+
+    /**
+     * Decrypts the given JWE string.
+     *
+     * @param jweString           JWE as a String
+     * @param recipientPrivateKey private key (ECKey) of the recipient
+     * @param maxCompressedCipherTextLength Maximum length for compressed ciphertexts Default value (if null or 0) is 100000
+     * @return plaintext payload
+     */
+    public static String decrypt(String jweString, JWK recipientPrivateKey, Integer maxCompressedCipherTextLength) {
+
+        Set<JWEDecrypterOption> jweDecrypterOptions = new HashSet<>();
+
+        if (maxCompressedCipherTextLength != null && maxCompressedCipherTextLength > 0) {
+            jweDecrypterOptions.add(new MaxCompressedCipherTextLength(maxCompressedCipherTextLength));
+        }
+
         try {
             if (!(recipientPrivateKey instanceof ECKey ecKey)) {
                 throw new JweUtilException("Only EC keys are supported.");
             }
             JWEObject jweObject = JWEObject.parse(jweString);
-            jweObject.decrypt(new ECDHDecrypter(ecKey));
+            jweObject.decrypt(new ECDHDecrypter(ecKey), jweDecrypterOptions);
             return jweObject.getPayload().toString();
         } catch (Exception e) {
             throw new JweUtilException("Error during JWE decryption", e);
