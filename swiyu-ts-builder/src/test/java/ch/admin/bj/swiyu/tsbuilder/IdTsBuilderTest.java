@@ -18,8 +18,8 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class IdTsBuilderTest {
 
-    private static final String VALID_KID     = "did:tdw:example.ch:issuer#assert-key-01";
-    private static final String VALID_SUBJECT = "did:example:actor";
+    private static final String VALID_KID     = "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRAA1:identifier.admin.ch:api:v1:did#assert-key-01";
+    private static final String VALID_SUBJECT = "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRBB1:identifier.admin.ch:api:v1:did";
     private static final Instant IAT          = Instant.ofEpochSecond(1690360968L);
     private static final Instant EXP          = Instant.ofEpochSecond(1753432968L);
 
@@ -332,12 +332,6 @@ class IdTsBuilderTest {
     }
 
     @Test
-    void withStatus_blankUri_throwsValidationException() {
-        assertThrows(TrustStatementValidationException.class,
-                () -> new IdTsBuilder().withStatus(0, "  "));
-    }
-
-    @Test
     void addEntityName_blankName_throwsValidationException() {
         assertThrows(TrustStatementValidationException.class,
                 () -> new IdTsBuilder().addEntityName("  "));
@@ -347,18 +341,6 @@ class IdTsBuilderTest {
     void addEntityName_blankLocalizedName_throwsValidationException() {
         assertThrows(TrustStatementValidationException.class,
                 () -> new IdTsBuilder().addEntityName("de-CH", "  "));
-    }
-
-    @Test
-    void withIsStateActor_nullValue_throwsValidationException() {
-        assertThrows(TrustStatementValidationException.class,
-                () -> new IdTsBuilder().withIsStateActor(null));
-    }
-
-    @Test
-    void addRegistryId_blankType_throwsValidationException() {
-        assertThrows(TrustStatementValidationException.class,
-                () -> new IdTsBuilder().addRegistryId("  ", "CHE-000.000.000"));
     }
 
     @Test

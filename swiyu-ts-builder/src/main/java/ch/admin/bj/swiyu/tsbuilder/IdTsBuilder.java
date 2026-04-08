@@ -24,8 +24,7 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> impl
     private static final String TYP = "swiyu-identity-trust-statement+jwt";
 
     private final List<Map<String, String>> registryIds = new ArrayList<>();
-    private boolean hasEntityName = false;
-    private boolean hasIsStateActor = false;
+
 
     /**
      * Creates a new {@code IdTsBuilder} and sets the {@code typ} header to
@@ -44,16 +43,22 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> impl
     }
 
     /**
-     * Adds a default (non-localized) entity name claim.
+     * Adds a non-localized entity name claim.
      * <p>
      * Serialized as {@code "entity_name": "<name>"} in the JWT payload.
+     * Use {@link #addEntityName(String, String)} to add additional localized variants.
      * </p>
      *
      * @param name the entity name, must not be {@code null} or blank
      * @return this builder for fluent chaining
+     * @throws TrustStatementValidationException if {@code name} is blank
      */
     public IdTsBuilder addEntityName(String name) {
-        return addEntityName(null, name);
+        if (name == null || name.isBlank()) {
+            throw new TrustStatementValidationException("entity_name must not be null or blank");
+        }
+        claim("entity_name", name);
+        return self();
     }
 
     /**
@@ -61,19 +66,24 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> impl
      * <p>
      * Serialized as {@code "entity_name#<locale>": "<name>"} in the JWT payload,
      * e.g. {@code "entity_name#de-CH": "Bundesamt für Justiz"}.
+     * May be called multiple times for different locales.
      * </p>
      *
      * @param locale the BCP 47 language tag (e.g. {@code de-CH}, {@code fr}),
      *               must not be {@code null} or blank
      * @param name   the entity name in the given locale, must not be {@code null} or blank
      * @return this builder for fluent chaining
+     * @throws TrustStatementValidationException if {@code locale} or {@code name} is blank
      */
     public IdTsBuilder addEntityName(String locale, String name) {
+        if (locale == null || locale.isBlank()) {
+            throw new TrustStatementValidationException(
+                    "locale must not be null or blank – use addEntityName(String name) for a non-localized entity name");
+        }
         if (name == null || name.isBlank()) {
             throw new TrustStatementValidationException("entity_name must not be null or blank");
         }
         claim(localizedKey("entity_name", locale), name);
-        hasEntityName = true;
         return self();
     }
 
@@ -83,12 +93,8 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> impl
      * @param isStateActor {@code true} if the subject is a state actor, {@code false} otherwise
      * @return this builder for fluent chaining
      */
-    public IdTsBuilder withIsStateActor(Boolean isStateActor) {
-        if (isStateActor == null) {
-            throw new TrustStatementValidationException("is_state_actor must not be null");
-        }
+    public IdTsBuilder withIsStateActor(boolean isStateActor) {
         claim("is_state_actor", isStateActor);
-        hasIsStateActor = true;
         return self();
     }
 
@@ -132,14 +138,15 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> impl
     protected void validateSubclass(JWTClaimsSet claims) {
         validateRequired(claims, "sub", "sub (subject) payload claim is required");
         validateRequired(claims, "status", "status payload claim is required – call withStatus()");
+        validateRequired(claims, "is_state_actor", "is_state_actor claim is required – call withIsStateActor()");
+
+        boolean hasEntityName = claims.getClaims().keySet().stream()
+                .anyMatch(k -> k.equals("entity_name") || k.startsWith("entity_name#"));
         if (!hasEntityName) {
             throw new TrustStatementValidationException(
                     "at least one entity_name claim is required – call addEntityName()");
         }
-        if (!hasIsStateActor) {
-            throw new TrustStatementValidationException(
-                    "is_state_actor claim is required – call withIsStateActor()");
-        }
+
         if (registryIds.isEmpty()) {
             throw new TrustStatementValidationException(
                     "at least one registry_id entry is required – call addRegistryId()");

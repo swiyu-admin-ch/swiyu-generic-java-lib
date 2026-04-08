@@ -23,8 +23,8 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class PiaTsBuilderTest {
 
-    private static final String VALID_KID     = "did:example:trust-issuer#key-1";
-    private static final String VALID_SUBJECT = "did:example:issuer";
+    private static final String VALID_KID     = "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRAA1:identifier.admin.ch:api:v1:did#assert-key-01";
+    private static final String VALID_SUBJECT = "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRBB1:identifier.admin.ch:api:v1:did";
     private static final String VALID_VCT     = "urn:ch.admin.fedpol.betaid";
 
     // Matches the non-normative example: iat < nbf < exp

@@ -25,15 +25,16 @@ import java.util.Map;
  * <p>Usage example (multiple locales per entry):
  * <pre>{@code
  * new NcTlsBuilder()
- *     .withKid("did:example:trust-issuer#key-1")
+ *     .withKid("did:tdw:QmZyt...#assert-key-01")
  *     .withValidity(Instant.now(), Instant.now().plus(365, ChronoUnit.DAYS))
  *     .withStatus(0, "https://example.com/statuslists/1")
  *     .addNonCompliantActor(
- *         new NcTlsBuilder.NonCompliantActorBuilder("did:example:badActor",
+ *         new NcTlsBuilder.NonCompliantActorBuilder("did:tdw:QmBad...#",
  *                                                   "2026-02-25T07:07:35Z",
  *                                                   "Actor is not who they claim to be")
  *             .addReason("de",    "Akteur ist nicht wer er vorgibt zu sein")
  *             .addReason("fr-CH", "L'acteur n'est pas qui il prétend être")
+ *             .build()
  *     )
  *     .build();
  * }</pre>
@@ -42,7 +43,7 @@ public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> im
 
     private static final String TYP = "swiyu-non-compliance-trust-list-statement+jwt";
 
-    private final List<Map<String, Object>> nonCompliantActors = new ArrayList<>();
+    private final List<NonCompliantActor> nonCompliantActors = new ArrayList<>();
 
     /**
      * Creates a new {@code NcTlsBuilder} and sets the {@code typ} header to
@@ -73,14 +74,32 @@ public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> im
                 "statement does not identify a single subject");
     }
 
-    // ── Inner Builder ─────────────────────────────────────────────────────────
+    /**
+     * Immutable value object representing a single non-compliant actor entry.
+     * <p>
+     * Instances are created via {@link NonCompliantActorBuilder}.
+     * </p>
+     */
+    public static final class NonCompliantActor {
+
+        private final Map<String, Object> entry;
+
+        private NonCompliantActor(Map<String, Object> entry) {
+            this.entry = Map.copyOf(entry);
+        }
+
+        Map<String, Object> toMap() {
+            return entry;
+        }
+    }
 
     /**
-     * Fluent builder for a single {@code non_compliant_actors} entry.
+     * Fluent builder for a {@link NonCompliantActor}.
      * <p>
      * Construct with the required fields ({@code actor}, {@code flagged_at},
      * default {@code reason}) and optionally add localized reason variants via
-     * {@link #addReason(String, String)}.
+     * {@link #addReason(String, String)}. Call {@link #build()} to produce the
+     * immutable {@link NonCompliantActor}.
      * </p>
      */
     public static class NonCompliantActorBuilder {
@@ -150,35 +169,43 @@ public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> im
         }
 
         /**
-         * Returns the assembled entry map.
+         * Builds and returns an immutable {@link NonCompliantActor}.
          *
-         * @return an unmodifiable snapshot of the entry
+         * @return a new {@link NonCompliantActor} containing all configured fields
          */
-        Map<String, Object> build() {
-            return new LinkedHashMap<>(entry);
+        public NonCompliantActor build() {
+            return new NonCompliantActor(entry);
         }
     }
 
     // ── Builder methods ───────────────────────────────────────────────────────
 
     /**
-     * Adds a non-compliant actor entry to the trust list using a
-     * {@link NonCompliantActorBuilder}.
+     * Adds a non-compliant actor entry to the trust list.
      * <p>
+     * Create the actor via {@link NonCompliantActorBuilder}:
+     * <pre>{@code
+     * .addNonCompliantActor(
+     *     new NcTlsBuilder.NonCompliantActorBuilder(did, flaggedAt, reason)
+     *         .addReason("de", "Akteur ist nicht wer er vorgibt zu sein")
+     *         .build()
+     * )
+     * }</pre>
      * Multiple actors may be added by calling this method repeatedly.
      * </p>
      *
-     * @param actorBuilder the fully configured actor builder, must not be {@code null}
+     * @param actor the fully built {@link NonCompliantActor}, must not be {@code null}
      * @return this builder for fluent chaining
-     * @throws TrustStatementValidationException if {@code actorBuilder} is {@code null}
+     * @throws TrustStatementValidationException if {@code actor} is {@code null}
      */
-    public NcTlsBuilder addNonCompliantActor(NonCompliantActorBuilder actorBuilder) {
-        if (actorBuilder == null) {
-            throw new TrustStatementValidationException(
-                    "actorBuilder must not be null");
+    public NcTlsBuilder addNonCompliantActor(NonCompliantActor actor) {
+        if (actor == null) {
+            throw new TrustStatementValidationException("actor must not be null");
         }
-        nonCompliantActors.add(actorBuilder.build());
-        claim("non_compliant_actors", nonCompliantActors);
+        nonCompliantActors.add(actor);
+        claim("non_compliant_actors", nonCompliantActors.stream()
+                .map(NonCompliantActor::toMap)
+                .toList());
         return self();
     }
 
@@ -196,9 +223,7 @@ public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> im
     @Override
     protected void validateSubclass(JWTClaimsSet claims) {
         validateRequired(claims, "status", "status payload claim is required – call withStatus()");
-        if (nonCompliantActors.isEmpty()) {
-            throw new TrustStatementValidationException(
-                    "at least one non_compliant_actors entry is required – call addNonCompliantActor()");
-        }
+        validateRequired(claims, "non_compliant_actors",
+                "at least one non_compliant_actors entry is required – call addNonCompliantActor()");
     }
 }

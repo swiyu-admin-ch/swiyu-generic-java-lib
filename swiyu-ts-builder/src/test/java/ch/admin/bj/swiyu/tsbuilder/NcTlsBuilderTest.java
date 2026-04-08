@@ -31,8 +31,8 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class NcTlsBuilderTest {
 
-    private static final String VALID_KID       = "did:example:trust-issuer#key-1";
-    private static final String VALID_ACTOR_DID = "did:example:badActor";
+    private static final String VALID_KID       = "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRAA1:identifier.admin.ch:api:v1:did#assert-key-01";
+    private static final String VALID_ACTOR_DID = "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRBB1:identifier.admin.ch:api:v1:did";
     private static final String VALID_FLAGGED_AT = "2026-02-25T07:07:35Z";
     private static final String VALID_REASON    = "The issuer is not who they claim to be";
     private static final Instant IAT            = Instant.ofEpochSecond(1690360968L);
@@ -48,7 +48,7 @@ class NcTlsBuilderTest {
                 .withStatus(0, "https://example.com/statuslists/1")
                 .addNonCompliantActor(
                         new NcTlsBuilder.NonCompliantActorBuilder(
-                                VALID_ACTOR_DID, VALID_FLAGGED_AT, VALID_REASON));
+                                VALID_ACTOR_DID, VALID_FLAGGED_AT, VALID_REASON).build());
     }
 
     // ── Header claims ─────────────────────────────────────────────────────────
@@ -105,7 +105,7 @@ class NcTlsBuilderTest {
     @Test
     void withSubject_always_throwsValidationException() {
         assertThrows(TrustStatementValidationException.class,
-                () -> new NcTlsBuilder().withSubject("did:example:actor"),
+                () -> new NcTlsBuilder().withSubject(VALID_ACTOR_DID),
                 "sub is not supported for ncTLS and must always throw");
     }
 
@@ -210,7 +210,8 @@ class NcTlsBuilderTest {
                                 .addReason("en",    "The issuer is not who they claim to be (EN)")
                                 .addReason("fr-CH", "The issuer is not who they claim to be (FR)")
                                 .addReason("it-CH", "The issuer is not who they claim to be (IT)")
-                                .addReason("rm-CH", "The issuer is not who they claim to be (RM)"))
+                                .addReason("rm-CH", "The issuer is not who they claim to be (RM)")
+                                .build())
                 .build();
 
         List<Map<String, Object>> actors =
@@ -233,16 +234,16 @@ class NcTlsBuilderTest {
                 .withValidity(IAT, EXP)
                 .withStatus(0, "https://example.com/statuslists/1")
                 .addNonCompliantActor(new NcTlsBuilder.NonCompliantActorBuilder(
-                        "did:example:badActor1", "2026-02-25T07:07:35Z", "Reason 1"))
+                        "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRCC1:identifier.admin.ch:api:v1:did", "2026-02-25T07:07:35Z", "Reason 1").build())
                 .addNonCompliantActor(new NcTlsBuilder.NonCompliantActorBuilder(
-                        "did:example:badActor2", "2025-01-13T07:13:00Z", "Reason 2"))
+                        "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRDD1:identifier.admin.ch:api:v1:did", "2025-01-13T07:13:00Z", "Reason 2").build())
                 .build();
 
         List<Map<String, Object>> actors =
                 (List<Map<String, Object>>) jwt.getClaimsSet().getClaims().get("non_compliant_actors");
         assertEquals(2, actors.size());
-        assertEquals("did:example:badActor1", actors.get(0).get("actor"));
-        assertEquals("did:example:badActor2", actors.get(1).get("actor"));
+        assertEquals("did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRCC1:identifier.admin.ch:api:v1:did", actors.get(0).get("actor"));
+        assertEquals("did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRDD1:identifier.admin.ch:api:v1:did", actors.get(1).get("actor"));
         assertEquals("2026-02-25T07:07:35Z",  actors.get(0).get("flagged_at"));
         assertEquals("2025-01-13T07:13:00Z",  actors.get(1).get("flagged_at"));
     }
@@ -255,7 +256,7 @@ class NcTlsBuilderTest {
                 .withValidity(IAT, EXP)
                 .withStatus(0, "https://example.com/statuslists/1")
                 .addNonCompliantActor(new NcTlsBuilder.NonCompliantActorBuilder(
-                        VALID_ACTOR_DID, VALID_FLAGGED_AT, VALID_REASON));
+                        VALID_ACTOR_DID, VALID_FLAGGED_AT, VALID_REASON).build());
 
         assertThrows(TrustStatementValidationException.class, builder::build);
     }
@@ -266,7 +267,7 @@ class NcTlsBuilderTest {
                 .withKid(VALID_KID)
                 .withStatus(0, "https://example.com/statuslists/1")
                 .addNonCompliantActor(new NcTlsBuilder.NonCompliantActorBuilder(
-                        VALID_ACTOR_DID, VALID_FLAGGED_AT, VALID_REASON));
+                        VALID_ACTOR_DID, VALID_FLAGGED_AT, VALID_REASON).build());
 
         assertThrows(TrustStatementValidationException.class, builder::build);
     }
@@ -277,7 +278,7 @@ class NcTlsBuilderTest {
                 .withKid(VALID_KID)
                 .withValidity(IAT, EXP)
                 .addNonCompliantActor(new NcTlsBuilder.NonCompliantActorBuilder(
-                        VALID_ACTOR_DID, VALID_FLAGGED_AT, VALID_REASON));
+                        VALID_ACTOR_DID, VALID_FLAGGED_AT, VALID_REASON).build());
 
         assertThrows(TrustStatementValidationException.class, builder::build);
     }

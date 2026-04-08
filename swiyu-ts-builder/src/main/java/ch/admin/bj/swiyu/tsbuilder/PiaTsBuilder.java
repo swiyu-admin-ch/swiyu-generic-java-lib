@@ -21,8 +21,8 @@ import java.util.Map;
 public class PiaTsBuilder extends AbstractTrustStatementBuilder<PiaTsBuilder> implements TrustStatement {
 
     private static final String TYP = "swiyu-protected-issuance-authorization-trust-statement+jwt";
-    private static final int MAX_VCT_NAME_LENGTH = 500;
-    private static final int MAX_REASON_LENGTH = 50;
+    private static final int MAX_VCT_NAME_LENGTH = 500; // defined in Trust Protocol 2.0
+    private static final int MAX_REASON_LENGTH = 50; // defined in Trust Protocol 2.0
 
     /**
      * Creates a new {@code PiaTsBuilder} and sets the {@code typ} header to

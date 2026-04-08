@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Abstract base class for all Trust Statement builders.
@@ -41,6 +42,15 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
     private static final String NOT_BEFORE = "notBefore";
     private static final String ISSUED_AT = "issuedAt";
     private static final String EXPIRES_AT = "expiresAt";
+
+    private static final Pattern DID_PATTERN =
+            Pattern.compile(
+                    "^did:(webvh|tdw):Q[1-9a-zA-NP-Z]{45,}(:[0-9a-zA-Z%_.-]+)++$");
+
+    private static final Pattern KID_PATTERN =
+            Pattern.compile(
+                    "^did:(webvh|tdw):Q[1-9a-zA-NP-Z]{45,}(:[0-9a-zA-Z%_.-]+)++#[0-9a-zA-Z_-]+$");
+
 
     /**
      * Nimbus header builder – accumulates header claims set by this builder and subclasses.
@@ -92,22 +102,25 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
     /**
      * Sets the {@code kid} protected header claim.
      * <p>
-     * The value MUST be an absolute DID with a key reference fragment
-     * (e.g. {@code did:tdw:QmZytP...#assert-key-01}).
+     * The value MUST be an absolute DID with a valid SCID and a key reference fragment,
+     * accepted by the swiyu DID resolver (e.g. {@code did:tdw:QmZytP...#assert-key-01}).
+     * Only {@code did:tdw} and {@code did:webvh} methods are supported.
      * </p>
      *
      * @param kid the absolute DID key reference, must not be {@code null} or blank
      * @return this builder for fluent chaining
-     * @throws TrustStatementValidationException if {@code kid} does not start with {@code did:}
-     *                                           or contains no {@code #} key reference fragment
+     * @throws TrustStatementValidationException if {@code kid} is blank or does not match
+     *                                           the expected DID format with SCID and key fragment
      */
+
     public T withKid(String kid) {
         if (kid == null || kid.isBlank()) {
             throw new TrustStatementValidationException("kid must not be null or blank");
         }
-        if (!kid.startsWith("did:") || !kid.contains("#")) {
+        if (!KID_PATTERN.matcher(kid).matches()) {
             throw new TrustStatementValidationException(
-                    "kid must be an absolute DID with a key reference fragment (e.g. did:tdw:...#key-1), got: " + kid);
+                    "kid must be an absolute DID (did:tdw or did:webvh) with a valid SCID and key reference fragment " +
+                    "(e.g. did:tdw:QmZyt...#key-1), got: " + kid);
         }
         headerBuilder.keyID(kid);
         return self();
@@ -367,20 +380,21 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
     }
 
     /**
-     * Validates that the given value is a syntactically valid DID (starts with {@code did:}).
+     * Validates that the given value is a syntactically valid swiyu DID
+     * ({@code did:tdw} or {@code did:webvh} with a valid SCID and path segments).
      *
      * @param did       the DID value to validate
      * @param claimName the claim name used in the error message
-     * @throws TrustStatementValidationException if {@code did} is blank or does not start with
-     *                                           {@code did:}
+     * @throws TrustStatementValidationException if {@code did} is blank or does not match
+     *                                           the expected DID format
      */
     protected void validateDid(String did, String claimName) {
         if (did == null || did.isBlank()) {
             throw new TrustStatementValidationException(claimName + " must not be null or blank");
         }
-        if (!did.startsWith("did:")) {
+        if (!DID_PATTERN.matcher(did).matches()) {
             throw new TrustStatementValidationException(
-                    claimName + " must be a valid DID starting with 'did:', got: " + did);
+                    claimName + " must be a valid swiyu DID (did:tdw or did:webvh with SCID), got: " + did);
         }
     }
 

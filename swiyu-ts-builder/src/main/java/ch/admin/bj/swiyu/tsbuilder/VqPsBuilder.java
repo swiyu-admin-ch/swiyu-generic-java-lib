@@ -24,9 +24,6 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> impl
     private static final int MAX_PURPOSE_NAME_LENGTH = 50;
     private static final int MAX_PURPOSE_DESC_LENGTH = 500;
 
-    private boolean hasPurposeName = false;
-    private boolean hasPurposeDesc = false;
-
     /**
      * Creates a new {@code VqPsBuilder} and sets the {@code typ} header to
      * {@code swiyu-verification-query-public-statement+jwt}.
@@ -44,18 +41,24 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> impl
     }
 
     /**
-     * Adds a default (non-localized) purpose name claim.
+     * Adds a non-localized purpose name claim.
      * <p>
      * Serialized as {@code "purpose_name": "<name>"} in the JWT payload.
      * The name must not exceed 50 characters.
+     * Use {@link #addPurposeName(String, String)} to add additional localized variants.
      * </p>
      *
      * @param name the purpose name, max 50 characters, must not be {@code null} or blank
      * @return this builder for fluent chaining
-     * @throws TrustStatementValidationException if {@code name} exceeds 50 characters
+     * @throws TrustStatementValidationException if {@code name} is blank or exceeds 50 characters
      */
     public VqPsBuilder addPurposeName(String name) {
-        return addPurposeName(null, name);
+        if (name == null || name.isBlank()) {
+            throw new TrustStatementValidationException("purpose_name must not be null or blank");
+        }
+        validateMaxLength(name, MAX_PURPOSE_NAME_LENGTH, "purpose_name");
+        claim("purpose_name", name);
+        return self();
     }
 
     /**
@@ -65,34 +68,46 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> impl
      * The name must not exceed 50 characters.
      * </p>
      *
-     * @param locale the BCP 47 language tag, must not be {@code null} or blank
-     * @param name   the purpose name in the given locale, max 50 characters
+     * @param locale the BCP 47 language tag (e.g. {@code de-CH}, {@code fr}),
+     *               must not be {@code null} or blank
+     * @param name   the purpose name in the given locale, max 50 characters,
+     *               must not be {@code null} or blank
      * @return this builder for fluent chaining
-     * @throws TrustStatementValidationException if {@code name} exceeds 50 characters
+     * @throws TrustStatementValidationException if {@code locale} or {@code name} is blank,
+     *                                           or {@code name} exceeds 50 characters
      */
     public VqPsBuilder addPurposeName(String locale, String name) {
+        if (locale == null || locale.isBlank()) {
+            throw new TrustStatementValidationException(
+                    "locale must not be null or blank – use addPurposeName(String name) for a non-localized purpose name");
+        }
         if (name == null || name.isBlank()) {
             throw new TrustStatementValidationException("purpose_name must not be null or blank");
         }
         validateMaxLength(name, MAX_PURPOSE_NAME_LENGTH, "purpose_name");
         claim(localizedKey("purpose_name", locale), name);
-        hasPurposeName = true;
         return self();
     }
 
     /**
-     * Adds a default (non-localized) purpose description claim.
+     * Adds a non-localized purpose description claim.
      * <p>
      * Serialized as {@code "purpose_description": "<desc>"} in the JWT payload.
      * The description must not exceed 500 characters.
+     * Use {@link #addPurposeDesc(String, String)} to add additional localized variants.
      * </p>
      *
      * @param desc the purpose description, max 500 characters, must not be {@code null} or blank
      * @return this builder for fluent chaining
-     * @throws TrustStatementValidationException if {@code desc} exceeds 500 characters
+     * @throws TrustStatementValidationException if {@code desc} is blank or exceeds 500 characters
      */
     public VqPsBuilder addPurposeDesc(String desc) {
-        return addPurposeDesc(null, desc);
+        if (desc == null || desc.isBlank()) {
+            throw new TrustStatementValidationException("purpose_description must not be null or blank");
+        }
+        validateMaxLength(desc, MAX_PURPOSE_DESC_LENGTH, "purpose_description");
+        claim("purpose_description", desc);
+        return self();
     }
 
     /**
@@ -102,18 +117,24 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> impl
      * The description must not exceed 500 characters.
      * </p>
      *
-     * @param locale the BCP 47 language tag, must not be {@code null} or blank
-     * @param desc   the purpose description in the given locale, max 500 characters
+     * @param locale the BCP 47 language tag (e.g. {@code de-CH}, {@code fr}),
+     *               must not be {@code null} or blank
+     * @param desc   the purpose description in the given locale, max 500 characters,
+     *               must not be {@code null} or blank
      * @return this builder for fluent chaining
-     * @throws TrustStatementValidationException if {@code desc} exceeds 500 characters
+     * @throws TrustStatementValidationException if {@code locale} or {@code desc} is blank,
+     *                                           or {@code desc} exceeds 500 characters
      */
     public VqPsBuilder addPurposeDesc(String locale, String desc) {
+        if (locale == null || locale.isBlank()) {
+            throw new TrustStatementValidationException(
+                    "locale must not be null or blank – use addPurposeDesc(String desc) for a non-localized purpose description");
+        }
         if (desc == null || desc.isBlank()) {
             throw new TrustStatementValidationException("purpose_description must not be null or blank");
         }
         validateMaxLength(desc, MAX_PURPOSE_DESC_LENGTH, "purpose_description");
         claim(localizedKey("purpose_description", locale), desc);
-        hasPurposeDesc = true;
         return self();
     }
 
@@ -261,14 +282,21 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> impl
     protected void validateSubclass(JWTClaimsSet claims) {
         validateRequired(claims, "sub", "sub (subject) payload claim is required");
         validateRequired(claims, "jti", "jti payload claim is required – call withJti()");
+
+        boolean hasPurposeName = claims.getClaims().keySet().stream()
+                .anyMatch(k -> k.equals("purpose_name") || k.startsWith("purpose_name#"));
         if (!hasPurposeName) {
             throw new TrustStatementValidationException(
                     "at least one purpose_name claim is required – call addPurposeName()");
         }
+
+        boolean hasPurposeDesc = claims.getClaims().keySet().stream()
+                .anyMatch(k -> k.equals("purpose_description") || k.startsWith("purpose_description#"));
         if (!hasPurposeDesc) {
             throw new TrustStatementValidationException(
                     "at least one purpose_description claim is required – call addPurposeDesc()");
         }
+
         validateRequired(claims, "request", "request payload claim is required – call withRequest()");
     }
 }

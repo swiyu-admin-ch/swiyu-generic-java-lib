@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class PiTlsBuilderTest {
 
-    private static final String VALID_KID = "did:example:trust-issuer#key-1";
+    private static final String VALID_KID = "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRAA1:identifier.admin.ch:api:v1:did#assert-key-01";
     private static final String VALID_JTI = "07f289d5-8b1f-4604-bf72-53bdcb71ee05";
 
     private static final Instant IAT = Instant.ofEpochSecond(1690360968L);
@@ -84,7 +84,7 @@ class PiTlsBuilderTest {
     @Test
     void withSubject_always_throwsValidationException() {
         assertThrows(TrustStatementValidationException.class,
-                () -> new NcTlsBuilder().withSubject("did:example:actor"),
+                () -> new NcTlsBuilder().withSubject("did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRBB1:identifier.admin.ch:api:v1:did"),
                 "sub is not supported for ncTLS and must always throw");
     }
 

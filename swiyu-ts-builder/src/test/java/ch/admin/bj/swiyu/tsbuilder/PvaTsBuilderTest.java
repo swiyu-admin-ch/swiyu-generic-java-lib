@@ -18,8 +18,8 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class PvaTsBuilderTest {
 
-    private static final String VALID_KID     = "did:tdw:example.ch:verifier#assert-key-01";
-    private static final String VALID_SUBJECT = "did:tdw:example.ch:verifier";
+    private static final String VALID_KID     = "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRAA1:identifier.admin.ch:api:v1:did#assert-key-01";
+    private static final String VALID_SUBJECT = "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRBB1:identifier.admin.ch:api:v1:did";
     private static final String VALID_JTI     = "550e8400-e29b-41d4-a716-446655440000";
     private static final Instant IAT          = Instant.ofEpochSecond(1690360968L);
     private static final Instant EXP          = Instant.ofEpochSecond(1753432968L);

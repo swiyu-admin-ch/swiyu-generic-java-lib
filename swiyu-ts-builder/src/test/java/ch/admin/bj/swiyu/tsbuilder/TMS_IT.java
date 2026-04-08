@@ -55,10 +55,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class TMS_IT {
 
-    private static final String KID = "did:tdw:example.ch:trust-issuer#assert-key-01";
-    private static final String SUBJECT_DID = "did:example:actor";
-    private static final String VERIFIER_DID = "did:example:verifier";
-    private static final String ISSUER_DID = "did:example:issuer";
+    private static final String KID          = "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRAA1:identifier.admin.ch:api:v1:did#assert-key-01";
+    private static final String SUBJECT_DID  = "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRBB1:identifier.admin.ch:api:v1:did";
+    private static final String VERIFIER_DID = "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRCC1:identifier.admin.ch:api:v1:did";
+    private static final String ISSUER_DID   = "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRDD1:identifier.admin.ch:api:v1:did";
 
     private static JwsSignatureService jwsSignatureService;
     private static SignatureConfigurationDto signatureConfig;
@@ -202,10 +202,10 @@ class TMS_IT {
                 .withStatus(0, "https://example.com/statuslists/1")
                 .addNonCompliantActor(
                         new NcTlsBuilder.NonCompliantActorBuilder(
-                                "did:example:badActor",
+                                "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RREE1:identifier.admin.ch:api:v1:did",
                                 "2026-02-25T07:07:35Z",
                                 "Actor is not who they claim to be"
-                        )
+                        ).build()
                 )
                 .build();
 

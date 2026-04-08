@@ -7,13 +7,15 @@ import com.nimbusds.jwt.JWTClaimsSet;
  * Represents an unsigned Trust Statement JWT, consisting of a Nimbus {@link JWSHeader}
  * and a Nimbus {@link JWTClaimsSet}.
  * <p>
- * This class acts as the product of the builder pipeline. It is a thin, immutable wrapper
- * around the two Nimbus types that together form an unsigned JWT, ready to be signed by a
- * {@code JWSSigner}.
+ * This class is the product of the builder pipeline. It is a thin, immutable wrapper
+ * around the two Nimbus types that together form an unsigned JWT ready to be signed.
+ * Its practical advantage over returning a {@link com.nimbusds.jwt.SignedJWT} directly
+ * is that {@link #getClaimsSet()} does not throw a checked {@link java.text.ParseException},
+ * because the claims set is known at construction time and never needs to be re-parsed.
  * </p>
  * <p>
- * External consumers sign the statement by constructing a {@link com.nimbusds.jwt.SignedJWT}
- * directly from the exposed header and claims:
+ * Sign the statement by constructing a {@link com.nimbusds.jwt.SignedJWT} from the
+ * exposed header and claims:
  * </p>
  * <pre>{@code
  * TrustStatementJwt ts = new IdTsBuilder()...build();
