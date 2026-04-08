@@ -76,7 +76,7 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> impl
      * @throws TrustStatementValidationException if {@code locale} or {@code name} is blank,
      *                                           or {@code name} exceeds 50 characters
      */
-    public VqPsBuilder addPurposeName(String locale, String name) {
+    public VqPsBuilder addPurposeName(String name, String locale) {
         if (locale == null || locale.isBlank()) {
             throw new TrustStatementValidationException(
                     "locale must not be null or blank – use addPurposeName(String name) for a non-localized purpose name");
@@ -125,7 +125,7 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> impl
      * @throws TrustStatementValidationException if {@code locale} or {@code desc} is blank,
      *                                           or {@code desc} exceeds 500 characters
      */
-    public VqPsBuilder addPurposeDesc(String locale, String desc) {
+    public VqPsBuilder addPurposeDesc(String desc, String locale) {
         if (locale == null || locale.isBlank()) {
             throw new TrustStatementValidationException(
                     "locale must not be null or blank – use addPurposeDesc(String desc) for a non-localized purpose description");

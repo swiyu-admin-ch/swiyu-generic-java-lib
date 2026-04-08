@@ -75,7 +75,7 @@ public class IdTsBuilder extends AbstractTrustStatementBuilder<IdTsBuilder> impl
      * @return this builder for fluent chaining
      * @throws TrustStatementValidationException if {@code locale} or {@code name} is blank
      */
-    public IdTsBuilder addEntityName(String locale, String name) {
+    public IdTsBuilder addEntityName( String name, String locale) {
         if (locale == null || locale.isBlank()) {
             throw new TrustStatementValidationException(
                     "locale must not be null or blank – use addEntityName(String name) for a non-localized entity name");

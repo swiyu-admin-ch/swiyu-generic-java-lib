@@ -136,7 +136,7 @@ class IdTsBuilderTest {
         SignedJWT jwt = new IdTsBuilder()
                 .withKid(VALID_KID).withSubject(VALID_SUBJECT)
                 .withValidity(IAT, EXP).withStatus(0, "https://example.com/statuslists/1")
-                .addEntityName("de", "John Smith's Schmiderei")
+                .addEntityName( "John Smith's Schmiderei", "de")
                 .withIsStateActor(false)
                 .addRegistryId("UID", "CHE-000.000.000")
                 .build();
@@ -150,8 +150,8 @@ class IdTsBuilderTest {
                 .withKid(VALID_KID).withSubject(VALID_SUBJECT)
                 .withValidity(IAT, EXP).withStatus(0, "https://example.com/statuslists/1")
                 .addEntityName("John Smith's Smithery")
-                .addEntityName("de", "John Smith's Schmiderei")
-                .addEntityName("de-CH", "John Smith's Schmiderei")
+                .addEntityName( "John Smith's Schmiderei", "de")
+                .addEntityName("John Smith's Schmiderei", "de-CH")
                 .withIsStateActor(false)
                 .addRegistryId("UID", "CHE-000.000.000")
                 .build();
@@ -342,7 +342,7 @@ class IdTsBuilderTest {
     @Test
     void addEntityName_blankLocalizedName_throwsValidationException() {
         assertThrows(TrustStatementValidationException.class,
-                () -> new IdTsBuilder().addEntityName("de-CH", "  "));
+                () -> new IdTsBuilder().addEntityName( "  ", "de-CH"));
     }
 
     @Test

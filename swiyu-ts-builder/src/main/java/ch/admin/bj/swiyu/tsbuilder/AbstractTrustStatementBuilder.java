@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 /**
@@ -114,7 +115,7 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      *                                           the expected DID format with SCID and key fragment
      */
 
-    public T withKid(String kid) {
+    protected T withKid(String kid) {
         if (kid == null || kid.isBlank()) {
             throw new TrustStatementValidationException("kid must not be null or blank");
         }
@@ -137,7 +138,7 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * @return this builder for fluent chaining
      * @throws TrustStatementValidationException if {@code subject} does not start with {@code did:}
      */
-    public T withSubject(String subject) {
+    protected T withSubject(String subject) {
         validateDid(subject, "sub");
         claimsBuilder.subject(subject);
         return self();
@@ -158,7 +159,7 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * @return this builder for fluent chaining
      * @throws TrustStatementValidationException if {@code expiresAt} is before {@code issuedAt}
      */
-    public T withValidity(Instant issuedAt, Instant expiresAt) {
+    protected T withValidity(Instant issuedAt, Instant expiresAt) {
         return withValidity(issuedAt, issuedAt, expiresAt);
     }
 
@@ -179,7 +180,7 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * @return this builder for fluent chaining
      * @throws TrustStatementValidationException if temporal ordering constraints are violated
      */
-    public T withValidity(Instant issuedAt, Instant notBefore, Instant expiresAt) {
+    protected T withValidity(Instant issuedAt, Instant notBefore, Instant expiresAt) {
         validateInstantNotNull(issuedAt, ISSUED_AT);
         validateInstantNotNull(notBefore, NOT_BEFORE);
         validateInstantNotNull(expiresAt, EXPIRES_AT);
@@ -411,7 +412,13 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
         if (uuid == null || uuid.isBlank()) {
             throw new TrustStatementValidationException(claimName + " must not be null or blank");
         }
-        if (!uuid.matches("[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}")) {
+        try {
+            UUID parsed = UUID.fromString(uuid);
+            if (parsed.version() != 4) {
+                throw new TrustStatementValidationException(
+                        claimName + " must be a UUIDv4 (RFC 9562), got version " + parsed.version() + ": " + uuid);
+            }
+        } catch (IllegalArgumentException e) {
             throw new TrustStatementValidationException(
                     claimName + " must be a valid UUIDv4 (RFC 9562), got: " + uuid);
         }

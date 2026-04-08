@@ -130,7 +130,7 @@ class VqPsBuilderTest {
         SignedJWT jwt = new VqPsBuilder()
                 .withKid(VALID_KID).withSubject(VALID_SUBJECT)
                 .withValidity(IAT, EXP).withJti(VALID_JTI)
-                .addPurposeName("de-ch", "beispiel abfrage")
+                .addPurposeName("beispiel abfrage", "de-ch")
                 .addPurposeDesc("frage ab zum beispiel")
                 .withRequest(VALID_SCOPE, validDcqlQuery())
                 .build();
@@ -144,8 +144,8 @@ class VqPsBuilderTest {
                 .withKid(VALID_KID).withSubject(VALID_SUBJECT)
                 .withValidity(IAT, EXP).withJti(VALID_JTI)
                 .addPurposeName("Age verification")
-                .addPurposeName("de-CH", "Altersnachweis")
-                .addPurposeName("fr-CH", "Vérification de l'âge")
+                .addPurposeName("Altersnachweis", "de-CH")
+                .addPurposeName( "Vérification de l'âge", "fr-CH")
                 .addPurposeDesc("Checks whether the requesting person is of legal age.")
                 .withRequest(VALID_SCOPE, validDcqlQuery())
                 .build();
@@ -173,7 +173,7 @@ class VqPsBuilderTest {
                 .withKid(VALID_KID).withSubject(VALID_SUBJECT)
                 .withValidity(IAT, EXP).withJti(VALID_JTI)
                 .addPurposeName("Age verification")
-                .addPurposeDesc("de-ch", "frage ab zum beispiel")
+                .addPurposeDesc("frage ab zum beispiel", "de-ch")
                 .withRequest(VALID_SCOPE, validDcqlQuery())
                 .build();
         assertEquals("frage ab zum beispiel", jwt.getJWTClaimsSet().getClaims().get("purpose_description#de-ch"));
@@ -315,7 +315,7 @@ class VqPsBuilderTest {
     void addPurposeName_localizedExceedsMaxLength_throwsValidationException() {
         String name51 = "A".repeat(51);
         assertThrows(TrustStatementValidationException.class,
-                () -> new VqPsBuilder().addPurposeName("de-CH", name51));
+                () -> new VqPsBuilder().addPurposeName( name51,"de-CH"));
     }
     @Test
     void addPurposeName_blankValue_throwsValidationException() {
