@@ -9,7 +9,7 @@ It provides a type-safe, fluent builder API for all Trust Statement types define
 - **Statement categories**: Builders are categorised as `TrustStatement`, `PublicStatement` or `TrustListStatement` via marker interfaces
 - **All swiyu Trust Statement types**: Ready-to-use builders for `idTS`, `vqPS`, `pvaTS`, `piaTS`, `piTLS`, and `ncTLS`
 - **Validation**: Built-in constraint enforcement (UUID v4, RFC 3339 timestamps, max-length checks, non-empty list guards) – fail-fast in setters, complete validation before object construction
-- **Signing agnostic**: Produces an unsigned `TrustStatementJwt` (header + claims) – signing is delegated to a `JWSSigner` of your choice (e.g. HSM, software key)
+- **Signing agnostic**: Produces an unsigned Nimbus `SignedJWT` (header + claims) – signing is delegated to a `JWSSigner` of your choice (e.g. HSM, software key)
 - **No framework dependency**: Pure Java 21, no Spring Boot required
 
 ## Installation
@@ -38,17 +38,16 @@ It provides a type-safe, fluent builder API for all Trust Statement types define
 
 ### Signing the result
 
-All builders return an unsigned `TrustStatementJwt` containing a Nimbus `JWSHeader` and `JWTClaimsSet`.
-Pass both to a `SignedJWT` and sign with a `JWSSigner` of your choice:
+All builders return an unsigned Nimbus [`SignedJWT`](https://www.javadoc.io/doc/com.nimbusds/nimbus-jose-jwt/latest/com/nimbusds/jwt/SignedJWT.html)
+in `UNSIGNED` state. Sign it with a `JWSSigner` of your choice:
 
 ```java
-TrustStatementJwt ts = new IdTsBuilder()
+SignedJWT ts = new IdTsBuilder()
         // ... configure ...
         .build();
 
-SignedJWT signed = new SignedJWT(ts.getJwsHeader(), ts.getClaimsSet());
-signed.sign(mySigner); // JWSSigner – HSM, software key, etc.
-String compactJws = signed.serialize();
+ts.sign(mySigner); // JWSSigner – HSM, software key, etc.
+String compactJws = ts.serialize();
 ```
 
 ---
@@ -56,9 +55,9 @@ String compactJws = signed.serialize();
 ### Identity Trust Statement (idTS)
 
 ```java
-TrustStatementJwt ts = new IdTsBuilder()
-        .withKid("did:tdw:example.ch:issuer-1#assert-key-01")
-        .withSubject("did:tdw:example.ch:issuer-1")
+SignedJWT ts = new IdTsBuilder()
+        .withKid("did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRAA1:identifier.admin.ch:api:v1:did#assert-key-01")
+        .withSubject("did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRBB1:identifier.admin.ch:api:v1:did")
         .withValidity(Instant.now(), Instant.now().plus(365, ChronoUnit.DAYS))
         .withStatus(42, "https://status.example.ch/list/1")
         .addEntityName("Smithery AG")                           // default (no locale)
@@ -81,9 +80,9 @@ Map<String, Object> dcqlQuery = Map.of("credentials", List.of(
         )
 ));
 
-TrustStatementJwt ts = new VqPsBuilder()
-        .withKid("did:tdw:example.ch:verifier-1#assert-key-01")
-        .withSubject("did:tdw:example.ch:verifier-1")
+SignedJWT ts = new VqPsBuilder()
+        .withKid("did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRAA1:identifier.admin.ch:api:v1:did#assert-key-01")
+        .withSubject("did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRBB1:identifier.admin.ch:api:v1:did")
         .withValidity(Instant.now(), Instant.now().plus(365, ChronoUnit.DAYS))
         .withJti("550e8400-e29b-41d4-a716-446655440000")
         .addPurposeName("Age verification")                     // default
@@ -97,9 +96,9 @@ TrustStatementJwt ts = new VqPsBuilder()
 ### Protected Verification Authorization Trust Statement (pvaTS)
 
 ```java
-TrustStatementJwt ts = new PvaTsBuilder()
-        .withKid("did:tdw:example.ch:verifier-1#assert-key-01")
-        .withSubject("did:tdw:example.ch:verifier-1")
+SignedJWT ts = new PvaTsBuilder()
+        .withKid("did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRAA1:identifier.admin.ch:api:v1:did#assert-key-01")
+        .withSubject("did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRBB1:identifier.admin.ch:api:v1:did")
         .withValidity(Instant.now(), Instant.now().plus(365, ChronoUnit.DAYS))
         .withStatus(7, "https://status.example.ch/list/1")
         .withJti("550e8400-e29b-41d4-a716-446655440000")
@@ -110,9 +109,9 @@ TrustStatementJwt ts = new PvaTsBuilder()
 ### Protected Issuance Authorization Trust Statement (piaTS)
 
 ```java
-TrustStatementJwt ts = new PiaTsBuilder()
-        .withKid("did:tdw:example.ch:issuer-2#assert-key-01")
-        .withSubject("did:tdw:example.ch:issuer-2")
+SignedJWT ts = new PiaTsBuilder()
+        .withKid("did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRAA1:identifier.admin.ch:api:v1:did#assert-key-01")
+        .withSubject("did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRBB1:identifier.admin.ch:api:v1:did")
         .withValidity(Instant.now(), Instant.now().plus(365, ChronoUnit.DAYS))
         .withStatus(3, "https://status.example.ch/list/1")
         .withCanIssue(
@@ -125,8 +124,8 @@ TrustStatementJwt ts = new PiaTsBuilder()
 ### Protected Issuance Trust List Statement (piTLS)
 
 ```java
-TrustStatementJwt ts = new PiTlsBuilder()
-        .withKid("did:tdw:example.ch:registry#assert-key-01")
+SignedJWT ts = new PiTlsBuilder()
+        .withKid("did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRAA1:identifier.admin.ch:api:v1:did#assert-key-01")
         .withValidity(Instant.now(), Instant.now().plus(365, ChronoUnit.DAYS))
         .withStatus(99, "https://status.example.ch/list/1")
         .withJti("550e8400-e29b-41d4-a716-446655440000")
@@ -139,17 +138,18 @@ TrustStatementJwt ts = new PiTlsBuilder()
 ### Non-Compliance Trust List Statement (ncTLS)
 
 ```java
-TrustStatementJwt ts = new NcTlsBuilder()
-        .withKid("did:tdw:example.ch:registry#assert-key-01")
+SignedJWT ts = new NcTlsBuilder()
+        .withKid("did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRAA1:identifier.admin.ch:api:v1:did#assert-key-01")
         .withValidity(Instant.now(), Instant.now().plus(1, ChronoUnit.DAYS))
         .withStatus(5, "https://status.example.ch/list/1")
         .addNonCompliantActor(
                 new NcTlsBuilder.NonCompliantActorBuilder(
-                        "did:tdw:example.ch:bad-actor",
+                        "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRCC1:identifier.admin.ch:api:v1:did",
                         "2026-02-25T07:07:35Z",
                         "Revoked due to policy violation")
                         .addReason("de", "Widerrufen wegen Richtlinienverstoß")
-                        .addReason("fr-CH", "Révoqué en raison d'une violation de politique"))
+                        .addReason("fr-CH", "Révoqué en raison d'une violation de politique")
+                        .build())
         .build();
 ```
 
@@ -170,11 +170,11 @@ TrustStatementJwt ts = new NcTlsBuilder()
 ## Error Handling
 
 All validation is unchecked and thrown as `TrustStatementValidationException`. Errors are thrown fail-fast
-in setters where possible, and at the latest during `build()` before the `TrustStatementJwt` is constructed:
+in setters where possible, and at the latest during `build()` before the `SignedJWT` is constructed:
 
 ```java
 try {
-    TrustStatementJwt ts = new IdTsBuilder().build(); // missing kid, validity, ... → exception
+    SignedJWT ts = new IdTsBuilder().build(); // missing kid, validity, ... → exception
 } catch (TrustStatementValidationException e) {
     log.error("Trust statement validation failed: {}", e.getMessage());
 }

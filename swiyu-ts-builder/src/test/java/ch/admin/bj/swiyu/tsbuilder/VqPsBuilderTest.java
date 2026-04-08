@@ -1,5 +1,8 @@
 package ch.admin.bj.swiyu.tsbuilder;
+import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.Test;
+
+import java.text.ParseException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -59,85 +62,85 @@ class VqPsBuilderTest {
     // ── Header claims ─────────────────────────────────────────────────────────
     @Test
     void build_validInput_headerContainsTypVqPs() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals("swiyu-verification-query-public-statement+jwt", jwt.getJwsHeader().getType().getType());
+        SignedJWT jwt = validBuilder().build();
+        assertEquals("swiyu-verification-query-public-statement+jwt", jwt.getHeader().getType().getType());
     }
     @Test
     void build_validInput_headerContainsAlgES256() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals("ES256", jwt.getJwsHeader().getAlgorithm().getName());
+        SignedJWT jwt = validBuilder().build();
+        assertEquals("ES256", jwt.getHeader().getAlgorithm().getName());
     }
     @Test
     void build_validInput_headerContainsKid() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(VALID_KID, jwt.getJwsHeader().getKeyID());
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(VALID_KID, jwt.getHeader().getKeyID());
     }
     @Test
     void build_validInput_headerContainsProfileVersion() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals("swiss-profile-trust:1.0.0", jwt.getJwsHeader().getCustomParam("profile_version"));
+        SignedJWT jwt = validBuilder().build();
+        assertEquals("swiss-profile-trust:1.0.0", jwt.getHeader().getCustomParam("profile_version"));
     }
     // ── Payload – iss MUST NOT be present (TP2: iss no longer supported) ────────
     @Test
-    void build_validInput_payloadDoesNotContainIss() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertFalse(jwt.getClaimsSet().getClaim("iss") != null,
+    void build_validInput_payloadDoesNotContainIss() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertFalse(jwt.getJWTClaimsSet().getClaim("iss") != null,
                 "iss must not be present – TP2 removes iss in favour of kid header");
     }
     // ── Payload – standard claims ──────────────────────────────────────────────
     @Test
-    void build_validInput_payloadContainsSub() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(VALID_SUBJECT, jwt.getClaimsSet().getSubject());
+    void build_validInput_payloadContainsSub() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(VALID_SUBJECT, jwt.getJWTClaimsSet().getSubject());
     }
     @Test
-    void build_validInput_payloadContainsIatAsEpochSeconds() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(1690360968L, jwt.getClaimsSet().getIssueTime().toInstant().getEpochSecond());
+    void build_validInput_payloadContainsIatAsEpochSeconds() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(1690360968L, jwt.getJWTClaimsSet().getIssueTime().toInstant().getEpochSecond());
     }
     @Test
-    void build_validInput_payloadContainsNbfAsEpochSeconds() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(1690360968L, jwt.getClaimsSet().getNotBeforeTime().toInstant().getEpochSecond());
+    void build_validInput_payloadContainsNbfAsEpochSeconds() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(1690360968L, jwt.getJWTClaimsSet().getNotBeforeTime().toInstant().getEpochSecond());
     }
     @Test
-    void build_validInput_payloadNbfEqualsIat() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(jwt.getClaimsSet().getIssueTime().toInstant().getEpochSecond(), jwt.getClaimsSet().getNotBeforeTime().toInstant().getEpochSecond());
+    void build_validInput_payloadNbfEqualsIat() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(jwt.getJWTClaimsSet().getIssueTime().toInstant().getEpochSecond(), jwt.getJWTClaimsSet().getNotBeforeTime().toInstant().getEpochSecond());
     }
     @Test
-    void build_validInput_payloadContainsExpAsEpochSeconds() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(1753432968L, jwt.getClaimsSet().getExpirationTime().toInstant().getEpochSecond());
+    void build_validInput_payloadContainsExpAsEpochSeconds() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(1753432968L, jwt.getJWTClaimsSet().getExpirationTime().toInstant().getEpochSecond());
     }
     // ── Payload – jti ─────────────────────────────────────────────────────────
     @Test
-    void build_validInput_payloadContainsJti() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(VALID_JTI, jwt.getClaimsSet().getJWTID());
+    void build_validInput_payloadContainsJti() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(VALID_JTI, jwt.getJWTClaimsSet().getJWTID());
     }
     // ── Payload – purpose_name (localization) ─────────────────────────────────
     @Test
-    void build_purposeNameWithoutLocale_payloadContainsBaseClaimKey() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals("Age verification", jwt.getClaimsSet().getClaims().get("purpose_name"));
+    void build_purposeNameWithoutLocale_payloadContainsBaseClaimKey() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertEquals("Age verification", jwt.getJWTClaimsSet().getClaims().get("purpose_name"));
     }
     @Test
-    void build_purposeNameWithLocale_payloadContainsLocalizedClaimKey() {
-        TrustStatementJwt jwt = new VqPsBuilder()
+    void build_purposeNameWithLocale_payloadContainsLocalizedClaimKey() throws ParseException {
+        SignedJWT jwt = new VqPsBuilder()
                 .withKid(VALID_KID).withSubject(VALID_SUBJECT)
                 .withValidity(IAT, EXP).withJti(VALID_JTI)
                 .addPurposeName("de-ch", "beispiel abfrage")
                 .addPurposeDesc("frage ab zum beispiel")
                 .withRequest(VALID_SCOPE, validDcqlQuery())
                 .build();
-        assertEquals("beispiel abfrage", jwt.getClaimsSet().getClaims().get("purpose_name#de-ch"));
-        assertFalse(jwt.getClaimsSet().getClaims().containsKey("purpose_name"),
+        assertEquals("beispiel abfrage", jwt.getJWTClaimsSet().getClaims().get("purpose_name#de-ch"));
+        assertFalse(jwt.getJWTClaimsSet().getClaims().containsKey("purpose_name"),
                 "non-localized purpose_name must be absent when only locale variant was added");
     }
     @Test
-    void build_purposeNameMultipleLocales_payloadContainsAllLocalizedKeys() {
-        TrustStatementJwt jwt = new VqPsBuilder()
+    void build_purposeNameMultipleLocales_payloadContainsAllLocalizedKeys() throws ParseException {
+        SignedJWT jwt = new VqPsBuilder()
                 .withKid(VALID_KID).withSubject(VALID_SUBJECT)
                 .withValidity(IAT, EXP).withJti(VALID_JTI)
                 .addPurposeName("Age verification")
@@ -146,7 +149,7 @@ class VqPsBuilderTest {
                 .addPurposeDesc("Checks whether the requesting person is of legal age.")
                 .withRequest(VALID_SCOPE, validDcqlQuery())
                 .build();
-        Map<String, Object> payload = jwt.getClaimsSet().getClaims();
+        Map<String, Object> payload = jwt.getJWTClaimsSet().getClaims();
         assertEquals("Age verification",           payload.get("purpose_name"));
         assertEquals("Altersnachweis",             payload.get("purpose_name#de-CH"));
         assertEquals("Vérification de l'âge",      payload.get("purpose_name#fr-CH"));
@@ -158,23 +161,23 @@ class VqPsBuilderTest {
     }
     // ── Payload – purpose_description (localization) ──────────────────────────
     @Test
-    void build_purposeDescWithoutLocale_payloadContainsBaseClaimKey() {
-        TrustStatementJwt jwt = validBuilder().build();
+    void build_purposeDescWithoutLocale_payloadContainsBaseClaimKey() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
         assertEquals(
                 "Checks whether the requesting person is of legal age.",
-                jwt.getClaimsSet().getClaims().get("purpose_description"));
+                jwt.getJWTClaimsSet().getClaims().get("purpose_description"));
     }
     @Test
-    void build_purposeDescWithLocale_payloadContainsLocalizedClaimKey() {
-        TrustStatementJwt jwt = new VqPsBuilder()
+    void build_purposeDescWithLocale_payloadContainsLocalizedClaimKey() throws ParseException {
+        SignedJWT jwt = new VqPsBuilder()
                 .withKid(VALID_KID).withSubject(VALID_SUBJECT)
                 .withValidity(IAT, EXP).withJti(VALID_JTI)
                 .addPurposeName("Age verification")
                 .addPurposeDesc("de-ch", "frage ab zum beispiel")
                 .withRequest(VALID_SCOPE, validDcqlQuery())
                 .build();
-        assertEquals("frage ab zum beispiel", jwt.getClaimsSet().getClaims().get("purpose_description#de-ch"));
-        assertFalse(jwt.getClaimsSet().getClaims().containsKey("purpose_description"),
+        assertEquals("frage ab zum beispiel", jwt.getJWTClaimsSet().getClaims().get("purpose_description#de-ch"));
+        assertFalse(jwt.getJWTClaimsSet().getClaims().containsKey("purpose_description"),
                 "non-localized purpose_description must be absent when only locale variant was added");
     }
     @Test
@@ -185,33 +188,33 @@ class VqPsBuilderTest {
     // ── Payload – request object ───────────────────────────────────────────────
     @Test
     @SuppressWarnings("unchecked")
-    void build_validInput_requestContainsTypeDCQL() {
-        TrustStatementJwt jwt = validBuilder().build();
-        Map<String, Object> request = (Map<String, Object>) jwt.getClaimsSet().getClaims().get("request");
+    void build_validInput_requestContainsTypeDCQL() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        Map<String, Object> request = (Map<String, Object>) jwt.getJWTClaimsSet().getClaims().get("request");
         assertNotNull(request, "request claim must be present");
         assertEquals("DCQL", request.get("type"));
     }
     @Test
     @SuppressWarnings("unchecked")
-    void build_validInput_requestContainsScope() {
-        TrustStatementJwt jwt = validBuilder().build();
-        Map<String, Object> request = (Map<String, Object>) jwt.getClaimsSet().getClaims().get("request");
+    void build_validInput_requestContainsScope() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        Map<String, Object> request = (Map<String, Object>) jwt.getJWTClaimsSet().getClaims().get("request");
         assertEquals(VALID_SCOPE, request.get("scope"));
     }
     @Test
     @SuppressWarnings("unchecked")
-    void build_validInput_requestQueryIsObjectNotString() {
-        TrustStatementJwt jwt = validBuilder().build();
-        Map<String, Object> request = (Map<String, Object>) jwt.getClaimsSet().getClaims().get("request");
+    void build_validInput_requestQueryIsObjectNotString() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        Map<String, Object> request = (Map<String, Object>) jwt.getJWTClaimsSet().getClaims().get("request");
         Object query = request.get("query");
         assertInstanceOf(Map.class, query,
                 "request.query must be a JSON object (Map), not a String");
     }
     @Test
     @SuppressWarnings("unchecked")
-    void build_validInput_requestQueryContainsCredentials() {
-        TrustStatementJwt jwt = validBuilder().build();
-        Map<String, Object> request = (Map<String, Object>) jwt.getClaimsSet().getClaims().get("request");
+    void build_validInput_requestQueryContainsCredentials() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        Map<String, Object> request = (Map<String, Object>) jwt.getJWTClaimsSet().getClaims().get("request");
         Map<String, Object> query = (Map<String, Object>) request.get("query");
         List<?> credentials = (List<?>) query.get("credentials");
         assertNotNull(credentials);
@@ -219,9 +222,9 @@ class VqPsBuilderTest {
     }
     @Test
     @SuppressWarnings("unchecked")
-    void build_validInput_requestQueryCredentialHasMetaVctValues() {
-        TrustStatementJwt jwt = validBuilder().build();
-        Map<String, Object> request = (Map<String, Object>) jwt.getClaimsSet().getClaims().get("request");
+    void build_validInput_requestQueryCredentialHasMetaVctValues() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        Map<String, Object> request = (Map<String, Object>) jwt.getJWTClaimsSet().getClaims().get("request");
         Map<String, Object> query = (Map<String, Object>) request.get("query");
         List<Map<String, Object>> credentials = (List<Map<String, Object>>) query.get("credentials");
         Map<String, Object> meta = (Map<String, Object>) credentials.get(0).get("meta");

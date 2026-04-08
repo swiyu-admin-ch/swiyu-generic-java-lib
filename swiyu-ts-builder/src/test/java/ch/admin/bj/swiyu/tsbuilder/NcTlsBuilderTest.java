@@ -1,7 +1,9 @@
 package ch.admin.bj.swiyu.tsbuilder;
 
+import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.Test;
 
+import java.text.ParseException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -55,35 +57,35 @@ class NcTlsBuilderTest {
 
     @Test
     void build_validInput_headerContainsTypNcTls() {
-        TrustStatementJwt jwt = validBuilder().build();
+        SignedJWT jwt = validBuilder().build();
         assertEquals("swiyu-non-compliance-trust-list-statement+jwt",
-                jwt.getJwsHeader().getType().getType());
+                jwt.getHeader().getType().getType());
     }
 
     @Test
     void build_validInput_headerContainsAlgES256() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals("ES256", jwt.getJwsHeader().getAlgorithm().getName());
+        SignedJWT jwt = validBuilder().build();
+        assertEquals("ES256", jwt.getHeader().getAlgorithm().getName());
     }
 
     @Test
     void build_validInput_headerContainsKid() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(VALID_KID, jwt.getJwsHeader().getKeyID());
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(VALID_KID, jwt.getHeader().getKeyID());
     }
 
     @Test
     void build_validInput_headerContainsProfileVersion() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals("swiss-profile-trust:1.0.0", jwt.getJwsHeader().getCustomParam("profile_version"));
+        SignedJWT jwt = validBuilder().build();
+        assertEquals("swiss-profile-trust:1.0.0", jwt.getHeader().getCustomParam("profile_version"));
     }
 
     // ── Payload – iss MUST NOT be present (TP2: iss no longer supported) ────────
 
     @Test
-    void build_validInput_payloadDoesNotContainIss() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertFalse(jwt.getClaimsSet().getClaim("iss") != null,
+    void build_validInput_payloadDoesNotContainIss() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertFalse(jwt.getJWTClaimsSet().getClaim("iss") != null,
                 "iss must not be present – TP2 removes iss in favour of kid header");
     }
 
@@ -96,9 +98,9 @@ class NcTlsBuilderTest {
     }
 
     @Test
-    void build_withoutSub_payloadDoesNotContainSub() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertFalse(jwt.getClaimsSet().getClaims().containsKey("sub"),
+    void build_withoutSub_payloadDoesNotContainSub() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertFalse(jwt.getJWTClaimsSet().getClaims().containsKey("sub"),
                 "sub must not be present when not explicitly set");
     }
 
@@ -112,21 +114,21 @@ class NcTlsBuilderTest {
     // ── Payload – standard claims ──────────────────────────────────────────────
 
     @Test
-    void build_validInput_payloadContainsIatAsEpochSeconds() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(1690360968L, jwt.getClaimsSet().getIssueTime().toInstant().getEpochSecond());
+    void build_validInput_payloadContainsIatAsEpochSeconds() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(1690360968L, jwt.getJWTClaimsSet().getIssueTime().toInstant().getEpochSecond());
     }
 
     @Test
-    void build_validInput_payloadContainsExpAsEpochSeconds() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(1753432968L, jwt.getClaimsSet().getExpirationTime().toInstant().getEpochSecond());
+    void build_validInput_payloadContainsExpAsEpochSeconds() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(1753432968L, jwt.getJWTClaimsSet().getExpirationTime().toInstant().getEpochSecond());
     }
 
     @Test
-    void build_twoParamValidity_payloadNbfEqualsIat() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(jwt.getClaimsSet().getIssueTime().toInstant().getEpochSecond(), jwt.getClaimsSet().getNotBeforeTime().toInstant().getEpochSecond(),
+    void build_twoParamValidity_payloadNbfEqualsIat() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(jwt.getJWTClaimsSet().getIssueTime().toInstant().getEpochSecond(), jwt.getJWTClaimsSet().getNotBeforeTime().toInstant().getEpochSecond(),
                 "2-param withValidity must set nbf == iat");
     }
 
@@ -134,10 +136,10 @@ class NcTlsBuilderTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void build_validInput_payloadStatusHasCorrectStructure() {
-        TrustStatementJwt jwt = validBuilder().build();
+    void build_validInput_payloadStatusHasCorrectStructure() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
 
-        Map<String, Object> status = (Map<String, Object>) jwt.getClaimsSet().getClaim("status");
+        Map<String, Object> status = (Map<String, Object>) jwt.getJWTClaimsSet().getClaim("status");
         assertNotNull(status, "status claim must be present");
 
         Map<String, Object> statusList = (Map<String, Object>) status.get("status_list");
@@ -150,22 +152,22 @@ class NcTlsBuilderTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void build_singleActor_payloadContainsArrayWithOneEntry() {
-        TrustStatementJwt jwt = validBuilder().build();
+    void build_singleActor_payloadContainsArrayWithOneEntry() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
 
         List<Map<String, Object>> actors =
-                (List<Map<String, Object>>) jwt.getClaimsSet().getClaims().get("non_compliant_actors");
+                (List<Map<String, Object>>) jwt.getJWTClaimsSet().getClaims().get("non_compliant_actors");
         assertNotNull(actors);
         assertEquals(1, actors.size());
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    void build_singleActor_entryUsesActorKeyNotDid() {
-        TrustStatementJwt jwt = validBuilder().build();
+    void build_singleActor_entryUsesActorKeyNotDid() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
 
         List<Map<String, Object>> actors =
-                (List<Map<String, Object>>) jwt.getClaimsSet().getClaim("non_compliant_actors");
+                (List<Map<String, Object>>) jwt.getJWTClaimsSet().getClaim("non_compliant_actors");
         Map<String, Object> entry = actors.get(0);
 
         assertTrue(entry.containsKey("actor"),
@@ -177,28 +179,28 @@ class NcTlsBuilderTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void build_singleActor_entryContainsFlaggedAt() {
-        TrustStatementJwt jwt = validBuilder().build();
+    void build_singleActor_entryContainsFlaggedAt() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
 
         List<Map<String, Object>> actors =
-                (List<Map<String, Object>>) jwt.getClaimsSet().getClaims().get("non_compliant_actors");
+                (List<Map<String, Object>>) jwt.getJWTClaimsSet().getClaims().get("non_compliant_actors");
         assertEquals(VALID_FLAGGED_AT, actors.get(0).get("flagged_at"));
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    void build_singleActor_entryContainsDefaultReason() {
-        TrustStatementJwt jwt = validBuilder().build();
+    void build_singleActor_entryContainsDefaultReason() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
 
         List<Map<String, Object>> actors =
-                (List<Map<String, Object>>) jwt.getClaimsSet().getClaims().get("non_compliant_actors");
+                (List<Map<String, Object>>) jwt.getJWTClaimsSet().getClaims().get("non_compliant_actors");
         assertEquals(VALID_REASON, actors.get(0).get("reason"));
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    void build_actorWithLocalizedReasons_entryContainsAllReasonKeys() {
-        TrustStatementJwt jwt = new NcTlsBuilder()
+    void build_actorWithLocalizedReasons_entryContainsAllReasonKeys() throws ParseException {
+        SignedJWT jwt = new NcTlsBuilder()
                 .withKid(VALID_KID)
                 .withValidity(IAT, EXP)
                 .withStatus(0, "https://example.com/statuslists/1")
@@ -215,7 +217,7 @@ class NcTlsBuilderTest {
                 .build();
 
         List<Map<String, Object>> actors =
-                (List<Map<String, Object>>) jwt.getClaimsSet().getClaims().get("non_compliant_actors");
+                (List<Map<String, Object>>) jwt.getJWTClaimsSet().getClaims().get("non_compliant_actors");
         Map<String, Object> entry = actors.get(0);
 
         assertEquals("The issuer is not who they claim to be (DE)", entry.get("reason"));
@@ -228,8 +230,8 @@ class NcTlsBuilderTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void build_multipleActors_payloadContainsAllEntries() {
-        TrustStatementJwt jwt = new NcTlsBuilder()
+    void build_multipleActors_payloadContainsAllEntries() throws ParseException {
+        SignedJWT jwt = new NcTlsBuilder()
                 .withKid(VALID_KID)
                 .withValidity(IAT, EXP)
                 .withStatus(0, "https://example.com/statuslists/1")
@@ -240,7 +242,7 @@ class NcTlsBuilderTest {
                 .build();
 
         List<Map<String, Object>> actors =
-                (List<Map<String, Object>>) jwt.getClaimsSet().getClaims().get("non_compliant_actors");
+                (List<Map<String, Object>>) jwt.getJWTClaimsSet().getClaims().get("non_compliant_actors");
         assertEquals(2, actors.size());
         assertEquals("did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRCC1:identifier.admin.ch:api:v1:did", actors.get(0).get("actor"));
         assertEquals("did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRDD1:identifier.admin.ch:api:v1:did", actors.get(1).get("actor"));

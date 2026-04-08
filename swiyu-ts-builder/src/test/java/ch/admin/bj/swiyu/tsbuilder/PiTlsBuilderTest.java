@@ -1,7 +1,9 @@
 package ch.admin.bj.swiyu.tsbuilder;
 
+import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.Test;
 
+import java.text.ParseException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -33,36 +35,36 @@ class PiTlsBuilderTest {
 
     @Test
     void build_validInput_headerContainsTypPiTls() {
-        TrustStatementJwt jwt = validBuilder().build();
+        SignedJWT jwt = validBuilder().build();
         assertEquals("swiyu-protected-issuance-trust-list-statement+jwt",
-                jwt.getJwsHeader().getType().getType());
+                jwt.getHeader().getType().getType());
     }
 
     @Test
     void build_validInput_headerContainsAlgES256() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals("ES256", jwt.getJwsHeader().getAlgorithm().getName());
+        SignedJWT jwt = validBuilder().build();
+        assertEquals("ES256", jwt.getHeader().getAlgorithm().getName());
     }
 
     @Test
     void build_validInput_headerContainsKid() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(VALID_KID, jwt.getJwsHeader().getKeyID());
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(VALID_KID, jwt.getHeader().getKeyID());
     }
 
     @Test
     void build_validInput_headerContainsProfileVersion() {
-        TrustStatementJwt jwt = validBuilder().build();
+        SignedJWT jwt = validBuilder().build();
         assertEquals("swiss-profile-trust:1.0.0",
-                jwt.getJwsHeader().getCustomParam("profile_version"));
+                jwt.getHeader().getCustomParam("profile_version"));
     }
 
     // ── Payload – iss MUST NOT be present ─────────────────────────────────────
 
     @Test
-    void build_validInput_payloadDoesNotContainIss() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertNull(jwt.getClaimsSet().getIssuer(),
+    void build_validInput_payloadDoesNotContainIss() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertNull(jwt.getJWTClaimsSet().getIssuer(),
                 "iss must not be present – TP2 removes iss in favour of kid header");
     }
 
@@ -75,9 +77,9 @@ class PiTlsBuilderTest {
     }
 
     @Test
-    void build_withoutSub_payloadDoesNotContainSub() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertNull(jwt.getClaimsSet().getSubject(),
+    void build_withoutSub_payloadDoesNotContainSub() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertNull(jwt.getJWTClaimsSet().getSubject(),
                 "sub must not be present when not explicitly set");
     }
 
@@ -91,39 +93,39 @@ class PiTlsBuilderTest {
     // ── Payload – standard claims ──────────────────────────────────────────────
 
     @Test
-    void build_validInput_payloadContainsJti() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(VALID_JTI, jwt.getClaimsSet().getJWTID());
+    void build_validInput_payloadContainsJti() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(VALID_JTI, jwt.getJWTClaimsSet().getJWTID());
     }
 
     @Test
-    void build_validInput_payloadContainsIatAsEpochSeconds() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(1690360968L, jwt.getClaimsSet().getIssueTime().toInstant().getEpochSecond());
+    void build_validInput_payloadContainsIatAsEpochSeconds() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(1690360968L, jwt.getJWTClaimsSet().getIssueTime().toInstant().getEpochSecond());
     }
 
     @Test
-    void build_validInput_payloadContainsNbfAsEpochSeconds() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(1721896968L, jwt.getClaimsSet().getNotBeforeTime().toInstant().getEpochSecond());
+    void build_validInput_payloadContainsNbfAsEpochSeconds() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(1721896968L, jwt.getJWTClaimsSet().getNotBeforeTime().toInstant().getEpochSecond());
     }
 
     @Test
-    void build_validInput_payloadNbfCanDifferFromIat() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertNotEquals(jwt.getClaimsSet().getIssueTime(), jwt.getClaimsSet().getNotBeforeTime(),
+    void build_validInput_payloadNbfCanDifferFromIat() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertNotEquals(jwt.getJWTClaimsSet().getIssueTime(), jwt.getJWTClaimsSet().getNotBeforeTime(),
                 "piTLS allows nbf to differ from iat (delayed activation)");
     }
 
     @Test
-    void build_validInput_payloadContainsExpAsEpochSeconds() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(1753432968L, jwt.getClaimsSet().getExpirationTime().toInstant().getEpochSecond());
+    void build_validInput_payloadContainsExpAsEpochSeconds() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(1753432968L, jwt.getJWTClaimsSet().getExpirationTime().toInstant().getEpochSecond());
     }
 
     @Test
-    void build_twoParamValidity_payloadNbfEqualsIat() {
-        TrustStatementJwt jwt = new PiTlsBuilder()
+    void build_twoParamValidity_payloadNbfEqualsIat() throws ParseException {
+        SignedJWT jwt = new PiTlsBuilder()
                 .withKid(VALID_KID)
                 .withValidity(IAT, EXP)
                 .withStatus(0, "https://example.com/statuslists/1")
@@ -131,7 +133,7 @@ class PiTlsBuilderTest {
                 .withVctValues(List.of("urn:ch.admin.fedpol.eid"))
                 .build();
 
-        assertEquals(jwt.getClaimsSet().getIssueTime(), jwt.getClaimsSet().getNotBeforeTime(),
+        assertEquals(jwt.getJWTClaimsSet().getIssueTime(), jwt.getJWTClaimsSet().getNotBeforeTime(),
                 "2-param withValidity must set nbf == iat");
     }
 
@@ -139,10 +141,10 @@ class PiTlsBuilderTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void build_validInput_payloadStatusHasCorrectStructure() {
-        TrustStatementJwt jwt = validBuilder().build();
+    void build_validInput_payloadStatusHasCorrectStructure() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
 
-        Map<String, Object> status = (Map<String, Object>) jwt.getClaimsSet().getClaim("status");
+        Map<String, Object> status = (Map<String, Object>) jwt.getJWTClaimsSet().getClaim("status");
         assertNotNull(status, "status claim must be present");
 
         Map<String, Object> statusList = (Map<String, Object>) status.get("status_list");
@@ -155,10 +157,10 @@ class PiTlsBuilderTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void build_singleVctValue_payloadContainsArrayWithOneEntry() {
-        TrustStatementJwt jwt = validBuilder().build();
+    void build_singleVctValue_payloadContainsArrayWithOneEntry() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
 
-        List<String> vctValues = (List<String>) jwt.getClaimsSet().getClaim("vct_values");
+        List<String> vctValues = (List<String>) jwt.getJWTClaimsSet().getClaim("vct_values");
         assertNotNull(vctValues);
         assertEquals(1, vctValues.size());
         assertEquals("urn:ch.admin.fedpol.eid", vctValues.getFirst());
@@ -166,8 +168,8 @@ class PiTlsBuilderTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void build_multipleVctValues_payloadContainsAllEntries() {
-        TrustStatementJwt jwt = new PiTlsBuilder()
+    void build_multipleVctValues_payloadContainsAllEntries() throws ParseException {
+        SignedJWT jwt = new PiTlsBuilder()
                 .withKid(VALID_KID)
                 .withValidity(IAT, NBF, EXP)
                 .withStatus(0, "https://example.com/statuslists/1")
@@ -177,7 +179,7 @@ class PiTlsBuilderTest {
                         "urn:ch.admin.asa.driving-licence"))
                 .build();
 
-        List<String> vctValues = (List<String>) jwt.getClaimsSet().getClaim("vct_values");
+        List<String> vctValues = (List<String>) jwt.getJWTClaimsSet().getClaim("vct_values");
         assertEquals(2, vctValues.size());
         assertEquals("urn:ch.admin.fedpol.eid", vctValues.get(0));
         assertEquals("urn:ch.admin.asa.driving-licence", vctValues.get(1));

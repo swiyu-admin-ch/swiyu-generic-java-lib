@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Verifies the full happy-path pipeline of building a Trust Statement JWT with each concrete
  * builder, signing it via the {@link JwsSignatureService} using a software EC key (ES256),
  * and confirming the resulting compact JWS is cryptographically valid. This test ensures
- * that the builder output ({@link TrustStatementJwt#getJwsHeader()}/{@link TrustStatementJwt#getClaimsSet()}) and the signing
+ * that the builder output ({@link SignedJWT}) and the signing
  * service are correctly wired together end-to-end.
  *
  * <p><b>Boundary conditions:</b><br>
@@ -102,7 +102,7 @@ class TMS_IT {
 
     @Test
     void givenValidIdTs_whenSignedWithEcKey_thenJwtVerifiesSuccessfully() throws Exception {
-        TrustStatementJwt ts = new IdTsBuilder()
+        SignedJWT ts = new IdTsBuilder()
                 .withKid(KID)
                 .withSubject(SUBJECT_DID)
                 .withValidity(now(), expiresAt())
@@ -121,7 +121,7 @@ class TMS_IT {
 
     @Test
     void givenValidVqPs_whenSignedWithEcKey_thenJwtVerifiesSuccessfully() throws Exception {
-        TrustStatementJwt ts = new VqPsBuilder()
+        SignedJWT ts = new VqPsBuilder()
                 .withKid(KID)
                 .withJti(randomUuidV4())
                 .withSubject(VERIFIER_DID)
@@ -141,7 +141,7 @@ class TMS_IT {
 
     @Test
     void givenValidPvaTs_whenSignedWithEcKey_thenJwtVerifiesSuccessfully() throws Exception {
-        TrustStatementJwt ts = new PvaTsBuilder()
+        SignedJWT ts = new PvaTsBuilder()
                 .withKid(KID)
                 .withJti(randomUuidV4())
                 .withSubject(VERIFIER_DID)
@@ -160,7 +160,7 @@ class TMS_IT {
 
     @Test
     void givenValidPiaTs_whenSignedWithEcKey_thenJwtVerifiesSuccessfully() throws Exception {
-        TrustStatementJwt ts = new PiaTsBuilder()
+        SignedJWT ts = new PiaTsBuilder()
                 .withKid(KID)
                 .withSubject(ISSUER_DID)
                 .withValidity(now(), now().plusSeconds(3600), expiresAt())
@@ -178,7 +178,7 @@ class TMS_IT {
 
     @Test
     void givenValidPiTls_whenSignedWithEcKey_thenJwtVerifiesSuccessfully() throws Exception {
-        TrustStatementJwt ts = new PiTlsBuilder()
+        SignedJWT ts = new PiTlsBuilder()
                 .withKid(KID)
                 .withJti(randomUuidV4())
                 .withValidity(now(), now().plusSeconds(3600), expiresAt())
@@ -196,7 +196,7 @@ class TMS_IT {
 
     @Test
     void givenValidNcTls_whenSignedWithEcKey_thenJwtVerifiesSuccessfully() throws Exception {
-        TrustStatementJwt ts = new NcTlsBuilder()
+        SignedJWT ts = new NcTlsBuilder()
                 .withKid(KID)
                 .withValidity(now(), expiresAt())
                 .withStatus(0, "https://example.com/statuslists/1")
@@ -220,20 +220,14 @@ class TMS_IT {
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /**
-     * Signs the given {@link TrustStatementJwt} via the {@link JwsSignatureService} and
-     * returns a {@link SignedJWT} ready for verification.
-     * <p>
-     * Mirrors the pattern used in production: builds a {@link JWSHeader} from the trust
-     * statement header claims, parses the payload into a {@link JWTClaimsSet}, constructs
-     * a {@link SignedJWT} and signs it with the configured key.
+     * Signs the given unsigned {@link SignedJWT} via the {@link JwsSignatureService}.
      *
-     * @param ts the assembled, unsigned trust statement
+     * @param ts the unsigned {@link SignedJWT} produced by a trust statement builder
      * @return the signed {@link SignedJWT}
      */
-    private SignedJWT signAndParse(TrustStatementJwt ts) throws Exception {
-        SignedJWT jwt = new SignedJWT(ts.getJwsHeader(), ts.getClaimsSet());
-        jwt.sign(jwsSignatureService.createSigner(signatureConfig));
-        return jwt;
+    private SignedJWT signAndParse(SignedJWT ts) throws Exception {
+        ts.sign(jwsSignatureService.createSigner(signatureConfig));
+        return ts;
     }
 
     /** Returns a {@link JWSVerifier} backed by the ephemeral EC public key. */

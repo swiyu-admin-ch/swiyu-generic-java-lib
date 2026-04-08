@@ -1,7 +1,9 @@
 package ch.admin.bj.swiyu.tsbuilder;
 
+import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.Test;
 
+import java.text.ParseException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -41,71 +43,71 @@ class IdTsBuilderTest {
 
     @Test
     void build_validInput_headerContainsTypIdentityTrustStatement() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals("swiyu-identity-trust-statement+jwt", jwt.getJwsHeader().getType().getType());
+        SignedJWT jwt = validBuilder().build();
+        assertEquals("swiyu-identity-trust-statement+jwt", jwt.getHeader().getType().getType());
     }
 
     @Test
     void build_validInput_headerContainsAlgES256() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals("ES256", jwt.getJwsHeader().getAlgorithm().getName());
+        SignedJWT jwt = validBuilder().build();
+        assertEquals("ES256", jwt.getHeader().getAlgorithm().getName());
     }
 
     @Test
     void build_validInput_headerContainsKid() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(VALID_KID, jwt.getJwsHeader().getKeyID());
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(VALID_KID, jwt.getHeader().getKeyID());
     }
 
     @Test
     void build_validInput_headerContainsProfileVersion() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals("swiss-profile-trust:1.0.0", jwt.getJwsHeader().getCustomParam("profile_version"));
+        SignedJWT jwt = validBuilder().build();
+        assertEquals("swiss-profile-trust:1.0.0", jwt.getHeader().getCustomParam("profile_version"));
     }
 
     // ── Payload – iss MUST NOT be present (TP2: iss no longer supported) ────────
 
     @Test
-    void build_validInput_payloadDoesNotContainIss() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertFalse(jwt.getClaimsSet().getClaim("iss") != null,
+    void build_validInput_payloadDoesNotContainIss() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertFalse(jwt.getJWTClaimsSet().getClaim("iss") != null,
                 "iss must not be present – TP2 removes iss in favour of kid header");
     }
 
     // ── Payload – standard claims ──────────────────────────────────────────────
 
     @Test
-    void build_validInput_payloadContainsSub() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(VALID_SUBJECT, jwt.getClaimsSet().getSubject());
+    void build_validInput_payloadContainsSub()  throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(VALID_SUBJECT, jwt.getJWTClaimsSet().getSubject());
     }
 
     @Test
-    void build_validInput_payloadContainsIatAsEpochSeconds() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(1690360968L, jwt.getClaimsSet().getIssueTime().toInstant().getEpochSecond());
+    void build_validInput_payloadContainsIatAsEpochSeconds() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(1690360968L, jwt.getJWTClaimsSet().getIssueTime().toInstant().getEpochSecond());
     }
 
     @Test
-    void build_validInput_payloadContainsExpAsEpochSeconds() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(1753432968L, jwt.getClaimsSet().getExpirationTime().toInstant().getEpochSecond());
+    void build_validInput_payloadContainsExpAsEpochSeconds() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(1753432968L, jwt.getJWTClaimsSet().getExpirationTime().toInstant().getEpochSecond());
     }
 
     @Test
-    void build_validInput_payloadNbfEqualsIat() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(jwt.getClaimsSet().getIssueTime().toInstant().getEpochSecond(), jwt.getClaimsSet().getNotBeforeTime().toInstant().getEpochSecond());
+    void build_validInput_payloadNbfEqualsIat() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(jwt.getJWTClaimsSet().getIssueTime().toInstant().getEpochSecond(), jwt.getJWTClaimsSet().getNotBeforeTime().toInstant().getEpochSecond());
     }
 
     // ── Payload – status claim ─────────────────────────────────────────────────
 
     @Test
     @SuppressWarnings("unchecked")
-    void build_validInput_payloadStatusHasCorrectStructure() {
-        TrustStatementJwt jwt = validBuilder().build();
+    void build_validInput_payloadStatusHasCorrectStructure() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
 
-        Map<String, Object> status = (Map<String, Object>) jwt.getClaimsSet().getClaim("status");
+        Map<String, Object> status = (Map<String, Object>) jwt.getJWTClaimsSet().getClaim("status");
         assertNotNull(status, "status claim must be present");
 
         Map<String, Object> statusList = (Map<String, Object>) status.get("status_list");
@@ -117,8 +119,8 @@ class IdTsBuilderTest {
     // ── Payload – entity_name (localization) ──────────────────────────────────
 
     @Test
-    void build_entityNameWithoutLocale_payloadContainsBaseClaimKey() {
-        TrustStatementJwt jwt = new IdTsBuilder()
+    void build_entityNameWithoutLocale_payloadContainsBaseClaimKey() throws ParseException {
+        SignedJWT jwt = new IdTsBuilder()
                 .withKid(VALID_KID).withSubject(VALID_SUBJECT)
                 .withValidity(IAT, EXP).withStatus(0, "https://example.com/statuslists/1")
                 .addEntityName("John Smith's Smithery")
@@ -126,12 +128,12 @@ class IdTsBuilderTest {
                 .addRegistryId("UID", "CHE-000.000.000")
                 .build();
 
-        assertEquals("John Smith's Smithery", jwt.getClaimsSet().getClaims().get("entity_name"));
+        assertEquals("John Smith's Smithery", jwt.getJWTClaimsSet().getClaims().get("entity_name"));
     }
 
     @Test
-    void build_entityNameWithLocale_payloadContainsLocalizedClaimKey() {
-        TrustStatementJwt jwt = new IdTsBuilder()
+    void build_entityNameWithLocale_payloadContainsLocalizedClaimKey() throws ParseException {
+        SignedJWT jwt = new IdTsBuilder()
                 .withKid(VALID_KID).withSubject(VALID_SUBJECT)
                 .withValidity(IAT, EXP).withStatus(0, "https://example.com/statuslists/1")
                 .addEntityName("de", "John Smith's Schmiderei")
@@ -139,12 +141,12 @@ class IdTsBuilderTest {
                 .addRegistryId("UID", "CHE-000.000.000")
                 .build();
 
-        assertEquals("John Smith's Schmiderei", jwt.getClaimsSet().getClaims().get("entity_name#de"));
+        assertEquals("John Smith's Schmiderei", jwt.getJWTClaimsSet().getClaims().get("entity_name#de"));
     }
 
     @Test
-    void build_entityNameMultipleLocales_payloadContainsAllLocalizedKeys() {
-        TrustStatementJwt jwt = new IdTsBuilder()
+    void build_entityNameMultipleLocales_payloadContainsAllLocalizedKeys() throws ParseException {
+        SignedJWT jwt = new IdTsBuilder()
                 .withKid(VALID_KID).withSubject(VALID_SUBJECT)
                 .withValidity(IAT, EXP).withStatus(0, "https://example.com/statuslists/1")
                 .addEntityName("John Smith's Smithery")
@@ -154,7 +156,7 @@ class IdTsBuilderTest {
                 .addRegistryId("UID", "CHE-000.000.000")
                 .build();
 
-        Map<String, Object> payload = jwt.getClaimsSet().getClaims();
+        Map<String, Object> payload = jwt.getJWTClaimsSet().getClaims();
         assertEquals("John Smith's Smithery",    payload.get("entity_name"));
         assertEquals("John Smith's Schmiderei",  payload.get("entity_name#de"));
         assertEquals("John Smith's Schmiderei",  payload.get("entity_name#de-CH"));
@@ -163,14 +165,14 @@ class IdTsBuilderTest {
     // ── Payload – is_state_actor ───────────────────────────────────────────────
 
     @Test
-    void build_isStateActorFalse_payloadContainsFalse() {
-        TrustStatementJwt jwt = validBuilder().build();
-        assertEquals(false, jwt.getClaimsSet().getClaims().get("is_state_actor"));
+    void build_isStateActorFalse_payloadContainsFalse() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
+        assertEquals(false, jwt.getJWTClaimsSet().getClaims().get("is_state_actor"));
     }
 
     @Test
-    void build_isStateActorTrue_payloadContainsTrue() {
-        TrustStatementJwt jwt = new IdTsBuilder()
+    void build_isStateActorTrue_payloadContainsTrue() throws ParseException {
+        SignedJWT jwt = new IdTsBuilder()
                 .withKid(VALID_KID).withSubject(VALID_SUBJECT)
                 .withValidity(IAT, EXP).withStatus(0, "https://example.com/statuslists/1")
                 .addEntityName("Bundesamt für Justiz")
@@ -178,17 +180,17 @@ class IdTsBuilderTest {
                 .addRegistryId("UID", "CHE-000.000.000")
                 .build();
 
-        assertEquals(true, jwt.getClaimsSet().getClaims().get("is_state_actor"));
+        assertEquals(true, jwt.getJWTClaimsSet().getClaims().get("is_state_actor"));
     }
 
     // ── Payload – registry_ids ────────────────────────────────────────────────
 
     @Test
     @SuppressWarnings("unchecked")
-    void build_singleRegistryId_payloadContainsArrayWithOneEntry() {
-        TrustStatementJwt jwt = validBuilder().build();
+    void build_singleRegistryId_payloadContainsArrayWithOneEntry() throws ParseException {
+        SignedJWT jwt = validBuilder().build();
 
-        List<Map<String, String>> ids = (List<Map<String, String>>) jwt.getClaimsSet().getClaims().get("registry_ids");
+        List<Map<String, String>> ids = (List<Map<String, String>>) jwt.getJWTClaimsSet().getClaims().get("registry_ids");
         assertNotNull(ids);
         assertEquals(1, ids.size());
         assertEquals("UID", ids.get(0).get("type"));
@@ -197,8 +199,8 @@ class IdTsBuilderTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void build_multipleRegistryIds_payloadContainsAllEntries() {
-        TrustStatementJwt jwt = new IdTsBuilder()
+    void build_multipleRegistryIds_payloadContainsAllEntries() throws ParseException {
+        SignedJWT jwt = new IdTsBuilder()
                 .withKid(VALID_KID).withSubject(VALID_SUBJECT)
                 .withValidity(IAT, EXP).withStatus(0, "https://example.com/statuslists/1")
                 .addEntityName("John Smith's Smithery")
@@ -207,7 +209,7 @@ class IdTsBuilderTest {
                 .addRegistryId("LEI", "0A1B2C3D4E5F6G7H8J9I")
                 .build();
 
-        List<Map<String, String>> ids = (List<Map<String, String>>) jwt.getClaimsSet().getClaims().get("registry_ids");
+        List<Map<String, String>> ids = (List<Map<String, String>>) jwt.getJWTClaimsSet().getClaims().get("registry_ids");
         assertEquals(2, ids.size());
         assertEquals("UID", ids.get(0).get("type"));
         assertEquals("CHE-000.000.000", ids.get(0).get("value"));
@@ -361,9 +363,9 @@ class IdTsBuilderTest {
 
     @Test
     void getPayloadToSign_validBuild_returnsTwoPartBase64UrlString() throws Exception {
-        TrustStatementJwt jwt = validBuilder().build();
-        String headerPart  = jwt.getJwsHeader().toBase64URL().toString();
-        String payloadPart = jwt.getClaimsSet().toPayload().toBase64URL().toString();
+        SignedJWT jwt = validBuilder().build();
+        String headerPart  = jwt.getHeader().toBase64URL().toString();
+        String payloadPart = jwt.getJWTClaimsSet().toPayload().toBase64URL().toString();
         String payloadToSign = headerPart + "." + payloadPart;
 
         assertNotNull(payloadToSign);

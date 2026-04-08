@@ -4,6 +4,7 @@ import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 
 import java.time.Instant;
 import java.util.Date;
@@ -264,7 +265,7 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * Extension point for subclass-specific claim validation.
      * <p>
      * Called by {@link #build()} after base-claim validation but <em>before</em> the
-     * {@link TrustStatementJwt} is constructed. Subclasses override this method to add
+     * {@link SignedJWT} is constructed. Subclasses override this method to add
      * type-specific required-claim checks against the provided {@code claims} snapshot.
      * The default implementation does nothing.
      * </p>
@@ -293,9 +294,9 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
 
     /**
      * Validates all required base claims, calls {@link #validateSubclass(JWTClaimsSet)} for
-     * type-specific validation, and then assembles the final {@link TrustStatementJwt}.
+     * type-specific validation, and then assembles the final {@link SignedJWT} in UNSIGNED state.
      * <p>
-     * The {@link TrustStatementJwt} is only constructed after <em>all</em> validations
+     * The {@link SignedJWT} is only constructed after <em>all</em> validations
      * (base and subclass) have passed. Subclasses must <strong>not</strong> override this
      * method – override {@link #validateSubclass(JWTClaimsSet)} instead.
      * </p>
@@ -308,11 +309,12 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * throws {@link TrustStatementValidationException}.
      * </p>
      *
-     * @return the fully assembled, unsigned {@link TrustStatementJwt}
+     * @return a {@link SignedJWT} in UNSIGNED state, ready to be signed via
+     *         {@link com.nimbusds.jose.JWSObject#sign(com.nimbusds.jose.JWSSigner)}
      * @throws TrustStatementValidationException if any required claim is missing or invalid,
      *                                           or if {@code build()} has already been called
      */
-    public final TrustStatementJwt build() throws TrustStatementValidationException {
+    public final SignedJWT build() throws TrustStatementValidationException {
         if (built) {
             throw new TrustStatementValidationException(
                     "This builder instance has already been used. Create a new instance for each Trust Statement.");
@@ -343,7 +345,7 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
         // ── Subclass-specific validation (before object construction) ─────────
         validateSubclass(claims);
 
-        return new TrustStatementJwt(header, claims);
+        return new SignedJWT(header, claims);
     }
 
     // ── Internal helpers ──────────────────────────────────────────────────────
