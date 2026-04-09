@@ -6,7 +6,7 @@
 
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-ts-builder</artifactId>
-    <version>1.3.0</version>
+    <version>1.4.0</version>
     <packaging>jar</packaging>
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <name>${project.groupId}:${project.artifactId}</name>
@@ -82,7 +82,7 @@
         <dependency>
             <groupId>ch.admin.swiyu</groupId>
             <artifactId>swiyu-jws-signature-service</artifactId>
-            <version>1.3.0</version>
+            <version>1.4.0</version>
             <scope>test</scope>
         </dependency>
 
@@ -208,4 +208,3 @@
     </profiles>
 
 </project>
-
