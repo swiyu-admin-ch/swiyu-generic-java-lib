@@ -7,7 +7,7 @@
     <packaging>jar</packaging>
     <artifactId>swiyu-generic-java-all</artifactId>
     <groupId>ch.admin.swiyu</groupId>
-    <version>1.3.0</version>
+    <version>1.4.0</version>
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Aggregator module that includes all Swiyu utility libraries</description>

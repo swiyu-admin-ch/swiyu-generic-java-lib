@@ -6,7 +6,7 @@
 
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-did-resolver-adapter</artifactId>
-    <version>1.3.0</version>
+    <version>1.4.0</version>
     <packaging>jar</packaging>
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <name>${project.groupId}:${project.artifactId}</name>
@@ -47,7 +47,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Dependency versions -->
-        <spring.boot.version>3.3.5</spring.boot.version>
+        <spring.boot.version>3.5.13</spring.boot.version>
         <junit.version>5.10.1</junit.version>
         <mockito.version>5.8.0</mockito.version>
         <slf4j.version>2.0.9</slf4j.version>
