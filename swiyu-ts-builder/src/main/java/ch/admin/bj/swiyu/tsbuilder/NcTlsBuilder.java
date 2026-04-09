@@ -192,7 +192,6 @@ public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> im
      * )
      * }</pre>
      * Multiple actors may be added by calling this method repeatedly.
-     * </p>
      *
      * @param actor the fully built {@link NonCompliantActor}, must not be {@code null}
      * @return this builder for fluent chaining
