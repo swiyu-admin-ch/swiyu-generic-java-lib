@@ -1,0 +1,46 @@
+@startuml
+skinparam maxMessageSize 150
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+
+participant "TergumTrustService\n(Tergum Backend)" as tms
+
+box "generic-java-lib" #E8F4F8
+participant "Statement Builder\n(swiyu-ts-service)" as builder
+participant "Signature Service\n(swiyu-jws-signature-service)" as crypto
+end box
+
+participant "HSM\n(Key Management)" as hsm
+
+== Trust Statement Generation Flow ==
+
+tms -> builder : new Builder()\n.withSub(..)\n.withStatus(..)
+activate builder
+
+tms -> builder : build()
+
+builder -> builder : Validate Base Claims & Constraints\n(e.g., enforce public visibility, no Selective Disclosure)
+builder -> builder : Process Localized Claims (RFC 5646 / BCP 47)
+builder -> builder : Inject UUIDv4 (jti) & Status List Entry
+builder -> builder : Assemble JOSE Header\n(Swiss Profile: typ, alg, kid, profile_version)
+
+builder --> tms : TrustStatementJwt (unsigned payload)
+deactivate builder
+
+tms -> crypto : sign(jwt.getPayloadToSign())
+activate crypto
+note right of crypto
+  The Signature Service abstracts
+  the hardware integration and
+  handles the secure connection.
+end note
+
+crypto -> hsm : invokeCryptographicSignature(hash)
+activate hsm
+hsm --> crypto : signatureBytes
+deactivate hsm
+
+crypto --> tms : signed JWS (Compact Serialization)
+deactivate crypto
+
+@enduml
