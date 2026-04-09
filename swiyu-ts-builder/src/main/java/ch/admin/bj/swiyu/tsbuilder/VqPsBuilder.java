@@ -53,10 +53,7 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> impl
      * @throws TrustStatementValidationException if {@code name} is blank or exceeds 50 characters
      */
     public VqPsBuilder addPurposeName(String name) {
-        if (name == null || name.isBlank()) {
-            throw new TrustStatementValidationException("purpose_name must not be null or blank");
-        }
-        validateMaxLength(name, MAX_PURPOSE_NAME_LENGTH, "purpose_name");
+        validatePurposeName(name);
         claim("purpose_name", name);
         return self();
     }
@@ -68,9 +65,9 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> impl
      * The name must not exceed 50 characters.
      * </p>
      *
-     * @param locale the BCP 47 language tag (e.g. {@code de-CH}, {@code fr}),
-     *               must not be {@code null} or blank
      * @param name   the purpose name in the given locale, max 50 characters,
+     *               must not be {@code null} or blank
+     * @param locale the BCP 47 language tag (e.g. {@code de-CH}, {@code fr}),
      *               must not be {@code null} or blank
      * @return this builder for fluent chaining
      * @throws TrustStatementValidationException if {@code locale} or {@code name} is blank,
@@ -81,12 +78,16 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> impl
             throw new TrustStatementValidationException(
                     "locale must not be null or blank – use addPurposeName(String name) for a non-localized purpose name");
         }
+        validatePurposeName(name);
+        claim(localizedKey("purpose_name", locale), name);
+        return self();
+    }
+
+    private void validatePurposeName(String name) {
         if (name == null || name.isBlank()) {
             throw new TrustStatementValidationException("purpose_name must not be null or blank");
         }
         validateMaxLength(name, MAX_PURPOSE_NAME_LENGTH, "purpose_name");
-        claim(localizedKey("purpose_name", locale), name);
-        return self();
     }
 
     /**
@@ -102,10 +103,7 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> impl
      * @throws TrustStatementValidationException if {@code desc} is blank or exceeds 500 characters
      */
     public VqPsBuilder addPurposeDesc(String desc) {
-        if (desc == null || desc.isBlank()) {
-            throw new TrustStatementValidationException("purpose_description must not be null or blank");
-        }
-        validateMaxLength(desc, MAX_PURPOSE_DESC_LENGTH, "purpose_description");
+        validatePurposeDesc(desc);
         claim("purpose_description", desc);
         return self();
     }
@@ -117,9 +115,9 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> impl
      * The description must not exceed 500 characters.
      * </p>
      *
-     * @param locale the BCP 47 language tag (e.g. {@code de-CH}, {@code fr}),
-     *               must not be {@code null} or blank
      * @param desc   the purpose description in the given locale, max 500 characters,
+     *               must not be {@code null} or blank
+     * @param locale the BCP 47 language tag (e.g. {@code de-CH}, {@code fr}),
      *               must not be {@code null} or blank
      * @return this builder for fluent chaining
      * @throws TrustStatementValidationException if {@code locale} or {@code desc} is blank,
@@ -130,12 +128,16 @@ public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> impl
             throw new TrustStatementValidationException(
                     "locale must not be null or blank – use addPurposeDesc(String desc) for a non-localized purpose description");
         }
+        validatePurposeDesc(desc);
+        claim(localizedKey("purpose_description", locale), desc);
+        return self();
+    }
+
+    private void validatePurposeDesc(String desc) {
         if (desc == null || desc.isBlank()) {
             throw new TrustStatementValidationException("purpose_description must not be null or blank");
         }
         validateMaxLength(desc, MAX_PURPOSE_DESC_LENGTH, "purpose_description");
-        claim(localizedKey("purpose_description", locale), desc);
-        return self();
     }
 
     /**
