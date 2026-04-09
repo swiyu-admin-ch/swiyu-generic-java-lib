@@ -47,11 +47,11 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
 
     private static final Pattern DID_PATTERN =
             Pattern.compile(
-                    "^did:(webvh|tdw):Q[1-9a-zA-NP-Z]{45,}(:[0-9a-zA-Z%_.-]+)++$");
+                    "^did:(webvh|tdw):Q[1-9A-HJ-NP-Za-km-z]{45}(:[0-9a-zA-Z%_.-]+)++$");
 
     private static final Pattern KID_PATTERN =
             Pattern.compile(
-                    "^did:(webvh|tdw):Q[1-9a-zA-NP-Z]{45,}(:[0-9a-zA-Z%_.-]+)++#[0-9a-zA-Z_-]+$");
+                    "^did:(webvh|tdw):Q[1-9A-HJ-NP-Za-km-z]{45}(:[0-9a-zA-Z%_.-]+)++#[0-9a-zA-Z_-]+$");
 
 
     /**
