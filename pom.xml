@@ -46,6 +46,7 @@
         <module>swiyu-did-resolver-adapter</module>
         <module>swiyu-jwe-util</module>
         <module>swiyu-jwt-util</module>
+        <module>swiyu-claims-path-pointer-util</module>
         <module>swiyu-dpop-util</module>
         <module>swiyu-ts-builder</module>
     </modules>

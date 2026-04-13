@@ -33,11 +33,11 @@ jobs:
           MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
       - name: Monitor Snyk for vulnerabilities in code 📦
-        uses: snyk/actions/docker@master
+        uses: snyk/actions/maven-3-jdk-21@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
           SNYK_API: https://api.eu.snyk.io
           SNYK_ORG: ${{ secrets.SNYK_ORG }}
         with:
-          # report only vulnerabilities with level high or critical, as we want to avoid noise in the PR checks
+          # run the Snyk CLI's `monitor` for a Maven aggregated project
           args: monitor --maven-aggregate-project --severity-threshold=high --project-tags=tag=${{ github.event.release.tag_name }}
