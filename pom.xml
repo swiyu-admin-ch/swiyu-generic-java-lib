@@ -69,6 +69,15 @@
 
     <dependencyManagement>
         <dependencies>
+
+            <!-- Check again on Spring Boot update -->
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-core</artifactId>
+                <version>10.1.54</version>
+                <scope>compile</scope>
+            </dependency>
+
             <!-- Testing -->
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
