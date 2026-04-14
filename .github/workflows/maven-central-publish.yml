@@ -39,5 +39,5 @@ jobs:
           SNYK_API: https://api.eu.snyk.io
           SNYK_ORG: ${{ secrets.SNYK_ORG }}
         with:
-          # run the Snyk CLI's `monitor` for a Maven aggregated project
-          args: monitor --maven-aggregate-project --severity-threshold=high --project-tags=tag=${{ github.event.release.tag_name }}
+          command: monitor
+          args: --maven-aggregate-project --severity-threshold=high --project-tags:app-name=swiyu-geberic-java-lib,version=${{ github.event.release.tag_name }}
