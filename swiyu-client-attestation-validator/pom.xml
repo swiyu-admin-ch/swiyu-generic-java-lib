@@ -136,6 +136,19 @@
                     <target>21</target>
                 </configuration>
             </plugin>
+            <!-- Add manifest information to the packages -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
 
             <!-- required by https://central.sonatype.org/publish/requirements/ -->
             <plugin>
