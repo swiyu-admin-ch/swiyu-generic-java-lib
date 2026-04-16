@@ -182,7 +182,7 @@ ERROR c.a.b.s.c.ClientAttestationValidator : Attestation EC verification failed
 The library includes:
 
 - **Nimbus JOSE+JWT** (9.37.3): JWT parsing and validation
-- **Bouncy Castle** (1.78.1): Cryptographic operations and PEM parsing
+- **Bouncy Castle** (1.84): Cryptographic operations and PEM parsing
 - **Jackson** (2.19.2): JSON processing
 - **Java JSON Canonicalization** (1.1): JCS implementation for hash verification
 - **Spring Boot Starter**: Auto-configuration support
@@ -197,4 +197,3 @@ contributing found in [CONTRIBUTING.md](/CONTRIBUTING.md).
 This project is licensed under the terms of the MIT license. See the [LICENSE](/LICENSE) file for details.
 
 ---
-
