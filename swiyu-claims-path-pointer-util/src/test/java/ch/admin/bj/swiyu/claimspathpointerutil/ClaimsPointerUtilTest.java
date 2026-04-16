@@ -2,7 +2,10 @@ package ch.admin.bj.swiyu.claimspathpointerutil;
 
 import java.util.*;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -10,6 +13,41 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ClaimsPathPointerUtilTest {
+
+    private Map<String, Object> sdJwt;
+
+    @BeforeEach
+    void setUp() throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        // OID4VP 1.0 7.3 Claims Path Pointer Example https://openid.net/specs/openid-4-verifiable-presentations-1_0.html#section-7.3
+        // all numbers are float, as sdjwt lib marshalls all numbers to float
+        sdJwt = objectMapper.readValue("""
+                {
+                  "vct": "https://www.oid4vp.example.com/university",
+                  "name": "Arthur Dent",
+                  "address": {
+                    "street_address": "42 Market Street",
+                    "locality": "Milliways",
+                    "postal_code": "12345"
+                  },
+                  "degrees": [
+                    {
+                      "type": "Bachelor of Science",
+                      "university": "University of Betelgeuse"
+                    },
+                    {
+                      "type": "Master of Science",
+                      "university": "University of Betelgeuse"
+                    }
+                  ],
+                  "nationalities": ["British", "Betelgeusian"],
+                  "boolean_value": true,
+                  "integer_number": 98.0,
+                  "float_number": 55.5,
+                  "lucky_numbers": [7.0, 3.14, 42.0]
+                }
+                """, Map.class);
+    }
 
     /**
      * Verifies that flatten returns the input path when the current object is a leaf (non-Map and non-List).
@@ -70,7 +108,7 @@ class ClaimsPathPointerUtilTest {
         Map<String, Object> obj = Map.of(
                 "given_name", "Alice",
                 "family_name", "Smith",
-                "age", 30,
+                "age", 30.0,
                 "address", Map.of(
                         "street_address", "Main St",
                         "locality", "Zurich",
@@ -111,29 +149,29 @@ class ClaimsPathPointerUtilTest {
     }
 
     @Test
-    void validateRequestedClaim_emptyPointerPath_throws() {
+    void validateRequestedClaims_emptyPointerPath_throws() {
         Map<String, Object> obj = Map.of("a", "b");
         assertThrows(IllegalArgumentException.class,
-                () -> ClaimsPathPointerUtil.validateRequestedClaim(obj, List.of(), null));
+                () -> ClaimsPathPointerUtil.validateRequestedClaims(obj, List.of(), null));
     }
 
     @Test
-    void validateRequestedClaim_pathNotFound_throws() {
+    void validateRequestedClaims_pathNotFound_throws() {
         Map<String, Object> obj = Map.of("a", Map.of("b", "c"));
         assertThrows(IllegalArgumentException.class,
-                () -> ClaimsPathPointerUtil.validateRequestedClaim(obj, List.of("a", "missing"), null));
+                () -> ClaimsPathPointerUtil.validateRequestedClaims(obj, List.of("a", "missing"), null));
     }
 
     @Test
-    void validateRequestedClaim_simplePath_successWhenValuesNull() {
+    void validateRequestedClaims_simplePath_successWhenValuesNull() {
         Map<String, Object> obj = Map.of("name", "Arthur Dent");
-        assertDoesNotThrow(() -> ClaimsPathPointerUtil.validateRequestedClaim(obj, List.of("name"), null));
+        assertDoesNotThrow(() -> ClaimsPathPointerUtil.validateRequestedClaims(obj, List.of("name"), null));
     }
 
     @Test
-    void validateRequestedClaim_simplePath_valueSatisfied_success() {
+    void validateRequestedClaims_simplePath_valueSatisfied_success() {
         Map<String, Object> obj = Map.of("name", "Arthur Dent");
-        assertDoesNotThrow(() -> ClaimsPathPointerUtil.validateRequestedClaim(
+        assertDoesNotThrow(() -> ClaimsPathPointerUtil.validateRequestedClaims(
                 obj,
                 List.of("name"),
                 List.of("Arthur Dent", "Zaphod")
@@ -141,9 +179,9 @@ class ClaimsPathPointerUtilTest {
     }
 
     @Test
-    void validateRequestedClaim_simplePath_valueNotSatisfied_throws() {
+    void validateRequestedClaims_simplePath_valueNotSatisfied_throws() {
         Map<String, Object> obj = Map.of("name", "Arthur Dent");
-        assertThrows(IllegalArgumentException.class, () -> ClaimsPathPointerUtil.validateRequestedClaim(
+        assertThrows(IllegalArgumentException.class, () -> ClaimsPathPointerUtil.validateRequestedClaims(
                 obj,
                 List.of("name"),
                 List.of("Ford Prefect")
@@ -151,7 +189,7 @@ class ClaimsPathPointerUtilTest {
     }
 
     @Test
-    void validateRequestedClaim_wildcardSelectAllArrayElements_success() {
+    void validateRequestedClaims_wildcardSelectAllArrayElements_success() {
         Map<String, Object> obj = Map.of(
                 "roles", List.of("admin", "user")
         );
@@ -160,7 +198,7 @@ class ClaimsPathPointerUtilTest {
         claimPointer.add(null); // wildcard on array
 
         // roles[*] contains "user"
-        assertDoesNotThrow(() -> ClaimsPathPointerUtil.validateRequestedClaim(
+        assertDoesNotThrow(() -> ClaimsPathPointerUtil.validateRequestedClaims(
                 obj,
                 claimPointer,
                 List.of("user")
@@ -168,7 +206,7 @@ class ClaimsPathPointerUtilTest {
     }
 
     @Test
-    void validateRequestedClaim_numericIndexSelection_success() {
+    void validateRequestedClaims_numericIndexSelection_success() {
         Map<String, Object> obj = Map.of(
                 "degrees", List.of(
                         Map.of("type", "BSc"),
@@ -177,7 +215,7 @@ class ClaimsPathPointerUtilTest {
         );
 
         // degrees[1].type == "MSc"
-        assertDoesNotThrow(() -> ClaimsPathPointerUtil.validateRequestedClaim(
+        assertDoesNotThrow(() -> ClaimsPathPointerUtil.validateRequestedClaims(
                 obj,
                 List.of("degrees", 1, "type"),
                 List.of("MSc")
@@ -185,9 +223,9 @@ class ClaimsPathPointerUtilTest {
     }
 
     @Test
-    void validateRequestedClaim_illegalPathComponentType_throws() {
+    void validateRequestedClaims_illegalPathComponentType_throws() {
         Map<String, Object> obj = Map.of("a", "b");
-        assertThrows(IllegalArgumentException.class, () -> ClaimsPathPointerUtil.validateRequestedClaim(
+        assertThrows(IllegalArgumentException.class, () -> ClaimsPathPointerUtil.validateRequestedClaims(
                 obj,
                 List.of(new Object()),
                 null
@@ -195,12 +233,12 @@ class ClaimsPathPointerUtilTest {
     }
 
     @Test
-    void validateRequestedClaim_wildcardOnNonArray_throws() {
+    void validateRequestedClaims_wildcardOnNonArray_throws() {
         Map<String, Object> obj = Map.of("roles", "admin");
         List<Object> claimPointer = new ArrayList<>();
         claimPointer.add("roles");
         claimPointer.add(null); // wildcard on array
-        assertThrows(IllegalArgumentException.class, () -> ClaimsPathPointerUtil.validateRequestedClaim(
+        assertThrows(IllegalArgumentException.class, () -> ClaimsPathPointerUtil.validateRequestedClaims(
                 obj,
                 claimPointer,
                 null
@@ -208,9 +246,9 @@ class ClaimsPathPointerUtilTest {
     }
 
     @Test
-    void validateRequestedClaim_indexOnNonArray_throws() {
+    void validateRequestedClaims_indexOnNonArray_throws() {
         Map<String, Object> obj = Map.of("roles", "admin");
-        assertThrows(IllegalArgumentException.class, () -> ClaimsPathPointerUtil.validateRequestedClaim(
+        assertThrows(IllegalArgumentException.class, () -> ClaimsPathPointerUtil.validateRequestedClaims(
                 obj,
                 List.of("roles", 0),
                 null
@@ -218,9 +256,9 @@ class ClaimsPathPointerUtilTest {
     }
 
     @Test
-    void validateRequestedClaim_keySelectionOnNonObject_throws() {
+    void validateRequestedClaims_keySelectionOnNonObject_throws() {
         Map<String, Object> obj = Map.of("roles", List.of("admin"));
-        assertThrows(IllegalArgumentException.class, () -> ClaimsPathPointerUtil.validateRequestedClaim(
+        assertThrows(IllegalArgumentException.class, () -> ClaimsPathPointerUtil.validateRequestedClaims(
                 obj,
                 List.of("roles", 0, "name"),
                 null
@@ -228,15 +266,37 @@ class ClaimsPathPointerUtilTest {
     }
 
     @Test
-    void validateRequestedClaim_keySelectionOnNonObject_thenSuccess() {
+    void validateRequestedClaims_keySelectionOnNonObject_thenSuccess() {
         List<Object> claimPointer = new ArrayList<>();
         claimPointer.add("roles");
         claimPointer.add(null); // wildcard on array
         Map<String, Object> obj = Map.of("roles", List.of("admin"));
-        assertDoesNotThrow(() -> ClaimsPathPointerUtil.validateRequestedClaim(
+        assertDoesNotThrow(() -> ClaimsPathPointerUtil.validateRequestedClaims(
                 obj,
                 claimPointer,
                 null
         ));
+    }
+
+    /**
+     * checks value of numbers in array, if one matches, the selection is valid
+     */
+    @Test
+    void validateRequestedClaims_withNumberValidation_doesNotThrow() {
+        var numberList = new ArrayList<>();
+        numberList.add("lucky_numbers");
+        numberList.add(null);
+        assertDoesNotThrow(() -> ClaimsPathPointerUtil.validateRequestedClaims(sdJwt, numberList, List.of(7)));
+    }
+
+    /**
+     * checks value of numbers in array, if one matches, the selection is valid
+     */
+    @Test
+    void validateRequestedClaims_withFloatNumberValidation_doesNotThrow() {
+        var numberList = new ArrayList<>();
+        numberList.add("lucky_numbers");
+        numberList.add(null);
+        assertDoesNotThrow(() -> ClaimsPathPointerUtil.validateRequestedClaims(sdJwt, numberList, List.of(3.14)));
     }
 }

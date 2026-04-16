@@ -12,14 +12,19 @@ public class ClaimsPathPointerUtil {
      * Validate if the requestedClaims are present in the jwt
      * Throws Illegal Argument Exception if something is wrong with the presented object map
      *
-     * @throws IllegalArgumentException if not all requested claims are present, if path does not exist, value missmatch in the sd jwt's claims
+     * @throws IllegalArgumentException if not all requested claims are present, if path does not exist, value mismatch in the sd jwt's claims
      */
-    public static void validateRequestedClaim(Map<String, Object> objectMap, List<Object> requestedClaimsPointerPath, List<Object> requestedValues) {
+    public static void validateRequestedClaims(Map<String, Object> objectMap, List<Object> requestedClaimsPointerPath, List<Object> requestedValues) {
         if (CollectionUtils.isEmpty(requestedClaimsPointerPath)) {
             throw new IllegalArgumentException("Requested claims pointer path is empty");
         }
 
         var claims = selectClaim(objectMap, requestedClaimsPointerPath);
+
+        if (requestedValues != null) {
+            // if number cast to double as the sdjwt uses GSON which unmarshals all numbers to double
+            requestedValues = requestedValues.stream().map(value -> value instanceof Number number ? number.doubleValue() : value).toList();
+        }
 
         if (requestedValues != null && Collections.disjoint(claims, requestedValues)) {
             throw new IllegalArgumentException("Not all requested claim values are satisfied");
