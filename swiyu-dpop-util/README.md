@@ -106,6 +106,13 @@ public void validateAccessTokenBinding(String accessToken, SignedJWT dpopJwt, Ma
   - `boundPublicKey`: The public key (JWK) bound to the access token.
 - **Throws:** `DemonstratingProofOfPossessionException` if the DPoP is not correctly associated with the access token or key.
 
+## Implementation Specialities
+To allow a degree uf fexibility with htu comparison, a beforehand known external url can be used.
+When receiveing a request with an internal_url and a htu.
+
+The htu comparison is done with
+
+`<external_url> + <internal_url.path> == <htu>`
 
 ## Dependencies
 

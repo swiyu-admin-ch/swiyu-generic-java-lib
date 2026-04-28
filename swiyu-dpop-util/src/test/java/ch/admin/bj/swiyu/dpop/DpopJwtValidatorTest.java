@@ -13,6 +13,8 @@ import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.net.URI;
 import java.time.Clock;
@@ -102,20 +104,57 @@ class DpopJwtValidatorTest {
         assertDoesNotThrow(() -> DpopJwtValidator.validateHtm("GET", signedJWT.getJWTClaimsSet()));
     }
 
-    @Test
-    void validateHtu_mismatch_throws() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"https://internal.local", "https://api.example.com"})
+    void validateHtu_match_ok(String requestUriHost) throws Exception {
+        SignedJWT signedJWT = buildSignedJwt("https://api.example.com/resource");
+        URI requestUri = new URI("%s/resource".formatted(requestUriHost));
+        URI externalUri = new URI("https://api.example.com");
+        assertDoesNotThrow(() -> DpopJwtValidator.validateHtu(requestUri, signedJWT.getJWTClaimsSet().getStringClaim("htu"), externalUri));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"https://internal.local", "https://api.example.com", "https://api.example.com/public/api"})
+    void validateHtu_match_rewrite_path_ok(String requestUriHost) throws Exception {
+        SignedJWT signedJWT = buildSignedJwt("https://api.example.com/public/api/resource");
+        URI requestUri = new URI("%s/resource".formatted(requestUriHost));
+        URI externalUri = new URI("https://api.example.com/public/api");
+        assertDoesNotThrow(() -> DpopJwtValidator.validateHtu(requestUri, signedJWT.getJWTClaimsSet().getStringClaim("htu"), externalUri));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"https://internal.local", "https://api.example.com"})
+    void validateHtu_mismatch_host_throws(String requestUriHost) throws Exception {
         SignedJWT signedJWT = buildSignedJwt("https://example.com/resource");
-        URI requestUri = new URI("https://internal.local/resource");
+        URI requestUri = new URI("%s/resource".formatted(requestUriHost));
         URI externalUri = new URI("https://api.example.com");
         assertThrows(DpopValidationException.class, () -> DpopJwtValidator.validateHtu(requestUri, signedJWT.getJWTClaimsSet().getStringClaim("htu"), externalUri));
     }
 
-    @Test
-    void validateHtu_match_ok() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"https://internal.local", "https://api.example.com"})
+    void validateHtu_mismatch_resource_throws(String requestUriHost) throws Exception {
         SignedJWT signedJWT = buildSignedJwt("https://api.example.com/resource");
-        URI requestUri = new URI("https://internal.local/resource");
+        URI requestUri = new URI("%s/credential".formatted(requestUriHost));
         URI externalUri = new URI("https://api.example.com");
-        assertDoesNotThrow(() -> DpopJwtValidator.validateHtu(requestUri, signedJWT.getJWTClaimsSet().getStringClaim("htu"), externalUri));
+        assertThrows(DpopValidationException.class, () -> DpopJwtValidator.validateHtu(requestUri, signedJWT.getJWTClaimsSet().getStringClaim("htu"), externalUri));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"https://internal.local", "https://api.example.com"})
+    void validateHtu_rewrite_path_injected_throws(String requestUriHost) throws Exception {
+        SignedJWT signedJWT = buildSignedJwt("https://api.example.com/public/api/resource");
+        URI requestUri = new URI("%s/injected/resource".formatted(requestUriHost));
+        URI externalUri = new URI("https://api.example.com/public/api");
+        assertThrows(DpopValidationException.class, () -> DpopJwtValidator.validateHtu(requestUri, signedJWT.getJWTClaimsSet().getStringClaim("htu"), externalUri));
+    }
+
+    @Test
+    void validateHtu_rewrite_path_missing_subresource_throws() throws Exception {
+        SignedJWT signedJWT = buildSignedJwt("https://api.example.com/public/api/subresource/resource");
+        URI requestUri = new URI("https://api.example.com/resource");
+        URI externalUri = new URI("https://api.example.com/public/api");
+        assertThrows(DpopValidationException.class, () -> DpopJwtValidator.validateHtu(requestUri, signedJWT.getJWTClaimsSet().getStringClaim("htu"), externalUri));
     }
 
     @Test
