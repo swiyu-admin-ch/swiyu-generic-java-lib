@@ -7,7 +7,7 @@
     <!--     For the sake of Maven Central publishing, it must now match the Maven Central namespace. -->
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-generic-java-lib-parent</artifactId>
-    <version>1.4.0</version>
+    <version>1.5.0</version>
     <packaging>pom</packaging>
 
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
@@ -79,6 +79,8 @@
         <module>swiyu-claims-path-pointer-util</module>
         <module>swiyu-dpop-util</module>
         <module>swiyu-ts-builder</module>
+        <module>swiyu-jwt-validator</module>
+        <module>swiyu-sdjwt-validator</module>
     </modules>
 
     <build>
