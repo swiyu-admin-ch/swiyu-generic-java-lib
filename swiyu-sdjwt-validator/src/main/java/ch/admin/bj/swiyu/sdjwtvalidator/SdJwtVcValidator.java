@@ -3,6 +3,7 @@ package ch.admin.bj.swiyu.sdjwtvalidator;
 import ch.admin.bj.swiyu.jwtvalidator.DidJwtValidator;
 import ch.admin.bj.swiyu.jwtvalidator.JwtValidatorException;
 import ch.admin.eid.did_sidekicks.DidDoc;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEObjectType;
@@ -55,6 +56,8 @@ public class SdJwtVcValidator {
     public static final String TYP_VC_SD_JWT = "vc+sd-jwt";
 
     private static final String SD_ALG_CLAIM = "_sd_alg";
+
+    private static final int OBJECT_PROPERTY_DISCLOSURES_SIZE = 3;
     
     /**
      * Registered JWT claims that MUST NOT appear in any Disclosure per RFC 9901 §3.2.2.2
@@ -236,39 +239,66 @@ public class SdJwtVcValidator {
     private void validateNoProtectedClaimsInDisclosures(String sdJwt) {
         List<String> disclosures = SdJwtParser.extractDisclosures(sdJwt);
         for (String disclosure : disclosures) {
-            String decoded = SdJwtParser.decodeDisclosure(disclosure);
-            try {
-                JsonNode array = OBJECT_MAPPER.readTree(decoded);
-
-                // Validate structure: must be a JSON array with exactly 2 or 3 elements.
-                // RFC 9901 §5.2 defines two Disclosure types:
-                //   Object Property: [salt, claim_name, claim_value]  (size 3)
-                //   Array Element:   [salt, claim_value]              (size 2)
-                if (!array.isArray() || (array.size() != 2 && array.size() != 3)) {
-                    throw new JwtValidatorException(
-                            "Invalid Disclosure format: expected JSON array with 2 or 3 elements, got: " + decoded);
-                }
-
-                // Only Object Property Disclosures (size 3) carry a claim name that can be checked.
-                // Array Element Disclosures (size 2) pass implicitly – their array name is embedded
-                // in the Issuer-Signed JWT, not in the Disclosure itself.
-                if (array.size() == 3) {
-                    String claimName = array.get(1).asText();
-                    if (PROTECTED_CLAIMS.contains(claimName)) {
-                        throw new JwtValidatorException(
-                                "Registered claim '" + claimName +
-                                "' MUST NOT be selectively disclosed (RFC 9901 §3.2.2.2 / Swiss Profile)");
-                    }
-                }
-
-
-            } catch (JwtValidatorException e) {
-                throw e;
-            } catch (Exception e) {
-                throw new JwtValidatorException("Failed to parse Disclosure: " + decoded, e);
-            }
+            validateSingleDisclosure(disclosure);
         }
         log.debug("All {} Disclosure(s) passed protected-claim check", disclosures.size());
+    }
+
+    /**
+     * Parses and validates a single base64url-encoded Disclosure.
+     *
+     * @param disclosure the base64url-encoded Disclosure
+     * @throws JwtValidatorException if the Disclosure is malformed or contains a protected claim
+     */
+    private void validateSingleDisclosure(String disclosure) {
+        String decoded = SdJwtParser.decodeDisclosure(disclosure);
+        try {
+            JsonNode array = OBJECT_MAPPER.readTree(decoded);
+            validateDisclosureStructure(array, decoded);
+            validateDisclosureClaimName(array);
+        } catch (JsonProcessingException e) {
+            throw new JwtValidatorException("Failed to parse Disclosure: " + decoded, e);
+        }
+    }
+
+    /**
+     * Validates that the decoded Disclosure is a JSON array with exactly 2 or 3 elements.
+     *
+     * <p>RFC 9901 §5.2 defines two Disclosure types:</p>
+     * <ul>
+     *   <li>Object Property: {@code [salt, claim_name, claim_value]} (size 3)</li>
+     *   <li>Array Element:   {@code [salt, claim_value]}             (size 2)</li>
+     * </ul>
+     *
+     * @param array   the parsed JSON node
+     * @param decoded the decoded string (for error messages)
+     * @throws JwtValidatorException if the structure is invalid
+     */
+    private void validateDisclosureStructure(JsonNode array, String decoded) {
+        if (!array.isArray() || (array.size() != 2 && array.size() != OBJECT_PROPERTY_DISCLOSURES_SIZE)) {
+            throw new JwtValidatorException(
+                    "Invalid Disclosure format: expected JSON array with 2 or 3 elements, got: " + decoded);
+        }
+    }
+
+    /**
+     * Validates that an Object Property Disclosure does not carry a protected claim name.
+     *
+     * <p>Array Element Disclosures (size 2) pass implicitly – their array name is embedded
+     * in the Issuer-Signed JWT, not in the Disclosure itself.</p>
+     *
+     * @param array the parsed Disclosure JSON array
+     * @throws JwtValidatorException if the claim name is a protected claim
+     */
+    private void validateDisclosureClaimName(JsonNode array) {
+        if (array.size() == OBJECT_PROPERTY_DISCLOSURES_SIZE) {
+            String claimName = array.get(1).asText();
+            if (PROTECTED_CLAIMS.contains(claimName)) {
+                throw new JwtValidatorException(
+                        "Registered claim '" + claimName +
+                        "' MUST NOT be selectively disclosed (RFC 9901 §3.2.2.2 / Swiss Profile)");
+            }
+        }
     }
 }
 

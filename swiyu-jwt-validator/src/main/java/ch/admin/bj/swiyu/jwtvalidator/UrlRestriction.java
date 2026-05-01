@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,7 +31,7 @@ public class UrlRestriction {
             throw new IllegalArgumentException("allowedHosts must not be null or empty");
         }
         this.allowedHosts = allowedHosts.stream()
-                .map(String::toLowerCase)
+                .map(h -> h.toLowerCase(Locale.ROOT))
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -61,7 +62,7 @@ public class UrlRestriction {
                 log.warn("URL validation failed: could not extract host from '{}'", url);
                 return false;
             }
-            boolean allowed = allowedHosts.contains(host.toLowerCase());
+            boolean allowed = allowedHosts.contains(host.toLowerCase(Locale.ROOT));
             if (!allowed) {
                 log.warn("URL validation failed: host '{}' is not in the allowed hosts whitelist", host);
             }

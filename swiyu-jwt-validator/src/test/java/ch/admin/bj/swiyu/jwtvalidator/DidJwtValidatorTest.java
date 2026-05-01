@@ -113,7 +113,7 @@ class DidJwtValidatorTest {
         // real UrlRestriction with an empty allowlist combined with a mock parser.
 
         UrlRestriction realEmpty = new UrlRestriction(Set.of("identifier.admin.ch"));
-        DidJwtValidator realValidator = new DidJwtValidator(mockDidKidParser, realEmpty);
+        new DidJwtValidator(mockDidKidParser, realEmpty);
 
         // The call will fail at new Did(didString) because of native libs – that is expected
         // in a unit test context. We only assert that the parser methods were invoked.

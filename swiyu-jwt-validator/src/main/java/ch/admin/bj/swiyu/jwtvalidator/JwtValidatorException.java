@@ -1,5 +1,7 @@
 package ch.admin.bj.swiyu.jwtvalidator;
 
+import java.io.Serial;
+
 /**
  * Unchecked exception thrown to signal failures during JWT validation.
  *
@@ -10,6 +12,9 @@ package ch.admin.bj.swiyu.jwtvalidator;
  * exception that callers can handle uniformly.</p>
  */
 public class JwtValidatorException extends RuntimeException {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     /**
      * Constructs a new exception with the given detail message.
