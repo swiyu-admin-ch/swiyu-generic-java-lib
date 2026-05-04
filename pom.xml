@@ -79,6 +79,8 @@
         <module>swiyu-claims-path-pointer-util</module>
         <module>swiyu-dpop-util</module>
         <module>swiyu-ts-builder</module>
+        <module>swiyu-jwt-validator</module>
+        <module>swiyu-sdjwt-validator</module>
     </modules>
 
     <build>

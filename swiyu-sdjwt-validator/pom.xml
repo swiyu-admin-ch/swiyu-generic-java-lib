@@ -5,15 +5,18 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ch.admin.swiyu</groupId>
-    <artifactId>swiyu-jwt-util</artifactId>
+    <artifactId>swiyu-sdjwt-validator</artifactId>
     <version>1.5.0</version>
     <packaging>jar</packaging>
-    <!-- required by https://central.sonatype.org/publish/requirements/ -->
+
     <name>${project.groupId}:${project.artifactId}</name>
-    <description>Utility library for JSON Web Token (JWT) operations in the Swiyu ecosystem. Provides static methods for secure token creation, validation, and parsing.</description>
+    <description>
+        Validates SD-JWT VC tokens according to the Swiss Profile VC specification (RFC 9901).
+        Enforces typ header, _sd_alg hash algorithm, and protected claim rules.
+        Delegates DID-based signature verification to swiyu-jwt-validator.
+    </description>
     <url>https://github.com/swiyu-admin-ch/swiyu-generic-java-lib</url>
 
-    <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <licenses>
         <license>
             <name>MIT License</name>
@@ -21,7 +24,6 @@
         </license>
     </licenses>
 
-    <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <developers>
         <developer>
             <name>Swiyu Omni Developers</name>
@@ -30,7 +32,6 @@
         </developer>
     </developers>
 
-    <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <scm>
         <connection>scm:git:git://github.com/swiyu-admin-ch/swiyu-generic-java-lib.git</connection>
         <developerConnection>scm:git:ssh://github.com:swiyu-admin-ch/swiyu-generic-java-lib.git</developerConnection>
@@ -43,26 +44,51 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <!-- Dependency versions -->
         <junit.version>5.10.1</junit.version>
         <mockito.version>5.8.0</mockito.version>
-        <slf4j.version>2.0.9</slf4j.version>
         <lombok.version>1.18.30</lombok.version>
+        <slf4j.version>2.0.9</slf4j.version>
         <nimbus-jose-jwt.version>10.8</nimbus-jose-jwt.version>
+        <jackson.version>2.21.2</jackson.version>
     </properties>
 
     <dependencies>
-        <!-- JWT signing and cryptographic operations -->
+        <!-- DID-based JWT signature validation -->
+        <dependency>
+            <groupId>ch.admin.swiyu</groupId>
+            <artifactId>swiyu-jwt-validator</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- JWT header/payload parsing -->
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
             <version>${nimbus-jose-jwt.version}</version>
         </dependency>
+
+        <!-- Disclosure JSON parsing -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.21.2</version>
+            <version>${jackson.version}</version>
         </dependency>
+
+        <!-- Logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -76,17 +102,10 @@
             <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
-            <scope>provided</scope>
-        </dependency>
     </dependencies>
 
     <build>
         <plugins>
-            <!-- Compiler plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -96,7 +115,6 @@
                     <target>21</target>
                 </configuration>
             </plugin>
-            <!-- Add manifest information to the packages -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -109,8 +127,6 @@
                     </archive>
                 </configuration>
             </plugin>
-
-            <!-- required by https://central.sonatype.org/publish/requirements/ -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
@@ -124,8 +140,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <!-- required by https://central.sonatype.org/publish/requirements/ -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -139,8 +153,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- required by https://central.sonatype.org/publish/requirements/ -->
-            <!-- Verhindert, dass Maven das alte deploy-Plugin nutzt -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
@@ -149,7 +161,6 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
-            <!-- required by https://central.sonatype.org/publish/requirements/ -->
             <plugin>
                 <groupId>org.sonatype.central</groupId>
                 <artifactId>central-publishing-maven-plugin</artifactId>
@@ -197,3 +208,4 @@
     </profiles>
 
 </project>
+
