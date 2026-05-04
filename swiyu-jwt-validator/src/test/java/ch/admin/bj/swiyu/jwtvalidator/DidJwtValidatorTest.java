@@ -13,6 +13,8 @@ import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
+import java.util.Date;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,7 +46,7 @@ class DidJwtValidatorTest {
     void setUp() throws Exception {
         mockDidKidParser = mock(DidKidParser.class);
         mockUrlRestriction = mock(UrlRestriction.class);
-        validator = new DidJwtValidator(mockDidKidParser, mockUrlRestriction);
+        validator = new DidJwtValidator(mockDidKidParser, mockUrlRestriction, DidJwtValidator.DEFAULT_CLOCK_SKEW_SECONDS);
 
         ecKey = new ECKeyGenerator(Curve.P_256).keyID(ABSOLUTE_KID).generate();
     }
@@ -56,19 +58,19 @@ class DidJwtValidatorTest {
     @Test
     void constructor_withNullDidKidParser_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class,
-                () -> new DidJwtValidator(null, mockUrlRestriction));
+                () -> new DidJwtValidator(null, mockUrlRestriction, DidJwtValidator.DEFAULT_CLOCK_SKEW_SECONDS));
     }
 
     @Test
     void constructor_withNullUrlRestriction_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class,
-                () -> new DidJwtValidator(mockDidKidParser, null));
+                () -> new DidJwtValidator(mockDidKidParser, null, DidJwtValidator.DEFAULT_CLOCK_SKEW_SECONDS));
     }
 
     @Test
-    void constructor_defaultWithNullUrlRestriction_throwsIllegalArgumentException() {
+    void constructor_withNegativeClockSkew_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class,
-                () -> new DidJwtValidator(null));
+                () -> new DidJwtValidator(mockDidKidParser, mockUrlRestriction, -1));
     }
 
     // -------------------------------------------------------------------------
@@ -113,7 +115,7 @@ class DidJwtValidatorTest {
         // real UrlRestriction with an empty allowlist combined with a mock parser.
 
         UrlRestriction realEmpty = new UrlRestriction(Set.of("identifier.admin.ch"));
-        new DidJwtValidator(mockDidKidParser, realEmpty);
+        new DidJwtValidator(mockDidKidParser, realEmpty, DidJwtValidator.DEFAULT_CLOCK_SKEW_SECONDS);
 
         // The call will fail at new Did(didString) because of native libs – that is expected
         // in a unit test context. We only assert that the parser methods were invoked.
@@ -192,6 +194,38 @@ class DidJwtValidatorTest {
 
         // Should succeed despite iss being present – iss is actively ignored
         assertDoesNotThrow(() -> validator.validateJwt(jwt, jwkSet));
+    }
+
+    @Test
+    void validateJwt_withJwkSet_expiredJwt_throwsJwtValidatorException() throws Exception {
+        // Build JWT with an exp in the past
+        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.ES256).keyID(ABSOLUTE_KID).build();
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .subject("test")
+                .expirationTime(Date.from(Instant.now().minusSeconds(3600)))
+                .build();
+        String jwt = sign(header, claims);
+        JWKSet jwkSet = new JWKSet(ecKey.toPublicJWK());
+
+        when(mockDidKidParser.extractKidFromHeader(jwt)).thenReturn(ABSOLUTE_KID);
+
+        assertThrows(JwtValidatorException.class, () -> validator.validateJwt(jwt, jwkSet));
+    }
+
+    @Test
+    void validateJwt_withJwkSet_notYetValidJwt_throwsJwtValidatorException() throws Exception {
+        // Build JWT with nbf in the future (beyond clock skew)
+        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.ES256).keyID(ABSOLUTE_KID).build();
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .subject("test")
+                .notBeforeTime(Date.from(Instant.now().plusSeconds(3600)))
+                .build();
+        String jwt = sign(header, claims);
+        JWKSet jwkSet = new JWKSet(ecKey.toPublicJWK());
+
+        when(mockDidKidParser.extractKidFromHeader(jwt)).thenReturn(ABSOLUTE_KID);
+
+        assertThrows(JwtValidatorException.class, () -> validator.validateJwt(jwt, jwkSet));
     }
 
     // -------------------------------------------------------------------------

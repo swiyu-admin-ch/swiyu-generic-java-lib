@@ -11,6 +11,7 @@ without making any HTTP calls itself (Flow B).
 - **Absolute `kid` enforcement:** JWTs without a fully-qualified `kid` (DID URL with `#` fragment) are rejected immediately.
 - **Base Registry allowlist:** DID URLs are validated against a configurable set of allowed hosts to prevent CSRF and "phone home" attacks.
 - **`iss` claim ignored:** Trust is established exclusively via the `kid`; the `iss` claim is never validated.
+- **Time claim validation:** `exp` and `nbf` are validated when present, with a configurable clock skew tolerance (default: 60 s).
 - **No Spring Framework:** Pure Java, injectable via constructor into any framework.
 
 ## Installation
@@ -43,12 +44,24 @@ String didString = validator.getDidString(jwtString);
 String didLog = httpClient.fetch(didUrl);
 DidDoc didDoc = did.resolveAll(didString, didLog).getDidDoc();
 validator.validateJwt(jwtString, didDoc);
+// → exp/nbf are checked automatically; iss is ignored
 ```
 
 ### Flow A – Direct JWK Set validation (e.g. Trust Statements)
 
 ```java
 validator.validateJwt(jwtString, jwkSet);
+// → exp/nbf are checked automatically; iss is ignored
+```
+
+### Custom Clock Skew
+
+```java
+// Allow up to 120 seconds of clock difference between issuer and verifier
+DidJwtValidator validator = new DidJwtValidator(
+    new UrlRestriction(Set.of("identifier.admin.ch")),
+    120
+);
 ```
 
 ## Dependency Graph

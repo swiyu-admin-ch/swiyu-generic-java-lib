@@ -11,10 +11,16 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.proc.BadJOSEException;
+import com.nimbusds.jose.proc.SecurityContext;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import lombok.extern.slf4j.Slf4j;
 
 import java.text.ParseException;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Main facade for JWT validation in the swiyu ecosystem.
@@ -48,29 +54,48 @@ public class DidJwtValidator {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
+    /** Default clock skew tolerance in seconds (60 s). */
+    public static final int DEFAULT_CLOCK_SKEW_SECONDS = 60;
+
     private final DidKidParser didKidParser;
     private final UrlRestriction urlRestriction;
+    private final int clockSkewSeconds;
 
     /**
-     * Creates a {@code DidJwtValidator} with a default {@link DidKidParser}.
+     * Creates a {@code DidJwtValidator} with a default {@link DidKidParser} and
+     * a clock skew of {@value #DEFAULT_CLOCK_SKEW_SECONDS} seconds.
      *
      * @param urlRestriction the Base Registry allowlist enforcer; must not be {@code null}
      */
     public DidJwtValidator(UrlRestriction urlRestriction) {
-        this(new DidKidParser(), urlRestriction);
+        this(new DidKidParser(), urlRestriction, DEFAULT_CLOCK_SKEW_SECONDS);
+    }
+
+    /**
+     * Creates a {@code DidJwtValidator} with a default {@link DidKidParser} and configurable
+     * clock skew tolerance.
+     *
+     * @param urlRestriction    the Base Registry allowlist enforcer; must not be {@code null}
+     * @param clockSkewSeconds  acceptable clock skew in seconds (e.g. 60); must be &ge; 0
+     */
+    public DidJwtValidator(UrlRestriction urlRestriction, int clockSkewSeconds) {
+        this(new DidKidParser(), urlRestriction, clockSkewSeconds);
     }
 
     /**
      * Creates a {@code DidJwtValidator} with explicit collaborators (useful for testing).
      *
-     * @param didKidParser   the kid parser; must not be {@code null}
-     * @param urlRestriction the Base Registry allowlist enforcer; must not be {@code null}
+     * @param didKidParser     the kid parser; must not be {@code null}
+     * @param urlRestriction   the Base Registry allowlist enforcer; must not be {@code null}
+     * @param clockSkewSeconds acceptable clock skew in seconds; must be &ge; 0
      */
-    public DidJwtValidator(DidKidParser didKidParser, UrlRestriction urlRestriction) {
+    public DidJwtValidator(DidKidParser didKidParser, UrlRestriction urlRestriction, int clockSkewSeconds) {
         if (didKidParser == null) throw new IllegalArgumentException("didKidParser must not be null");
         if (urlRestriction == null) throw new IllegalArgumentException("urlRestriction must not be null");
+        if (clockSkewSeconds < 0) throw new IllegalArgumentException("clockSkewSeconds must be >= 0");
         this.didKidParser = didKidParser;
         this.urlRestriction = urlRestriction;
+        this.clockSkewSeconds = clockSkewSeconds;
     }
 
     /**
@@ -141,6 +166,7 @@ public class DidJwtValidator {
             throw new JwtValidatorException("Key '" + kid + "' not found in DID Document", e);
         }
 
+        validateTimeClaims(jwtString);
         JWKSet jwkSet = toJwkSet(jwk);
         verifySignature(jwtString, jwkSet);
     }
@@ -161,12 +187,42 @@ public class DidJwtValidator {
     public void validateJwt(String jwtString, JWKSet jwkSet) {
         // Validate kid header presence before delegating to JwtUtil
         didKidParser.extractKidFromHeader(jwtString);
+        validateTimeClaims(jwtString);
         verifySignature(jwtString, jwkSet);
     }
 
     // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------
+
+    /**
+     * Validates the time-based JWT claims ({@code exp} and {@code nbf}) using Nimbus
+     * {@link DefaultJWTClaimsVerifier} with the configured clock skew tolerance.
+     *
+     * <p>The {@code iss} claim is intentionally <em>ignored</em> (not verified, not forbidden)
+     * per PARENT-ADR-027. {@code exp} and {@code nbf} are checked when present.</p>
+     *
+     * @param jwtString the compact serialized JWT
+     * @throws JwtValidatorException if {@code exp} or {@code nbf} are violated
+     */
+    private void validateTimeClaims(String jwtString) {
+        try {
+            SignedJWT jwt = SignedJWT.parse(jwtString);
+            DefaultJWTClaimsVerifier<SecurityContext> verifier = new DefaultJWTClaimsVerifier<>(
+                    null,                  // no required audience
+                    new JWTClaimsSet.Builder().build(), // no exact match required
+                    Set.of(),              // no required claims (exp/nbf checked if present)
+                    Set.of()               // no prohibited claims – iss is ignored, not forbidden
+            );
+            verifier.setMaxClockSkew(clockSkewSeconds);
+            verifier.verify(jwt.getJWTClaimsSet(), null);
+            log.debug("JWT time claims (exp/nbf) verified successfully");
+        } catch (ParseException e) {
+            throw new JwtValidatorException("Failed to parse JWT for claims verification", e);
+        } catch (BadJOSEException e) {
+            throw new JwtValidatorException("JWT time claim validation failed: " + e.getMessage(), e);
+        }
+    }
 
     /**
      * Resolves a DID string to its HTTPS URL using the didresolver library.
