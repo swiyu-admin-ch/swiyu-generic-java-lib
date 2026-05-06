@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ch.admin.swiyu</groupId>
-    <artifactId>swiyu-jwt-util</artifactId>
+    <artifactId>swiyu-jwt-validator</artifactId>
     <version>1.5.0</version>
     <packaging>jar</packaging>
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <name>${project.groupId}:${project.artifactId}</name>
-    <description>Utility library for JSON Web Token (JWT) operations in the Swiyu ecosystem. Provides static methods for secure token creation, validation, and parsing.</description>
+    <description>TODO</description>
     <url>https://github.com/swiyu-admin-ch/swiyu-generic-java-lib</url>
 
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
@@ -49,9 +49,30 @@
         <slf4j.version>2.0.9</slf4j.version>
         <lombok.version>1.18.30</lombok.version>
         <nimbus-jose-jwt.version>10.8</nimbus-jose-jwt.version>
+        <didresolver.version>2.7.0</didresolver.version>
+        <jna.version>5.17.0</jna.version>
+        <slf4j.version>2.0.9</slf4j.version>
     </properties>
 
     <dependencies>
+        <!-- DID resolution -->
+        <dependency>
+            <groupId>ch.admin.swiyu</groupId>
+            <artifactId>didresolver</artifactId>
+            <version>${didresolver.version}</version>
+        </dependency>
+        <!-- JNA for didresolver native bindings -->
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>${jna.version}</version>
+        </dependency>
+        <!-- JWT utility library -->
+        <dependency>
+            <groupId>ch.admin.swiyu</groupId>
+            <artifactId>swiyu-jwt-util</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- JWT signing and cryptographic operations -->
         <dependency>
             <groupId>com.nimbusds</groupId>
@@ -62,6 +83,12 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>2.21.2</version>
+        </dependency>
+        <!-- Logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
         <!-- Testing -->
         <dependency>
