@@ -97,12 +97,12 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      *
      * @param typ the {@code typ} header value (e.g. {@code swiyu-identity-trust-statement+jwt})
      */
-    protected void setTypHeader(String typ) {
+    public void setTypHeader(String typ) {
         headerBuilder.type(new JOSEObjectType(typ));
     }
 
     /**
-     * Sets the {@code kid} protected header claim.
+     * Sets the {@code kid} header claim.
      * <p>
      * The value MUST be an absolute DID with a valid SCID and a key reference fragment,
      * accepted by the swiyu DID resolver (e.g. {@code did:tdw:QmZytP...#assert-key-01}).
@@ -115,7 +115,7 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      *                                           the expected DID format with SCID and key fragment
      */
 
-    protected T withKid(String kid) {
+    public T withKid(String kid) {
         if (kid == null || kid.isBlank()) {
             throw new TrustStatementValidationException("kid must not be null or blank");
         }
@@ -138,7 +138,7 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * @return this builder for fluent chaining
      * @throws TrustStatementValidationException if {@code subject} does not start with {@code did:}
      */
-    protected T withSubject(String subject) {
+    public T withSubject(String subject) {
         validateDid(subject, "sub");
         claimsBuilder.subject(subject);
         return self();
@@ -159,7 +159,7 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * @return this builder for fluent chaining
      * @throws TrustStatementValidationException if {@code expiresAt} is before {@code issuedAt}
      */
-    protected T withValidity(Instant issuedAt, Instant expiresAt) {
+    public T withValidity(Instant issuedAt, Instant expiresAt) {
         return withValidity(issuedAt, issuedAt, expiresAt);
     }
 
@@ -180,7 +180,7 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * @return this builder for fluent chaining
      * @throws TrustStatementValidationException if temporal ordering constraints are violated
      */
-    protected T withValidity(Instant issuedAt, Instant notBefore, Instant expiresAt) {
+    public T withValidity(Instant issuedAt, Instant notBefore, Instant expiresAt) {
         validateInstantNotNull(issuedAt, ISSUED_AT);
         validateInstantNotNull(notBefore, NOT_BEFORE);
         validateInstantNotNull(expiresAt, EXPIRES_AT);
