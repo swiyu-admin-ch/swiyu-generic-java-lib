@@ -7,17 +7,16 @@ import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Shared validation helpers for DPoP JWTs.
