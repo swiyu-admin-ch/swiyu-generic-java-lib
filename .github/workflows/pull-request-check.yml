@@ -45,7 +45,7 @@ jobs:
         with:
           name: jacoco-reports
           path: |
-            swiyu-client-attestation-validator/target/site/jacoco/jacoco.xml
+            **/target/site/jacoco/jacoco.xml
 
       - name: Run PMD static analysis
         uses: pmd/pmd-github-action@v2

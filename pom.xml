@@ -71,7 +71,6 @@
 
     <modules>
         <module>swiyu-jws-signature-service</module>
-        <module>swiyu-client-attestation-validator</module>
         <module>swiyu-generic-java-all</module>
         <module>swiyu-did-resolver-adapter</module>
         <module>swiyu-jwe-util</module>
