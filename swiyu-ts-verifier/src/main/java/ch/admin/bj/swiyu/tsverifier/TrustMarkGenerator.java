@@ -70,7 +70,7 @@ class TrustMarkGenerator {
                 }
             }
         }
-        if (authorizedFields.containsAll(usedProtectedFields)) {
+        if (!usedProtectedFields.isEmpty() && authorizedFields.containsAll(usedProtectedFields)) {
             trustMarkersBuilder.governedUseCaseAuthorizationTrustMarker(true);
         }
         return trustMarkersBuilder.build();

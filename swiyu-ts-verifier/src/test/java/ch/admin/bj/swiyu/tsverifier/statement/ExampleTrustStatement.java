@@ -53,6 +53,52 @@ public enum ExampleTrustStatement {
                 ]
             }"""),
     /**
+     * verification-query-public-statement with a protected claim
+     */
+    vqPS_protected_claim("""
+            {
+                "typ": "swiyu-verification-query-public-statement+jwt",
+                "alg": "ES256",
+                "kid": "did:example:verification-statment-issuer#key-1",
+            	"profile_version": "swiss-profile-trust:1.0.0"
+            }
+            """, """
+            {
+               "jti": "07f289d5-8b1f-4604-bf72-53bdcb71ee05",
+               "sub":"did:example:actor",
+               "iat":1690360968,
+               "exp":32503676400,
+               "purpose_name":"beispiel abfrage",
+               "purpose_name#de-ch":"beispiel abfrage",
+               "purpose_description":"frage ab zum beispiel",
+               "purpose_description#de-ch":"frage ab zum beispiel",
+               "request": {
+                  "type":"DCQL",
+                  "scope": "com.example.identityCardCredential_presentation",
+                  "query":{
+                     "credentials":[
+                        {
+                           "id":"my_credential",
+                           "format":"dc+sd-jwt",
+                           "meta":{
+                              "vct_values":[
+                                 "https://credentials.example.com/identity_credential"
+                              ]
+                           },
+                           "claims":[
+                              {
+                                 "path":[
+                                    "personal_administrative_number"
+                                 ]
+                              }
+                           ]
+                        }
+                     ]
+                  }
+               }
+            }
+            """),
+    /**
      * verification-query-public-statement
      */
     vqPS("""
@@ -88,7 +134,7 @@ public enum ExampleTrustStatement {
                            "claims":[
                               {
                                  "path":[
-                                    "personal_administrative_number"
+                                    "name"
                                  ]
                               }
                            ]

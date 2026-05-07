@@ -3,7 +3,6 @@ package ch.admin.bj.swiyu.tsverifier.statement;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSHeader;
@@ -19,7 +18,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
 
-import java.util.Optional;
 import java.util.stream.Stream;
 
 class StatementParserTest {
@@ -35,7 +33,7 @@ class StatementParserTest {
     private static Stream<Arguments> statementsProvider() {
         return Stream.of(
                 Arguments.of(ExampleTrustStatement.idTS, IdentityTrustStatement.class),
-                Arguments.of(ExampleTrustStatement.vqPS, VerificationQueryPublicStatement.class),
+                Arguments.of(ExampleTrustStatement.vqPS_protected_claim, VerificationQueryPublicStatement.class),
                 Arguments.of(ExampleTrustStatement.pvaTS, ProtectedVerificationAuthorizationTrustStatement.class),
                 Arguments.of(ExampleTrustStatement.piaTS, ProtectedIssuanceAuthorizationTrustStatement.class),
                 Arguments.of(ExampleTrustStatement.piTLS, ProtectedIssuanceTrustListStatement.class),
