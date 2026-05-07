@@ -7,13 +7,16 @@ import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+
 
 /**
  * Shared validation helpers for DPoP JWTs.
@@ -131,13 +134,18 @@ public final class DpopJwtValidator {
         if (htu == null) {
             throw new DpopValidationException("Missing htu claim");
         }
+        
+        String requestSuffix = StringUtils.difference(externalUri.getPath(), requestUri.getPath());
+        URI htuUri = new URI(htu).normalize();
         URI baseUri = new URI(requestUri.getScheme(),
                 requestUri.getUserInfo(),
                 externalUri.getHost(),
                 externalUri.getPort(),
-                requestUri.getPath(),
+                Paths.get(externalUri.getPath(), requestSuffix).toString(),
                 null, null).normalize();
-        URI htuUri = new URI(htu).normalize();
+        
+
+
         if (!baseUri.equals(htuUri)) {
             throw new DpopValidationException("URL mismatch between DPoP and request");
         }

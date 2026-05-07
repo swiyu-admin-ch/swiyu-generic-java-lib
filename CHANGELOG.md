@@ -75,6 +75,14 @@ A new library for SD-JWT VC validation according to the Swiss Profile VC specifi
 
 **Dependencies:** `swiyu-jwt-validator`
 
+### Fixed
+
+- Fixed `swiyu-generic-java-all` so the aggregator includes all libraries.
+
+### Removed
+
+- Removed the `swiyu-client-attestation-validator` library.
+
 ---
 
 ## 1.4.0

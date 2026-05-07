@@ -13,13 +13,13 @@ This project follows a multi-module Maven architecture, where each utility libra
 
 ## Modules
 
-### **swiyu-client-attestation-validator**
-Utilities for validating client attestation tokens and certificates (Android SafetyNet, Apple DeviceCheck, etc.)
+### **swiyu-jwt-validator**
+Utilities for validating DID-based JWTs in the swiyu ecosystem.
 
 ```xml
 <dependency>
     <groupId>ch.admin.swiyu</groupId>
-    <artifactId>swiyu-client-attestation-validator</artifactId>
+    <artifactId>swiyu-jwt-validator</artifactId>
     <version>0.0.1</version>
 </dependency>
 ```
@@ -44,7 +44,7 @@ mvn clean install
 
 ### Build a specific module
 ```bash
-cd swiyu-client-attestation-validator
+cd swiyu-jwt-validator
 mvn clean install
 ```
 
@@ -55,7 +55,7 @@ mvn test
 
 ### Run tests for a specific module
 ```bash
-mvn test -pl swiyu-client-attestation-validator
+mvn test -pl swiyu-jwt-validator
 ```
 
 ## Requirements
