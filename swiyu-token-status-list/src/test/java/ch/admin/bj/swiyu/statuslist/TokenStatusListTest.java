@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-class TokenStatusListTokenTest {
+class TokenStatusListTest {
 
 
 
@@ -29,7 +29,7 @@ class TokenStatusListTokenTest {
         var statusListDto = assertDoesNotThrow(() -> mapper.readValue(testVector.getJsonEncoding(), TokenStatusListTokenDto.TokenStatusListDto.class));
         var bits = statusListDto.getBits();
         var data = statusListDto.getStatusListData();
-        var tokenStatusListToken = assertDoesNotThrow(() -> TokenStatusListToken.loadTokenStatusListToken(bits, data));
+        var tokenStatusListToken = assertDoesNotThrow(() -> TokenStatusList.loadTokenStatusListToken(bits, data));
         var exampleBits = testVector.getExampleBits();
         for (int i = 0; i < Math.pow(2, 20); i++) {
             var status = tokenStatusListToken.getStatus(i);
@@ -50,7 +50,7 @@ class TokenStatusListTokenTest {
          */
         // Create an empty token status list like in 9.1 of
         // https://www.ietf.org/archive/id/draft-ietf-oauth-status-list-02.html#name-further-examples
-        var statusList = new TokenStatusListToken(2, 12);
+        var statusList = new TokenStatusList(2, 12);
         statusList.setStatus(0, 1); // Revoke first entry
         assertEquals(1, statusList.getStatusList()[0]);
         statusList.setStatus(1, 2);
@@ -91,13 +91,13 @@ class TokenStatusListTokenTest {
         var claims = statusList.getStatusListClaims();
         assertEquals(2, claims.get("bits"));
         // Try loading the one we created
-        var statusListLoaded = TokenStatusListToken.loadTokenStatusListToken((int) claims.get("bits"),
+        var statusListLoaded = TokenStatusList.loadTokenStatusListToken((int) claims.get("bits"),
                 (String) claims.get("lst"), 5);
         for (int i = 0; i < 12; i++) {
             assertEquals(statusList.getStatus(i), statusListLoaded.getStatus(i));
         }
         // Compare to spec lst example
-        statusListLoaded = TokenStatusListToken.loadTokenStatusListToken(2, "eNo76fITAAPfAgc", 5);
+        statusListLoaded = TokenStatusList.loadTokenStatusListToken(2, "eNo76fITAAPfAgc", 5);
         for (int i = 0; i < 12; i++) {
             assertEquals(statusList.getStatus(i), statusListLoaded.getStatus(i));
         }
@@ -107,7 +107,7 @@ class TokenStatusListTokenTest {
     void testLargeStatusList() {
         // Playground for the size of the data
         var entries = (int) (Math.pow(10, 7)); // 10 mio entries
-        var statusList = new TokenStatusListToken(2, entries);
+        var statusList = new TokenStatusList(2, entries);
         var randomGenerator = new Random();
         for (var i = 0; i < entries * 0.9; i++) { // 90% used randomly (high entropy)
             statusList.setStatus(randomGenerator.nextInt(entries), randomGenerator.nextInt(1, 3));
@@ -121,12 +121,12 @@ class TokenStatusListTokenTest {
 
     @Test
     void testStatusListStructure() throws IOException {
-        var statusList = new TokenStatusListToken(2, 4);
+        var statusList = new TokenStatusList(2, 4);
         for (byte statusByte : statusList.getStatusList()) {
             assertEquals(0, statusByte);
         }
         var initialStatusList = statusList.getStatusListData();
-        var loadedStatusList = TokenStatusListToken.loadTokenStatusListToken(2, initialStatusList, 5);
+        var loadedStatusList = TokenStatusList.loadTokenStatusListToken(2, initialStatusList, 5);
         // Should be still the same zipped string after loading
         assertEquals(initialStatusList, loadedStatusList.getStatusListData());
         // Should be still all 0s
@@ -140,7 +140,7 @@ class TokenStatusListTokenTest {
         for (byte statusByte : statusList.getStatusList()) {
             assertNotEquals(0, statusByte);
         }
-        loadedStatusList = TokenStatusListToken.loadTokenStatusListToken(2, statusList.getStatusListData(), 5);
+        loadedStatusList = TokenStatusList.loadTokenStatusListToken(2, statusList.getStatusListData(), 5);
         assertNotEquals(initialStatusList, loadedStatusList.getStatusListData());
         loadedStatusList.setStatus(0, 0);
         loadedStatusList.setStatus(1, 0);
@@ -163,7 +163,7 @@ class TokenStatusListTokenTest {
         var base64CompressionBomb = Base64.getUrlEncoder().withoutPadding().encodeToString(compressionBomb);
         // Expect an IOException while decompressing
         var exception = assertThrows(IOException.class, () -> {
-            TokenStatusListToken.decodeStatusList(base64CompressionBomb, 204800);
+            TokenStatusList.decodeStatusList(base64CompressionBomb, 204800);
         });
         assertThat(exception.getMessage()).startsWith("Decompressed data exceeds safe limit! Possible compression bomb attack.");
     }
@@ -176,7 +176,7 @@ class TokenStatusListTokenTest {
         var base64CompressionBomb = Base64.getUrlEncoder().withoutPadding().encodeToString(compressionBomb);
         // Expect no IOException while decompressing, because the safe limit is bigger than the compressed data
         assertDoesNotThrow(() -> {
-            TokenStatusListToken.decodeStatusList(base64CompressionBomb, 204800);
+            TokenStatusList.decodeStatusList(base64CompressionBomb, 204800);
         });
     }
 

@@ -6,11 +6,10 @@ import ch.admin.bj.swiyu.jwtvalidator.DidKidParser;
 import ch.admin.bj.swiyu.jwtvalidator.JwtValidatorException;
 import ch.admin.bj.swiyu.jwtvalidator.UrlRestriction;
 import ch.admin.bj.swiyu.statuslist.TokenStatusListBit;
-import ch.admin.bj.swiyu.statuslist.TokenStatusListToken;
+import ch.admin.bj.swiyu.statuslist.TokenStatusList;
 import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListTokenDto;
 import ch.admin.bj.swiyu.tsverifier.statement.*;
 import com.nimbusds.jose.jwk.JWKSet;
-import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -101,7 +100,7 @@ public class TrustStatementVerifier {
                 return false;
             }
             try {
-                TokenStatusListToken statusListToken = TokenStatusListToken.loadTokenStatusListToken(tokenStatusList.getBits(), tokenStatusList.getStatusListData());
+                TokenStatusList statusListToken = TokenStatusList.loadTokenStatusListToken(tokenStatusList.getBits(), tokenStatusList.getStatusListData());
                 return statusListToken.getStatus(statefulStatement.getStatusIndex()) == TokenStatusListBit.VALID.getBitNumber();
             } catch (IOException e) {
                 log.info("Status List {} cannot be loaded", statefulStatement.getStatusListUri(), e);

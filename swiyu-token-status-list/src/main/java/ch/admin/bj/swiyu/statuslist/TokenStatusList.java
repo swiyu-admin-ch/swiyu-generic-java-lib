@@ -17,7 +17,7 @@ import lombok.Getter;
  * Status List published on registry
  */
 @Getter
-public class TokenStatusListToken {
+public class TokenStatusList {
 
     /**
      * zlib needs some maximum buffer size to know when to stop unzipping
@@ -44,7 +44,7 @@ public class TokenStatusListToken {
      * @param bits             how many bits each status list entry shall have
      * @param statusListLength the number of status list entries available
      */
-    public TokenStatusListToken(int bits, int statusListLength) {
+    public TokenStatusList(int bits, int statusListLength) {
         this.bits = bits;
         statusList = new byte[(int) Math.ceil(statusListLength * bits / 8.0)];
     }
@@ -55,17 +55,17 @@ public class TokenStatusListToken {
      * @param bits       how many bits each status list entry has
      * @param statusList the data of the existing status list entry
      */
-    public TokenStatusListToken(int bits, byte[] statusList) {
+    public TokenStatusList(int bits, byte[] statusList) {
         this.bits = bits;
         this.statusList = statusList;
     }
 
-    public static TokenStatusListToken loadTokenStatusListToken(int bits, String lst) throws IOException {
-        return new TokenStatusListToken(bits, decodeStatusList(lst, BUFFER_SIZE));
+    public static TokenStatusList loadTokenStatusListToken(int bits, String lst) throws IOException {
+        return new TokenStatusList(bits, decodeStatusList(lst, BUFFER_SIZE));
     }
 
-    public static TokenStatusListToken loadTokenStatusListToken(int bits, String lst, int maxBufferSize) throws IOException {
-        return new TokenStatusListToken(bits, decodeStatusList(lst, maxBufferSize));
+    public static TokenStatusList loadTokenStatusListToken(int bits, String lst, int maxBufferSize) throws IOException {
+        return new TokenStatusList(bits, decodeStatusList(lst, maxBufferSize));
     }
 
     private static String encodeStatusList(byte[] statusList) throws IOException {

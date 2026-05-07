@@ -1,50 +1,38 @@
-# JWT Utility Library
+# Token Status List Library
 
-A utility library for creating, validating, and parsing JSON Web Tokens (JWT) in the Swiyu ecosystem.
+A utility library for reading and setting states in Token Status Lists.
 
 ## Features
 
-- ✅ **Utility Class**: Static methods for JWT creation, validation, and parsing
-- ✅ **Flexible Token Management**: Supports creation, validation, and parsing of JWTs
-- ✅ **Integration Ready**: Designed for secure authentication and authorization in enterprise applications
+- Parsing of Token Status List (TLS) Tokens and References
+- Serialize and Deserialize Token Status List Data
+- Reading and Setting indexes in Token Status List Data
 
-## Installation
+Note: For verifying the Token Status List Token in JWT format, use the JWT Utility Library. 
 
-Add the dependency to your `pom.xml`:
-
-```xml
-<dependency>
-    <groupId>ch.admin.swiyu</groupId>
-    <artifactId>swiyu-jwt-service</artifactId>
-    <version>1.4.0</version>
-</dependency>
-```
 
 ## Usage
 
 ### Basic Usage
 
-Use the static methods of `JwtUtil` to create, validate, or parse JWTs:
+Note: use an ObjectMapper to parse JWT bodies into the DTOs. 
 
 ```java
-import ch.admin.bj.swiyu.jwtutil.JwtUtil;
+import ch.admin.bj.swiyu.statuslist.TokenStatusList;
+import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListTokenDto;
+import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListReferenceDto;
 
-public class MyJwtExample {
-    public String createToken() {
-        // Example: create a JWT with claims
-        return JwtUtil.createJwt("payload");
-    }
-
-    public boolean validateToken(String jwt) {
-        return JwtUtil.validateJwt(jwt);
+public class MyStatusListExample {
+    public String getStatus(TokenStatusListReferenceDto ref, TokenStatusListTokenDto token) {
+        var sl = token.getStatusList();
+        var statusList = TokenStatusList.loadTokenStatusListToken(sl.getBits(), sl.getStatusListData());
+        return statusList.getStatus(ref.getStatus().getStatusList().getIndex());
     }
 }
 ```
 
 ## Dependencies
 
-- **Nimbus JOSE+JWT**: JWT signing and verification
-- **Bouncy Castle**: Cryptographic operations
 - **Jackson**: JSON processing
 
 ## License

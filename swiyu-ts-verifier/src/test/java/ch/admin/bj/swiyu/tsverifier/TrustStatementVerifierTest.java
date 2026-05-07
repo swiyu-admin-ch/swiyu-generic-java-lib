@@ -2,7 +2,7 @@ package ch.admin.bj.swiyu.tsverifier;
 
 import ch.admin.bj.swiyu.jwtvalidator.DidKidParser;
 import ch.admin.bj.swiyu.jwtvalidator.UrlRestriction;
-import ch.admin.bj.swiyu.statuslist.TokenStatusListToken;
+import ch.admin.bj.swiyu.statuslist.TokenStatusList;
 import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListTokenDto;
 import ch.admin.bj.swiyu.tsverifier.statement.ExampleTrustStatement;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -193,7 +193,7 @@ class TrustStatementVerifierTest {
      * Generates a status list with 1 bits where no entries are revoked
      */
     private static TokenStatusListTokenDto generateStatusListToken(int... revokedIndexes) {
-        var statusList = new TokenStatusListToken(1, 100);
+        var statusList = new TokenStatusList(1, 100);
         for (int index : revokedIndexes) {
             statusList.setStatus(index, 1);
         }
