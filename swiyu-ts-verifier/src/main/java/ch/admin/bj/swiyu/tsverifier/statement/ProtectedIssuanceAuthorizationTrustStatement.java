@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * This statement is provided by issuers as proof of state authorization to issue protected VCs .
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -14,6 +17,9 @@ public class ProtectedIssuanceAuthorizationTrustStatement extends TrustStatement
     @JsonProperty("can_issue")
     private ProtectedIssuanceAuthorizationObject canIssue;
 
+    /**
+     * Defines the scope and descriptive details of the authorization.
+     */
     @Getter
     @Setter
     @NoArgsConstructor

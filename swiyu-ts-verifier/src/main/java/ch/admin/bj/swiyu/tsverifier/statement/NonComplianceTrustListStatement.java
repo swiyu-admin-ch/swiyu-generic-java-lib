@@ -22,6 +22,9 @@ public class NonComplianceTrustListStatement extends TrustListStatement implemen
     @JsonProperty("non_compliant_actors")
     private List<NonCompliantActor> nonCompliantActors;
 
+    /**
+     * Defines a single non-complicant actor
+     */
     @Getter
     @Setter
     @NoArgsConstructor

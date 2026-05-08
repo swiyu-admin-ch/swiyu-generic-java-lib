@@ -36,8 +36,10 @@ public class TrustStatementVerifier {
 
 
     /**
+     * Creates a new Trust Protocol 2.0 Statement Verifier, initialized with the statements to be verified.
+     * These Statements may also be public statements in case of verifiers.
      * @param serializedTrustStatementJwt a list of trust statements provided about the actor
-     * @param urlRestirction Restriction for allowed hosts where the trust statements may be hosted on
+     * @param urlRestriction Restriction for allowed hosts where the trust statements may be hosted on
      * @param kidParser parser for DIDs
      */
     public TrustStatementVerifier(List<String> serializedTrustStatementJwt, UrlRestriction urlRestriction, DidKidParser kidParser) {

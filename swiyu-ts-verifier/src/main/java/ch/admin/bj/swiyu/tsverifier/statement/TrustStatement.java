@@ -3,13 +3,18 @@ package ch.admin.bj.swiyu.tsverifier.statement;
 import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListReferenceDto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Abstract Representation for trust statements
+ */
 @Getter
 @Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class TrustStatement extends Statement implements StatefulStatement {
     /**
      * status reference in a format defined by the swiss-profile-vc

@@ -7,6 +7,10 @@ import lombok.RequiredArgsConstructor;
 import java.util.Arrays;
 import java.util.Optional;
 
+/**
+ * All possible statement types and associated classes. 
+ * When encoded as JWT the statement type is found in the header claim "typ"
+ */
 @Getter
 @RequiredArgsConstructor
 public enum StatementType {

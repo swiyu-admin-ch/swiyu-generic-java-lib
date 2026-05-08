@@ -8,6 +8,9 @@ import lombok.Setter;
 
 import java.util.List;
 
+/**
+ * Information for actors which VCTs can be issued only by authorized issuers.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

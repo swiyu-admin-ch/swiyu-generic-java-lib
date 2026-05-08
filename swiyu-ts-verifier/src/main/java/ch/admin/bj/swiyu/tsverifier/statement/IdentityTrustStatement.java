@@ -5,6 +5,9 @@ import lombok.*;
 
 import java.util.List;
 
+/**
+ * This trust statement is provided by issuers and verifiers to link real-world identities to their cryptographic counterparts.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

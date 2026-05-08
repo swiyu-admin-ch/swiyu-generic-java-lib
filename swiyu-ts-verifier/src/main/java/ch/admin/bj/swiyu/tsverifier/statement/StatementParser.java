@@ -9,11 +9,30 @@ import lombok.extern.slf4j.Slf4j;
 import java.text.ParseException;
 import java.util.Optional;
 
+/**
+ * Parses Statements which include 
+ * <ul>
+ * <li>Trust Statement</li>
+ * <li>Trust List Statements</li>
+ * <li>Public Statements</li>
+ * </ul>
+ */
 @Slf4j
 public class StatementParser {
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
+    /**
+     * Parses a serialized JWT into a {@link Statement}.
+     *
+     * <p>If any parsing or deserialization exception occurs, the error is logged and an empty
+     * {@link Optional} is returned.
+     *
+     * @param serializedJwt the compact‑serialization JWT string representing a trust statement
+     * @return an {@link Optional} containing the parsed {@link Statement} when successful,
+     *         or {@link Optional#empty()} if the JWT is malformed, the type is unknown,
+     *         or required claims are missing
+     */
     public Optional<Statement> parse(String serializedJwt) {
         try {
             SignedJWT parsedStatement = SignedJWT.parse(serializedJwt);
