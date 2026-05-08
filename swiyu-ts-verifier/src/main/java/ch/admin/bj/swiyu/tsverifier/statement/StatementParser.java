@@ -12,11 +12,7 @@ import java.util.Optional;
 @Slf4j
 public class StatementParser {
 
-    private final ObjectMapper mapper;
-
-    public StatementParser() {
-        this.mapper = new ObjectMapper();
-    }
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     public Optional<Statement> parse(String serializedJwt) {
         try {

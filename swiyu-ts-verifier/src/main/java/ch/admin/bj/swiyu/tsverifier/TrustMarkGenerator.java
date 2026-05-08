@@ -15,13 +15,15 @@ class TrustMarkGenerator {
 
     private final TrustMarkers.TrustMarkersBuilder trustMarkersBuilder;
     private final List<Statement> validStatements;
+    private static ObjectMapper mapper = new ObjectMapper();
+    private static List<String> pROTECTED_CLAIMS = List.of("personal_administrative_number");
 
-    public TrustMarkGenerator(List<Statement> validStatements) {
+    TrustMarkGenerator(List<Statement> validStatements) {
         this.validStatements = validStatements;
         this.trustMarkersBuilder = TrustMarkers.builder();
     }
 
-    public TrustMarkGenerator processCommonTrust(String actorDid) {
+    TrustMarkGenerator processCommonTrust(String actorDid) {
 
         for (Statement statement : validStatements) {
             if (statement instanceof IdentityTrustStatement) {
@@ -40,7 +42,7 @@ class TrustMarkGenerator {
         return this;
     }
 
-    public TrustMarkers finalizeIssuerTrust(String vct) {
+    TrustMarkers finalizeIssuerTrust(String vct) {
         // If we have no information we must assume that the vct is governed
         trustMarkersBuilder.governedUseCaseTrustMarker(true);
         for (Statement s : validStatements) {
@@ -55,7 +57,7 @@ class TrustMarkGenerator {
     }
 
 
-    public TrustMarkers finalizeVerifierTrust() {
+    TrustMarkers finalizeVerifierTrust() {
         Set<String> authorizedFields = new HashSet<>();
         List<String> usedProtectedFields = new LinkedList<>();
         for (Statement s : validStatements) {
@@ -78,10 +80,8 @@ class TrustMarkGenerator {
 
     private static void extractUsedProtectedFields(VerificationQueryPublicStatement vqPS, List<String> usedProtectedFields) {
         try {
-            final List<String> PROTECTED_CLAIMS = List.of("personal_administrative_number");
-            final ObjectMapper mapper = new ObjectMapper();
             String dcqlQuery = mapper.writeValueAsString(vqPS.getRequest().getQuery());
-            for (String protectedClaim : PROTECTED_CLAIMS) {
+            for (String protectedClaim : pROTECTED_CLAIMS) {
                 if (dcqlQuery.contains(protectedClaim)) {
                     usedProtectedFields.add(protectedClaim);
                 }

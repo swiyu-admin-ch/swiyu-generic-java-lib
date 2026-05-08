@@ -3,7 +3,6 @@ package ch.admin.bj.swiyu.statuslist;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Map;
 import java.util.zip.Deflater;
@@ -70,13 +69,18 @@ public class TokenStatusList {
 
     private static String encodeStatusList(byte[] statusList) throws IOException {
         // zipping the data
-        var zlibOutput = new ByteArrayOutputStream();
-        var deflaterStream = new DeflaterOutputStream(zlibOutput, new Deflater(9));
-        deflaterStream.write(statusList);
-        deflaterStream.finish();
-        byte[] clippedZlibOutput = Arrays.copyOf(zlibOutput.toByteArray(), zlibOutput.size());
-        deflaterStream.close();
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(clippedZlibOutput);
+        var deflater = new Deflater(9);
+        try (var zlibOutput = new ByteArrayOutputStream()) {
+            try (var deflaterStream = new DeflaterOutputStream(zlibOutput, deflater)) {
+                deflaterStream.write(statusList);
+            }
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(zlibOutput.toByteArray());
+        } catch (IOException e) {
+            throw new IOException("Status List data can not be zipped", e);
+        } finally {
+            // Release native Deflater resources explicitly
+            deflater.end();
+        }
     }
 
     /**
@@ -113,6 +117,7 @@ public class TokenStatusList {
                 output.write(buffer, 0, bytesRead);
             }
             // Return the fully decompressed byte array
+            inflaterStream.close();
             return output.toByteArray();
         }
     }
@@ -142,16 +147,15 @@ public class TokenStatusList {
      * @return the status bits as an integer
      */
     public int getStatus(int idx) {
+        verifyIndexArgument(idx);
+
         byte entryByte = getStatusEntryByte(idx);
-        // The starting position of the status in the Byte
+        // The starting position of the status in the byte
         var bitIndex = (idx * bits) % 8;
-        // Mask to remove all bits larger than the status
-        var mask = (1 << bitIndex << bits) - 1;
-        // Drop all bits larger than our status
-        var maskedByte = entryByte & mask;
-        // Shift the status to the start of the byte so 1 = revoked, 2 = suspended, etc,
-        // also removes all bits smaller than our status
-        return maskedByte >> bitIndex;
+        // Mask for the status width, e.g. bits=2 → 0b00000011
+        var mask = (1 << bits) - 1;
+        // Shift the entry to the LSB, then mask off the relevant bits
+        return (entryByte >> bitIndex) & mask;
     }
 
     /**
@@ -161,6 +165,7 @@ public class TokenStatusList {
      * @param status The new status to be set
      */
     public void setStatus(int idx, int status) {
+        verifyIndexArgument(idx);
         verifyStatusArgument(status);
         unsetStatus(idx);
         byte entryByte = getStatusEntryByte(idx);
@@ -175,6 +180,7 @@ public class TokenStatusList {
      */
     public void unsetStatus(int idx) {
         int status = (1 << bits) - 1;
+        verifyIndexArgument(idx);
         verifyStatusArgument(status);
         byte entryByte = getStatusEntryByte(idx);
         // Shift the bit to the correct position in the byte
@@ -182,10 +188,18 @@ public class TokenStatusList {
         setStatusEntryByte(idx, entryByte);
     }
 
+    /**
+     * Validates if the status list bits support the revoke status
+     * @return true, if the status list can represent revoked state
+     */
     public boolean canRevoke() {
         return bits >= TokenStatusListBit.REVOKED.getBitNumber();
     }
 
+    /**
+     * Validates if the status list bits support the suspend status
+     * @return true, if the status list can represent suspended state
+     */
     public boolean canSuspend() {
         return bits >= TokenStatusListBit.SUSPENDED.getBitNumber();
     }
@@ -210,11 +224,19 @@ public class TokenStatusList {
         }
     }
 
+    private void verifyIndexArgument(int idx) {
+        int statusListBits = this.statusList.length * 8;
+        int maximumIndex = statusListBits / bits;
+        if (idx < 0 && idx <= maximumIndex) {
+            throw new IndexOutOfBoundsException("Status List Index %d out of bounds; must be between 0 and %d".formatted(idx, maximumIndex));
+        }
+    }
+
     private byte getStatusEntryByte(int idx) throws IndexOutOfBoundsException {
         try {
             return statusList[idx * bits / 8];
         } catch (ArrayIndexOutOfBoundsException e) {
-            throw new IndexOutOfBoundsException("Status List Index %d out of bounds (Max size %d)".formatted(idx, statusList.length * bits));
+            throw new IndexOutOfBoundsException("Status List Index %d out of bounds (Max size %d)".formatted(idx, statusList.length * bits * 8));
         }
     }
 

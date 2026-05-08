@@ -33,7 +33,7 @@ class StatementParserTest {
     private static Stream<Arguments> statementsProvider() {
         return Stream.of(
                 Arguments.of(ExampleTrustStatement.idTS, IdentityTrustStatement.class),
-                Arguments.of(ExampleTrustStatement.vqPS_protected_claim, VerificationQueryPublicStatement.class),
+                Arguments.of(ExampleTrustStatement.vqPS, VerificationQueryPublicStatement.class),
                 Arguments.of(ExampleTrustStatement.pvaTS, ProtectedVerificationAuthorizationTrustStatement.class),
                 Arguments.of(ExampleTrustStatement.piaTS, ProtectedIssuanceAuthorizationTrustStatement.class),
                 Arguments.of(ExampleTrustStatement.piTLS, ProtectedIssuanceTrustListStatement.class),

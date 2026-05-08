@@ -56,7 +56,7 @@ class TrustStatementVerifierTest {
     void testGetKeyIds() {
         var statements = getValidExampleTrustStatements();
 
-        var verifier = new TrustStatementVerifier(statements, Mockito.mock(UrlRestriction.class));
+        var verifier = new TrustStatementVerifier(statements, Mockito.mock(UrlRestriction.class), new DidKidParser());
         var ids = verifier.getRequiredKeyIds();
         assertThat(ids).hasSize(2).contains("did:example:trust-issuer#key-1", "did:example:verification-statment-issuer#key-1");
     }
@@ -64,7 +64,7 @@ class TrustStatementVerifierTest {
     @Test
     void testGetStatusListUris() {
         var statements = getValidExampleTrustStatements();
-        var verifier = new TrustStatementVerifier(statements, Mockito.mock(UrlRestriction.class));
+        var verifier = new TrustStatementVerifier(statements, Mockito.mock(UrlRestriction.class), new DidKidParser());
         var statusListUris = verifier.getRequiredStatusLists();
         assertThat(statusListUris).hasSize(1).contains("https://example.com/statuslists/1");
     }

@@ -14,7 +14,7 @@ class IdentityTrustStatementTest {
     void testParseExample() throws JsonProcessingException {
         var idTS = mapper.readValue(ExampleTrustStatement.idTS.getCombinedJson(), IdentityTrustStatement.class);
         assertThat(idTS.getTyp()).isEqualTo(StatementType.IDENTITY_TRUST_STATEMENT);
-        assertThat(idTS.getExp()).isEqualTo(1753432968);
+        assertThat(idTS.getExp()).isEqualTo(32503676400l);
         assertThat(idTS.getKid()).isEqualTo("did:example:trust-issuer#key-1");
         assertThat(idTS.getEntityName()).isEqualTo("John Smith's Smithery");
     }
