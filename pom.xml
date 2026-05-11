@@ -80,6 +80,8 @@
         <module>swiyu-ts-builder</module>
         <module>swiyu-jwt-validator</module>
         <module>swiyu-sdjwt-validator</module>
+        <module>swiyu-token-status-list</module>
+        <module>swiyu-ts-verifier</module>
     </modules>
 
     <build>
