@@ -31,7 +31,7 @@ class TokenStatusListTest {
         var data = statusListDto.getStatusListData();
         var tokenStatusListToken = assertDoesNotThrow(() -> TokenStatusList.loadTokenStatusListToken(bits, data));
         var exampleBits = testVector.getExampleBits();
-        for (int i = 0; i < Math.pow(2, 20); i++) {
+        for (int i = 0; i < (1 << 20); i++) {
             var status = tokenStatusListToken.getStatus(i);
             assertThat(status).as("Index %d should be as in the test vector".formatted(i)).isEqualTo(exampleBits.getOrDefault(i, 0));
         }
@@ -109,7 +109,8 @@ class TokenStatusListTest {
         var entries = (int) (Math.pow(10, 7)); // 10 mio entries
         var statusList = new TokenStatusList(2, entries);
         var randomGenerator = new Random();
-        for (var i = 0; i < entries * 0.9; i++) { // 90% used randomly (high entropy)
+        var usedEntries = (int) (entries * 0.9); // 90% used randomly (high entropy)
+        for (var i = 0; i < usedEntries; i++) {
             statusList.setStatus(randomGenerator.nextInt(entries), randomGenerator.nextInt(1, 3));
         }
         var claims = assertDoesNotThrow(statusList::getStatusListClaims);
