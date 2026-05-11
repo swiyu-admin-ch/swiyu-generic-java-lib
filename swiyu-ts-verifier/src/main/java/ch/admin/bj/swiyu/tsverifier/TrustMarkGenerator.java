@@ -146,7 +146,7 @@ class TrustMarkGenerator {
         List<String> usedProtectedFields = new LinkedList<>();
         for (Statement s : validStatements) {
             if (s instanceof ProtectedVerificationAuthorizationTrustStatement pvaTS) {
-                authorizedFields = new HashSet<>(pvaTS.getAuthorizedFields());
+                authorizedFields.addAll(pvaTS.getAuthorizedFields());
             }
             if (s instanceof VerificationQueryPublicStatement vqPS) {
                 trustMarkersBuilder.transparentVerificationTrustMarker(true);
@@ -171,7 +171,7 @@ class TrustMarkGenerator {
                 }
             }
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new TrustStatementException("Query of Verification Query Public Statement (vqPS) cannot be parsed", e);
         }
     }
 }

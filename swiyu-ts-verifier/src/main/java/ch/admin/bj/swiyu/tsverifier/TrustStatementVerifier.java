@@ -131,7 +131,8 @@ public class TrustStatementVerifier {
                 return statusListToken.getStatus(statefulStatement.getStatusIndex()) == TokenStatusListBit.VALID.getBitNumber();
             } catch (IOException e) {
                 log.info("Status List {} cannot be loaded", statefulStatement.getStatusListUri(), e);
-                throw new RuntimeException(e);
+                // When no state can be established we must assume that it is not valid
+                return false;
             }
         } else {
             // The statement type has no state ==> Always valid

@@ -1,5 +1,6 @@
 package ch.admin.bj.swiyu.tsverifier.statement;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
@@ -30,7 +31,8 @@ public class IdentityTrustStatement extends TrustStatement{
     @Getter
     @Setter
     @NoArgsConstructor
-    private static class RegistryObject {
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class RegistryObject {
 
         /**
          * Type of the registry.

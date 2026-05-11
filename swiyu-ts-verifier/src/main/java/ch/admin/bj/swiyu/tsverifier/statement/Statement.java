@@ -1,6 +1,5 @@
 package ch.admin.bj.swiyu.tsverifier.statement;
 
-import ch.admin.bj.swiyu.jwtvalidator.DidKidParser;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -17,7 +16,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class Statement {
+public class Statement {
     /**
      * The specific statements define the typ string.
      */

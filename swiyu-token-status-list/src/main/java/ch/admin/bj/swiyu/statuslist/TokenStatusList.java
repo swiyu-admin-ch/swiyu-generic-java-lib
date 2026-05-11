@@ -56,7 +56,7 @@ public class TokenStatusList {
      */
     public TokenStatusList(int bits, byte[] statusList) {
         this.bits = bits;
-        this.statusList = statusList;
+        this.statusList = statusList.clone();
     }
 
     public static TokenStatusList loadTokenStatusListToken(int bits, String lst) throws IOException {
