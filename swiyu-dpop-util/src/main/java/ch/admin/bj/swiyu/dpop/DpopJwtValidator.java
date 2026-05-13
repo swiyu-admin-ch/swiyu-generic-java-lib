@@ -7,11 +7,9 @@ import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.lang3.StringUtils;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Paths;
 import java.text.ParseException;
 import java.time.Clock;
 import java.time.Instant;
@@ -85,8 +83,8 @@ public final class DpopJwtValidator {
      *
      * @param dpopJwt the signed DPoP JWT
      * @param key     the public JWK from the JWT header
-     * @throws JOSEException            if signature verification fails due to cryptographic error
-     * @throws DpopValidationException  if the signature is invalid
+     * @throws JOSEException           if signature verification fails due to cryptographic error
+     * @throws DpopValidationException if the signature is invalid
      */
     public static void validateSignature(SignedJWT dpopJwt, JWK key) throws JOSEException {
         if (!dpopJwt.verify(new ECDSAVerifier(key.toECKey()))) {
@@ -111,8 +109,8 @@ public final class DpopJwtValidator {
      *
      * @param requestMethod the HTTP method of the request
      * @param jwtClaims     the JWT claims set
-     * @throws ParseException           if the claim cannot be parsed
-     * @throws DpopValidationException  if the method does not match
+     * @throws ParseException          if the claim cannot be parsed
+     * @throws DpopValidationException if the method does not match
      */
     public static void validateHtm(String requestMethod, JWTClaimsSet jwtClaims) throws ParseException {
         String htm = jwtClaims.getStringClaim("htm");
@@ -124,29 +122,48 @@ public final class DpopJwtValidator {
     /**
      * Validates that the HTTP URI ('htu' claim) matches the request URI.
      *
-     * @param requestUri   the URI of the incoming request
-     * @param htu          the 'htu' claim from the JWT
-     * @param externalUri  the external URI to compare against
-     * @throws URISyntaxException       if URI parsing fails
+     * <p>Reconstructs the full path in case a reverse proxy stripped the external prefix
+     * before forwarding the request to the application. It finds the longest possible
+     * overlap between the external path suffix and the internal path prefix.</p>
+     *
+     * @param requestUri  the URI of the incoming request
+     * @param htu         the 'htu' claim from the DPoP JWT
+     * @param externalUri the external URI (public gateway/proxy URI) to compare against
+     * @throws URISyntaxException      if URI parsing fails
      * @throws DpopValidationException if the URIs do not match
      */
     public static void validateHtu(URI requestUri, String htu, URI externalUri) throws URISyntaxException {
         if (htu == null) {
             throw new DpopValidationException("Missing htu claim");
         }
-        
-        String requestSuffix = StringUtils.difference(externalUri.getPath(), requestUri.getPath());
-        URI htuUri = new URI(htu).normalize();
-        URI baseUri = new URI(requestUri.getScheme(),
-                requestUri.getUserInfo(),
-                externalUri.getHost(),
-                externalUri.getPort(),
-                Paths.get(externalUri.getPath(), requestSuffix).toString(),
-                null, null).normalize();
-        
 
+        String extPath = externalUri.getPath() == null ? "" : externalUri.getPath();
+        if (extPath.endsWith("/")) {
+            extPath = extPath.substring(0, extPath.length() - 1);
+        }
 
-        if (!baseUri.equals(htuUri)) {
+        String intPath = requestUri.getPath() == null ? "" : requestUri.getPath();
+        String fullPath = extPath + intPath; // Fallback in case there is no overlap
+
+        // Find the longest possible suffix of the external path
+        // that is simultaneously the prefix of the internal path.
+        if (intPath.startsWith(extPath)) {
+            fullPath = intPath; // No proxy stripping occurred
+        } else {
+            for (int i = 0; i < extPath.length(); i++) {
+                String suffix = extPath.substring(i);
+                if (intPath.startsWith(suffix)) {
+                    // Overlap found! Take the preceding part of the external path
+                    // and append the complete internal path.
+                    fullPath = extPath.substring(0, i) + intPath;
+                    break;
+                }
+            }
+        }
+
+        URI baseUri = new URI(externalUri.getScheme(), externalUri.getUserInfo(), externalUri.getHost(), externalUri.getPort(), fullPath, null, null).normalize();
+
+        if (!baseUri.equals(new URI(htu).normalize())) {
             throw new DpopValidationException("URL mismatch between DPoP and request");
         }
     }
