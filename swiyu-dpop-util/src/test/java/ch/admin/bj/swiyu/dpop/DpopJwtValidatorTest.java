@@ -114,6 +114,16 @@ class DpopJwtValidatorTest {
     }
 
     @ParameterizedTest
+    @ValueSource(strings = {"?debug=0", "#somefragment", "?debug=0#someFragment"})
+    void validateHtu_whenQueryFragment_ok(String queryFragment) throws Exception {
+        // Queries and fragments must be ignored
+        SignedJWT signedJWT = buildSignedJwt("https://api.example.com/resource");
+        URI requestUri = new URI("https://internal.local/resource%s".formatted(queryFragment));
+        URI externalUri = new URI("https://api.example.com");
+        assertDoesNotThrow(() -> DpopJwtValidator.validateHtu(requestUri, signedJWT.getJWTClaimsSet().getStringClaim("htu"), externalUri));
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {"https://internal.local", "https://api.example.com", "https://api.example.com/public/api"})
     void validateHtu_match_rewrite_path_ok(String requestUriHost) throws Exception {
         SignedJWT signedJWT = buildSignedJwt("https://api.example.com/public/api/resource");
@@ -144,7 +154,7 @@ class DpopJwtValidatorTest {
     @ValueSource(strings = {"https://internal.local", "https://api.example.com"})
     void validateHtu_rewrite_path_injected_throws(String requestUriHost) throws Exception {
         SignedJWT signedJWT = buildSignedJwt("https://api.example.com/public/api/resource");
-        URI requestUri = new URI("%s/injected/resource".formatted(requestUriHost));
+        URI requestUri = new URI("%s/injected/public/api/resource".formatted(requestUriHost));
         URI externalUri = new URI("https://api.example.com/public/api");
         assertThrows(DpopValidationException.class, () -> DpopJwtValidator.validateHtu(requestUri, signedJWT.getJWTClaimsSet().getStringClaim("htu"), externalUri));
     }
@@ -154,6 +164,76 @@ class DpopJwtValidatorTest {
         SignedJWT signedJWT = buildSignedJwt("https://api.example.com/public/api/subresource/resource");
         URI requestUri = new URI("https://api.example.com/resource");
         URI externalUri = new URI("https://api.example.com/public/api");
+        assertThrows(DpopValidationException.class, () -> DpopJwtValidator.validateHtu(requestUri, signedJWT.getJWTClaimsSet().getStringClaim("htu"), externalUri));
+    }
+
+    @Test
+    void validateHtu_noPathPrefix_ok() throws Exception {
+        SignedJWT signedJWT = buildSignedJwt("https://example.com/oid4vci/api/token");
+        URI requestUri = new URI("https://internal.local/oid4vci/api/token");
+        URI externalUri = new URI("https://example.com");
+        assertDoesNotThrow(() -> DpopJwtValidator.validateHtu(requestUri, signedJWT.getJWTClaimsSet().getStringClaim("htu"), externalUri));
+    }
+
+    @Test
+    void validateHtu_withPathPrefix_ok() throws Exception {
+        // Bug-Report-Szenario: EXTERNAL_URL = https://example.com/public/issuer/oid4vci
+        // Proxy strippt /public/issuer → interner Request kommt als /oid4vci/api/token an
+        // Client signiert htu korrekt mit vollem externen Pfad
+        SignedJWT signedJWT = buildSignedJwt("https://example.com/public/issuer/oid4vci/api/token");
+        URI requestUri = new URI("https://internal.local/oid4vci/api/token");
+        URI externalUri = new URI("https://example.com/public/issuer/oid4vci");
+        assertDoesNotThrow(() -> DpopJwtValidator.validateHtu(requestUri, signedJWT.getJWTClaimsSet().getStringClaim("htu"), externalUri));
+    }
+
+    @Test
+    void validateHtu_withPathPrefix_wrongHtu_throws() throws Exception {
+        // htu fehlt der Pfadpräfix
+        SignedJWT signedJWT = buildSignedJwt("https://example.com/oid4vci/api/token");
+        URI requestUri = new URI("https://internal.local/oid4vci/api/token");
+        URI externalUri = new URI("https://example.com/public/issuer/oid4vci");
+        assertThrows(DpopValidationException.class, () -> DpopJwtValidator.validateHtu(requestUri, signedJWT.getJWTClaimsSet().getStringClaim("htu"), externalUri));
+    }
+
+    @Test
+    void validateHtu_trailingSlashOnExternalUri_ok() throws Exception {
+        // Trailing slash auf externalUri soll korrekt behandelt werden
+        SignedJWT signedJWT = buildSignedJwt("https://example.com/public/issuer/oid4vci/api/token");
+        URI requestUri = new URI("https://internal.local/oid4vci/api/token");
+        URI externalUri = new URI("https://example.com/public/issuer/oid4vci/");
+        assertDoesNotThrow(() -> DpopJwtValidator.validateHtu(requestUri, signedJWT.getJWTClaimsSet().getStringClaim("htu"), externalUri));
+    }
+
+    @Test
+    void validateHtu_realWorld_vzAstra_ok() throws Exception {
+        // Reales Produktionsszenario: vz-api-d.astra.admin.ch
+        // EXTERNAL_URL = https://vz-api-d.astra.admin.ch/public/issuer/oid4vci
+        // Proxy strippt /public/issuer → interner Request: POST /oid4vci/api/token
+        // iOS-Wallet signiert htu = https://vz-api-d.astra.admin.ch/public/issuer/oid4vci/api/token
+        SignedJWT signedJWT = buildSignedJwt("https://vz-api-d.astra.admin.ch/public/issuer/oid4vci/api/token");
+        URI requestUri = new URI("https://ba-vz-issuer-service-svc.astra-vz-issuer-service-d.svc.cluster.local/oid4vci/api/token");
+        URI externalUri = new URI("https://vz-api-d.astra.admin.ch/public/issuer/oid4vci");
+        assertDoesNotThrow(() -> DpopJwtValidator.validateHtu(requestUri, signedJWT.getJWTClaimsSet().getStringClaim("htu"), externalUri));
+    }
+
+    @Test
+    void validateHtu_realWorld_bcsIntg_ok() throws Exception {
+        // Reales Produktionsszenario: bcs-intg.admin.ch
+        // EXTERNAL_URL = https://bcs-intg.admin.ch/bcs-web/issuer-agent/oid4vci
+        // Proxy strippt /bcs-web/issuer-agent → interner Request: POST /oid4vci/api/token
+        // Client signiert htu = https://bcs-intg.admin.ch/bcs-web/issuer-agent/oid4vci/api/token
+        SignedJWT signedJWT = buildSignedJwt("https://bcs-intg.admin.ch/bcs-web/issuer-agent/oid4vci/api/token");
+        URI requestUri = new URI("https://internal.bcs.local/oid4vci/api/token");
+        URI externalUri = new URI("https://bcs-intg.admin.ch/bcs-web/issuer-agent/oid4vci");
+        assertDoesNotThrow(() -> DpopJwtValidator.validateHtu(requestUri, signedJWT.getJWTClaimsSet().getStringClaim("htu"), externalUri));
+    }
+
+    @Test
+    void validateHtu_realWorld_vzAstra_wrongHtu_throws() throws Exception {
+        // Angriff: htu enthält nicht den vollen externen Pfad
+        SignedJWT signedJWT = buildSignedJwt("https://vz-api-d.astra.admin.ch/oid4vci/api/token");
+        URI requestUri = new URI("https://ba-vz-issuer-service-svc.astra-vz-issuer-service-d.svc.cluster.local/oid4vci/api/token");
+        URI externalUri = new URI("https://vz-api-d.astra.admin.ch/public/issuer/oid4vci");
         assertThrows(DpopValidationException.class, () -> DpopJwtValidator.validateHtu(requestUri, signedJWT.getJWTClaimsSet().getStringClaim("htu"), externalUri));
     }
 

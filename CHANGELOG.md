@@ -5,15 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## next – [1.6.0]
-
-### Added
-- **New Module `swiyu-token-status-list`**: Implementation of a utility library for Token Status List (TSL) operations, including parsing of TSL tokens and references, data serialization, and status bit manipulation (#843).
-- **New Module `swiyu-ts-verifier`**: Introduction of a high-level facade for verifying all six types of Swiss Trust Protocol 2.0 Trust Statements (`idTS`, `vqPS`, `pvaTS`, `piaTS`, `piTLS`, `ncTLS`) (#843).
-
 ---
 
-## 1.5.0 – 2026-05-06
+## [1.5.0] – 2026-05-06
 
 ### Added
 
