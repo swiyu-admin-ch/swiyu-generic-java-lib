@@ -114,6 +114,16 @@ class DpopJwtValidatorTest {
     }
 
     @ParameterizedTest
+    @ValueSource(strings = {"?debug=0", "#somefragment", "?debug=0#someFragment"})
+    void validateHtu_whenQueryFragment_ok(String queryFragment) throws Exception {
+        // Queries and fragments must be ignored
+        SignedJWT signedJWT = buildSignedJwt("https://api.example.com/resource");
+        URI requestUri = new URI("https://internal.local/resource%s".formatted(queryFragment));
+        URI externalUri = new URI("https://api.example.com");
+        assertDoesNotThrow(() -> DpopJwtValidator.validateHtu(requestUri, signedJWT.getJWTClaimsSet().getStringClaim("htu"), externalUri));
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {"https://internal.local", "https://api.example.com", "https://api.example.com/public/api"})
     void validateHtu_match_rewrite_path_ok(String requestUriHost) throws Exception {
         SignedJWT signedJWT = buildSignedJwt("https://api.example.com/public/api/resource");
@@ -144,7 +154,7 @@ class DpopJwtValidatorTest {
     @ValueSource(strings = {"https://internal.local", "https://api.example.com"})
     void validateHtu_rewrite_path_injected_throws(String requestUriHost) throws Exception {
         SignedJWT signedJWT = buildSignedJwt("https://api.example.com/public/api/resource");
-        URI requestUri = new URI("%s/injected/resource".formatted(requestUriHost));
+        URI requestUri = new URI("%s/injected/public/api/resource".formatted(requestUriHost));
         URI externalUri = new URI("https://api.example.com/public/api");
         assertThrows(DpopValidationException.class, () -> DpopJwtValidator.validateHtu(requestUri, signedJWT.getJWTClaimsSet().getStringClaim("htu"), externalUri));
     }
