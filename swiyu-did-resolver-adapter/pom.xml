@@ -85,6 +85,15 @@
         </dependency>
 
         <!-- Spring WebFlux for WebClient -->
+        <!-- Bump tomcat version from 10.1.54 -> 10.1.55 
+            for https://security.snyk.io/vuln/SNYK-JAVA-ORGAPACHETOMCATEMBED-16643259 
+            & https://security.snyk.io/vuln/SNYK-JAVA-ORGAPACHETOMCATEMBED-16691231 
+            Remove once upgrading spring boot starter from 4.0.6 -->
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-core</artifactId>
+            <version>10.1.55</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
