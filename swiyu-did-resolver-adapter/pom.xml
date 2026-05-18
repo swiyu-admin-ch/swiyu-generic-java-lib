@@ -6,7 +6,7 @@
 
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-did-resolver-adapter</artifactId>
-    <version>1.6.0-SNAPSHOT</version>
+    <version>1.7.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <name>${project.groupId}:${project.artifactId}</name>
@@ -85,14 +85,14 @@
         </dependency>
 
         <!-- Spring WebFlux for WebClient -->
-        <!-- Bump tomcat version from 10.1.54 -> 10.1.55 
-            for https://security.snyk.io/vuln/SNYK-JAVA-ORGAPACHETOMCATEMBED-16643259 
-            & https://security.snyk.io/vuln/SNYK-JAVA-ORGAPACHETOMCATEMBED-16691231 
+        <!-- Bump tomcat version to 11.0.22
+            for https://security.snyk.io/vuln/SNYK-JAVA-ORGAPACHETOMCATEMBED-16643259
+            & https://security.snyk.io/vuln/SNYK-JAVA-ORGAPACHETOMCATEMBED-16691231
             Remove once upgrading spring boot starter from 4.0.6 -->
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-core</artifactId>
-            <version>10.1.55</version>
+            <version>11.0.22</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -152,7 +152,7 @@
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-core</artifactId>
-                <version>10.1.54</version>
+                <version>11.0.22</version>
                 <scope>compile</scope>
             </dependency>
         </dependencies>

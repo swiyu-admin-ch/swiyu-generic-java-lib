@@ -20,7 +20,7 @@ It provides a type-safe, fluent builder API for all Trust Statement types define
 <dependency>
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-ts-builder</artifactId>
-    <version>1.6.0-SNAPSHOT</version>
+    <version>1.7.0-SNAPSHOT</version>
 </dependency>
 ```
 

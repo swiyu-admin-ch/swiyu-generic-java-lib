@@ -18,7 +18,7 @@ Add the dependency to your `pom.xml`:
 <dependency>
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-jws-signature-service</artifactId>
-    <version>1.6.0-SNAPSHOT</version>
+    <version>1.7.0-SNAPSHOT</version>
 </dependency>
 ```
 
