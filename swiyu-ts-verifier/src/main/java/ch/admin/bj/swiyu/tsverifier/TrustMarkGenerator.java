@@ -114,12 +114,15 @@ class TrustMarkGenerator {
     TrustMarkers finalizeIssuerTrust(String vct) {
         // If we have no information we must assume that the vct is governed
         trustMarkersBuilder.governedUseCaseTrustMarker(true);
+        trustMarkersBuilder.governedUseCaseAuthorizationTrustMarker(false);
         for (Statement s : validStatements) {
             if (s instanceof ProtectedIssuanceTrustListStatement piTLS) {
                 trustMarkersBuilder.governedUseCaseTrustMarker(piTLS.getVctValues().contains(vct));
             }
             if (s instanceof ProtectedIssuanceAuthorizationTrustStatement piaTS) {
-                trustMarkersBuilder.governedUseCaseAuthorizationTrustMarker(piaTS.getCanIssue().getVct().equals(vct));
+                if (piaTS.getCanIssue().getVct().equals(vct)) {
+                    trustMarkersBuilder.governedUseCaseAuthorizationTrustMarker(true);
+                }
             }
         }
         return trustMarkersBuilder.build();
