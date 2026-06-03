@@ -64,7 +64,7 @@ class DidResolverAdapterTest {
         when(didResolverWebClient.retrieveDidDocument(anyString(), anyMap())).thenReturn(DID_LOG_VALID);
         assertThatThrownBy(() -> didResolverAdapter.resolveKey(DID + "#non-existent-key", Map.of()))
                 .isInstanceOf(DidResolverException.class)
-                .hasMessageContaining("non-existent-key");
+                .hasMessageContaining("not found in DID Document");
     }
 
     @Test
