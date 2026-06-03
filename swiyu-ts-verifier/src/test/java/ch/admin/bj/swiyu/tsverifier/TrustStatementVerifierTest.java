@@ -83,7 +83,7 @@ class TrustStatementVerifierTest {
 
     @Test
     void testVerifyIssuanceStatements_whenGovernedUseCase_lackingAuthorization_thenNotTrusted() {
-        var statements = getValidExampleTrustStatements();
+        var statements = getExampleStatementsNoAuthorization();
         var verifier = new TrustStatementVerifier(statements, mockRestriction, mockKidParser);
         var result = verifier.verifyIssuanceStatements(TRUST_ROOT_DID, ACTOR_DID, PROTECTED_VCT_WITHOUT_AUTHORIZATION, new JWKSet(trustIssuerKey), List.of(generateStatusListToken()));
         assertThat(result.evaluatedActorDid()).isEqualTo(ACTOR_DID);
@@ -173,8 +173,20 @@ class TrustStatementVerifierTest {
                 ExampleTrustStatement.pvaTS,
                 ExampleTrustStatement.vqPS_protected_claim,
                 ExampleTrustStatement.piTLS,
-                ExampleTrustStatement.piaTS);
+                ExampleTrustStatement.piaTS,
+                ExampleTrustStatement.piaTS_other
+            );
     }
+
+    private static List<String> getExampleStatementsNoAuthorization() {
+        return getTrustStatements(
+                ExampleTrustStatement.idTS,
+                ExampleTrustStatement.ncTLS,
+                ExampleTrustStatement.vqPS_protected_claim,
+                ExampleTrustStatement.piTLS
+            );
+    }
+
 
     private static List<String> getTrustStatements(ExampleTrustStatement... statements) {
         return Arrays.stream(statements)
