@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - `swiyu-did-resolver-adapter`: bump tomcat version to 11.0.22 for security updates.
 
+---
+
 ## [1.6.1] – 2026-05-18
 
 ### Fixed
