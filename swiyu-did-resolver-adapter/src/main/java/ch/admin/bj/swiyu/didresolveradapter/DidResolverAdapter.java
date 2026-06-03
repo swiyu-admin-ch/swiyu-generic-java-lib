@@ -103,12 +103,13 @@ public class DidResolverAdapter {
      */
     public JWK resolveKey(String keyId, Map<String, String> urlMappings) {
         var didLog = fetchDidLog(keyId , urlMappings);
-        DidDoc didDoc = getDidDoc(keyId, didLog);
 
         var keySplit = keyId.split("#");
         if (keySplit.length != 2) {
             throw new IllegalArgumentException(String.format("Key %s is malformed: missing fragment", keyId));
         }
+
+        DidDoc didDoc = getDidDoc(keySplit[0], didLog);
 
         try {
             var jwk = didDoc.getKey(keySplit[1]);
