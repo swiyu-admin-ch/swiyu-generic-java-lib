@@ -19,7 +19,7 @@ Delegates DID-based signature verification to [`swiyu-jwt-validator`](../swiyu-j
 <dependency>
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-sdjwt-validator</artifactId>
-    <version>1.6.3</version>
+    <version>1.6.4</version>
 </dependency>
 ```
 
