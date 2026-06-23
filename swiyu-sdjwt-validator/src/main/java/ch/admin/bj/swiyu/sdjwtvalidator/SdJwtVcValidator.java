@@ -11,9 +11,11 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Validates SD-JWT VC tokens according to the Swiss Profile VC specification (RFC 9901).
@@ -171,7 +173,7 @@ public class SdJwtVcValidator {
     // -------------------------------------------------------------------------
 
     /**
-     * Runs all structural SD-JWT VC checks ({@code typ}, {@code _sd_alg}, protected claims)
+     * Runs all structural SD-JWT VC checks ({@code typ}, {@code _sd_alg}, protected claims, disclosure hashes)
      * and returns the extracted Issuer-Signed JWT for subsequent signature verification.
      *
      * @param sdJwt the full SD-JWT string
@@ -184,10 +186,11 @@ public class SdJwtVcValidator {
             SignedJWT signedJwt = SignedJWT.parse(issuerJwt);
             validateTypHeader(signedJwt);
             validateSdAlg(signedJwt);
+            validateNoProtectedClaimsInDisclosures(sdJwt);
+            validateDisclosureHashes(sdJwt, signedJwt);
         } catch (ParseException e) {
             throw new JwtValidatorException("Failed to parse Issuer-Signed JWT", e);
         }
-        validateNoProtectedClaimsInDisclosures(sdJwt);
         return issuerJwt;
     }
 
@@ -298,6 +301,125 @@ public class SdJwtVcValidator {
                         "Registered claim '" + claimName +
                         "' MUST NOT be selectively disclosed (RFC 9901 §3.2.2.2 / Swiss Profile)");
             }
+        }
+    }
+
+    /**
+     * Validates that all disclosure hashes match the signed hashes in the {@code _sd} claim.
+     *
+     * <p>This is a critical security check to prevent forgery of disclosure values.
+     * Each disclosure must be hashed using the algorithm specified in {@code _sd_alg}
+     * (which must be {@code sha-256}), and the resulting hash must appear in the
+     * {@code _sd} claim array within the signed JWT.</p>
+     *
+     * @param sdJwt     the full SD-JWT string containing all disclosures
+     * @param signedJwt the parsed Issuer-Signed JWT containing the {@code _sd} claim
+     * @throws JwtValidatorException if any disclosure hash does not match a signed hash
+     */
+    private void validateDisclosureHashes(String sdJwt, SignedJWT signedJwt) throws ParseException {
+        List<String> disclosures = SdJwtParser.extractDisclosures(sdJwt);
+        if (disclosures.isEmpty()) {
+            log.debug("No disclosures to validate");
+            return;
+        }
+
+        // Extract the _sd claim array from the signed JWT
+        Set<String> signedHashes = extractSignedHashes(signedJwt);
+        if (signedHashes.isEmpty()) {
+            throw new JwtValidatorException(
+                    "SD-JWT contains " + disclosures.size() + " disclosure(s) but the '_sd' claim is missing or empty");
+        }
+
+        // Compute hash for each disclosure and verify it exists in the signed hashes
+        for (String disclosure : disclosures) {
+            String computedHash = computeDisclosureHash(disclosure);
+            if (!signedHashes.contains(computedHash)) {
+                throw new JwtValidatorException(
+                        "Disclosure hash verification failed: computed hash '" + computedHash +
+                        "' is not present in the '_sd' claim. This indicates the disclosure has been tampered with.");
+            }
+        }
+
+        log.debug("All {} disclosure hash(es) successfully verified against '_sd' claim", disclosures.size());
+    }
+
+    /**
+     * Extracts all hashes from the {@code _sd} claim in the JWT.
+     * The {@code _sd} claim can appear at the top level or nested within objects.
+     *
+     * @param signedJwt the parsed Issuer-Signed JWT
+     * @return a set of base64url-encoded hash strings
+     * @throws ParseException if the JWT claims cannot be parsed
+     */
+    private Set<String> extractSignedHashes(SignedJWT signedJwt) throws ParseException {
+        Set<String> hashes = new HashSet<>();
+        Object sdClaim = signedJwt.getJWTClaimsSet().getClaim("_sd");
+
+        if (sdClaim instanceof List<?> sdList) {
+            for (Object item : sdList) {
+                if (item instanceof String hash) {
+                    hashes.add(hash);
+                }
+            }
+        }
+
+        // Also recursively extract _sd from nested objects in the claims
+        extractNestedSdHashes(signedJwt.getJWTClaimsSet().getClaims(), hashes);
+
+        return hashes;
+    }
+
+    /**
+     * Recursively extracts {@code _sd} arrays from nested objects in the JWT claims.
+     *
+     * @param claims the claims map to search
+     * @param hashes the set to populate with found hashes
+     */
+    private void extractNestedSdHashes(Map<String, Object> claims, Set<String> hashes) {
+        for (Object value : claims.values()) {
+            if (value instanceof Map<?, ?> nestedObject) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> nestedMap = (Map<String, Object>) nestedObject;
+                Object nestedSd = nestedMap.get("_sd");
+                if (nestedSd instanceof List<?> nestedList) {
+                    for (Object item : nestedList) {
+                        if (item instanceof String hash) {
+                            hashes.add(hash);
+                        }
+                    }
+                }
+                // Recursively search deeper levels
+                extractNestedSdHashes(nestedMap, hashes);
+            } else if (value instanceof List<?> list) {
+                // Handle arrays that might contain objects with _sd
+                for (Object item : list) {
+                    if (item instanceof Map<?, ?> mapItem) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> itemMap = (Map<String, Object>) mapItem;
+                        extractNestedSdHashes(itemMap, hashes);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Computes the SHA-256 hash of a disclosure and returns it as a base64url-encoded string.
+     *
+     * <p>According to RFC 9901, the hash is computed over the base64url-encoded disclosure string,
+     * including any padding characters (though base64url typically omits padding).</p>
+     *
+     * @param disclosure the base64url-encoded disclosure string
+     * @return the base64url-encoded SHA-256 hash
+     * @throws JwtValidatorException if SHA-256 is not available (should never happen)
+     */
+    private String computeDisclosureHash(String disclosure) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(disclosure.getBytes(StandardCharsets.US_ASCII));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(hashBytes);
+        } catch (NoSuchAlgorithmException e) {
+            throw new JwtValidatorException("SHA-256 algorithm not available", e);
         }
     }
 }

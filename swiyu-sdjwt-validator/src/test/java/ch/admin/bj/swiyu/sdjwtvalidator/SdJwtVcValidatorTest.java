@@ -16,7 +16,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Base64;
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -84,7 +86,9 @@ class SdJwtVcValidatorTest {
 
     @Test
     void validateSdJwtVc_dcSdJwtTyp_passes() throws Exception {
-        String sdJwt = buildSdJwt(SdJwtVcValidator.TYP_DC_SD_JWT, "sha-256") + DISCLOSURE_GIVEN_NAME + "~";
+        String hash = computeSha256Hash(DISCLOSURE_GIVEN_NAME);
+        String sdJwt = buildSdJwtWithSdClaim(SdJwtVcValidator.TYP_DC_SD_JWT, "sha-256", List.of(hash))
+                + DISCLOSURE_GIVEN_NAME + "~";
         JWKSet jwkSet = new JWKSet(ecKey.toPublicJWK());
         doNothing().when(mockDidJwtValidator).validateJwt(anyString(), any(JWKSet.class));
         assertDoesNotThrow(() -> validator.validateSdJwtVc(sdJwt, jwkSet));
@@ -95,7 +99,9 @@ class SdJwtVcValidatorTest {
         SdJwtVcValidator migrationValidator = new SdJwtVcValidator(
                 mockDidJwtValidator,
                 Set.of(SdJwtVcValidator.TYP_DC_SD_JWT, SdJwtVcValidator.TYP_VC_SD_JWT));
-        String sdJwt = buildSdJwt(SdJwtVcValidator.TYP_VC_SD_JWT, "sha-256") + DISCLOSURE_GIVEN_NAME + "~";
+        String hash = computeSha256Hash(DISCLOSURE_GIVEN_NAME);
+        String sdJwt = buildSdJwtWithSdClaim(SdJwtVcValidator.TYP_VC_SD_JWT, "sha-256", List.of(hash))
+                + DISCLOSURE_GIVEN_NAME + "~";
         JWKSet jwkSet = new JWKSet(ecKey.toPublicJWK());
         doNothing().when(mockDidJwtValidator).validateJwt(anyString(), any(JWKSet.class));
         assertDoesNotThrow(() -> migrationValidator.validateSdJwtVc(sdJwt, jwkSet));
@@ -165,7 +171,8 @@ class SdJwtVcValidatorTest {
         // Array element disclosures have format [salt, value] (size 2) – no claim name to check
         String arrayElementDisclosure = Base64.getUrlEncoder().withoutPadding().encodeToString(
                 "[\"salt3\",\"some-array-value\"]".getBytes(StandardCharsets.UTF_8));
-        String sdJwt = buildSdJwt(SdJwtVcValidator.TYP_DC_SD_JWT, "sha-256")
+        String hash = computeSha256Hash(arrayElementDisclosure);
+        String sdJwt = buildSdJwtWithSdClaim(SdJwtVcValidator.TYP_DC_SD_JWT, "sha-256", List.of(hash))
                 + arrayElementDisclosure + "~";
         JWKSet jwkSet = new JWKSet(ecKey.toPublicJWK());
         doNothing().when(mockDidJwtValidator).validateJwt(anyString(), any(JWKSet.class));
@@ -185,7 +192,8 @@ class SdJwtVcValidatorTest {
 
     @Test
     void validateSdJwtVc_validDisclosure_doesNotThrow() throws Exception {
-        String sdJwt = buildSdJwt(SdJwtVcValidator.TYP_DC_SD_JWT, "sha-256")
+        String hash = computeSha256Hash(DISCLOSURE_GIVEN_NAME);
+        String sdJwt = buildSdJwtWithSdClaim(SdJwtVcValidator.TYP_DC_SD_JWT, "sha-256", List.of(hash))
                 + DISCLOSURE_GIVEN_NAME + "~";
         JWKSet jwkSet = new JWKSet(ecKey.toPublicJWK());
         doNothing().when(mockDidJwtValidator).validateJwt(anyString(), any(JWKSet.class));
@@ -215,6 +223,135 @@ class SdJwtVcValidatorTest {
 
         assertEquals("https://identifier.admin.ch/abc/did.jsonl", url);
         verify(mockDidJwtValidator).getAndValidateResolutionUrl(anyString());
+    }
+
+    // -------------------------------------------------------------------------
+    // Disclosure Hash Validation (EIDSEC-880 Fix)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void validateSdJwtVc_validDisclosureHash_passes() throws Exception {
+        // Create a disclosure and compute its hash
+        String disclosure = DISCLOSURE_GIVEN_NAME;
+        String hash = computeSha256Hash(disclosure);
+
+        // Build SD-JWT with the correct hash in the _sd claim
+        String sdJwt = buildSdJwtWithSdClaim(SdJwtVcValidator.TYP_DC_SD_JWT, "sha-256", List.of(hash))
+                + disclosure + "~";
+
+        JWKSet jwkSet = new JWKSet(ecKey.toPublicJWK());
+        doNothing().when(mockDidJwtValidator).validateJwt(anyString(), any(JWKSet.class));
+
+        assertDoesNotThrow(() -> validator.validateSdJwtVc(sdJwt, jwkSet));
+    }
+
+    @Test
+    void validateSdJwtVc_tamperedDisclosureValue_throwsJwtValidatorException() throws Exception {
+        // Create a valid disclosure with hash
+        String validDisclosure = DISCLOSURE_GIVEN_NAME;
+        String validHash = computeSha256Hash(validDisclosure);
+
+        // Create a tampered disclosure (different value for same claim)
+        String tamperedDisclosure = Base64.getUrlEncoder().withoutPadding().encodeToString(
+                "[\"salt1\",\"given_name\",\"Attacker\"]".getBytes(StandardCharsets.UTF_8));
+
+        // Build SD-JWT with the valid hash but send tampered disclosure
+        String sdJwt = buildSdJwtWithSdClaim(SdJwtVcValidator.TYP_DC_SD_JWT, "sha-256", List.of(validHash))
+                + tamperedDisclosure + "~";
+
+        JwtValidatorException ex = assertThrows(JwtValidatorException.class,
+                () -> validator.validateSdJwtVc(sdJwt, (JWKSet) null));
+
+        assertTrue(ex.getMessage().contains("Disclosure hash verification failed"),
+                "Expected hash verification failure message, got: " + ex.getMessage());
+        assertTrue(ex.getMessage().contains("tampered"),
+                "Expected tampering indication, got: " + ex.getMessage());
+    }
+
+    @Test
+    void validateSdJwtVc_disclosureWithoutCorrespondingHash_throwsJwtValidatorException() throws Exception {
+        // Create a disclosure but don't include its hash in _sd claim
+        String disclosure = DISCLOSURE_GIVEN_NAME;
+        String someOtherHash = computeSha256Hash("someOtherDisclosure");
+
+        // Build SD-JWT with a different hash that doesn't match the disclosure
+        String sdJwt = buildSdJwtWithSdClaim(SdJwtVcValidator.TYP_DC_SD_JWT, "sha-256", List.of(someOtherHash))
+                + disclosure + "~";
+
+        JwtValidatorException ex = assertThrows(JwtValidatorException.class,
+                () -> validator.validateSdJwtVc(sdJwt, (JWKSet) null));
+
+        assertTrue(ex.getMessage().contains("Disclosure hash verification failed"));
+    }
+
+    @Test
+    void validateSdJwtVc_disclosureWithoutSdClaim_throwsJwtValidatorException() throws Exception {
+        // Create a disclosure but don't include any _sd claim
+        String disclosure = DISCLOSURE_GIVEN_NAME;
+
+        // Build SD-JWT without _sd claim
+        String sdJwt = buildSdJwt(SdJwtVcValidator.TYP_DC_SD_JWT, "sha-256") + disclosure + "~";
+
+        JwtValidatorException ex = assertThrows(JwtValidatorException.class,
+                () -> validator.validateSdJwtVc(sdJwt, (JWKSet) null));
+
+        assertTrue(ex.getMessage().contains("'_sd' claim is missing or empty"),
+                "Expected missing _sd claim message, got: " + ex.getMessage());
+    }
+
+    @Test
+    void validateSdJwtVc_multipleDisclosuresAllValid_passes() throws Exception {
+        // Create multiple disclosures
+        String disclosure1 = DISCLOSURE_GIVEN_NAME;
+        String disclosure2 = Base64.getUrlEncoder().withoutPadding().encodeToString(
+                "[\"salt2\",\"family_name\",\"Mustermann\"]".getBytes(StandardCharsets.UTF_8));
+
+        // Compute hashes
+        String hash1 = computeSha256Hash(disclosure1);
+        String hash2 = computeSha256Hash(disclosure2);
+
+        // Build SD-JWT with both hashes
+        String sdJwt = buildSdJwtWithSdClaim(SdJwtVcValidator.TYP_DC_SD_JWT, "sha-256",
+                List.of(hash1, hash2)) + disclosure1 + "~" + disclosure2 + "~";
+
+        JWKSet jwkSet = new JWKSet(ecKey.toPublicJWK());
+        doNothing().when(mockDidJwtValidator).validateJwt(anyString(), any(JWKSet.class));
+
+        assertDoesNotThrow(() -> validator.validateSdJwtVc(sdJwt, jwkSet));
+    }
+
+    @Test
+    void validateSdJwtVc_multipleDisclosuresOneTampered_throwsJwtValidatorException() throws Exception {
+        // Create two disclosures, one valid and one tampered
+        String validDisclosure = DISCLOSURE_GIVEN_NAME;
+        String validHash = computeSha256Hash(validDisclosure);
+
+        String originalDisclosure2 = Base64.getUrlEncoder().withoutPadding().encodeToString(
+                "[\"salt2\",\"family_name\",\"Mustermann\"]".getBytes(StandardCharsets.UTF_8));
+        String originalHash2 = computeSha256Hash(originalDisclosure2);
+
+        String tamperedDisclosure2 = Base64.getUrlEncoder().withoutPadding().encodeToString(
+                "[\"salt2\",\"family_name\",\"Attacker\"]".getBytes(StandardCharsets.UTF_8));
+
+        // Build SD-JWT with original hashes but send one tampered disclosure
+        String sdJwt = buildSdJwtWithSdClaim(SdJwtVcValidator.TYP_DC_SD_JWT, "sha-256",
+                List.of(validHash, originalHash2)) + validDisclosure + "~" + tamperedDisclosure2 + "~";
+
+        JwtValidatorException ex = assertThrows(JwtValidatorException.class,
+                () -> validator.validateSdJwtVc(sdJwt, (JWKSet) null));
+
+        assertTrue(ex.getMessage().contains("Disclosure hash verification failed"));
+    }
+
+    @Test
+    void validateSdJwtVc_noDisclosures_passes() throws Exception {
+        // SD-JWT without any disclosures should pass (no hash validation needed)
+        String sdJwt = buildSdJwt(SdJwtVcValidator.TYP_DC_SD_JWT, "sha-256");
+
+        JWKSet jwkSet = new JWKSet(ecKey.toPublicJWK());
+        doNothing().when(mockDidJwtValidator).validateJwt(anyString(), any(JWKSet.class));
+
+        assertDoesNotThrow(() -> validator.validateSdJwtVc(sdJwt, jwkSet));
     }
 
     // -------------------------------------------------------------------------
@@ -254,6 +391,34 @@ class SdJwtVcValidatorTest {
         SignedJWT jwt = new SignedJWT(header, claims);
         jwt.sign(signer);
         return jwt.serialize();
+    }
+
+    /**
+     * Builds a signed SD-JWT with a specific _sd claim containing the provided hashes.
+     */
+    private String buildSdJwtWithSdClaim(String typ, String sdAlg, List<String> sdHashes) throws Exception {
+        JWSHeader.Builder headerBuilder = new JWSHeader.Builder(JWSAlgorithm.ES256).keyID(KID);
+        if (typ != null) {
+            headerBuilder.type(new com.nimbusds.jose.JOSEObjectType(typ));
+        }
+        JWTClaimsSet.Builder claimsBuilder = new JWTClaimsSet.Builder()
+                .claim("_sd_alg", sdAlg)
+                .claim("vct", "https://example.com/MyCredential");
+
+        if (sdHashes != null && !sdHashes.isEmpty()) {
+            claimsBuilder.claim("_sd", sdHashes);
+        }
+
+        return sign(headerBuilder.build(), claimsBuilder.build()) + "~";
+    }
+
+    /**
+     * Computes SHA-256 hash of a disclosure string and returns it as base64url-encoded.
+     */
+    private String computeSha256Hash(String disclosure) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hashBytes = digest.digest(disclosure.getBytes(StandardCharsets.US_ASCII));
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(hashBytes);
     }
 }
 
