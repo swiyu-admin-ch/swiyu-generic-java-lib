@@ -307,11 +307,6 @@ public class SdJwtVcValidator {
     /**
      * Validates that all disclosure hashes match the signed hashes in the {@code _sd} claim.
      *
-     * <p>This is a critical security check to prevent forgery of disclosure values.
-     * Each disclosure must be hashed using the algorithm specified in {@code _sd_alg}
-     * (which must be {@code sha-256}), and the resulting hash must appear in the
-     * {@code _sd} claim array within the signed JWT.</p>
-     *
      * @param sdJwt     the full SD-JWT string containing all disclosures
      * @param signedJwt the parsed Issuer-Signed JWT containing the {@code _sd} claim
      * @throws JwtValidatorException if any disclosure hash does not match a signed hash
@@ -376,32 +371,32 @@ public class SdJwtVcValidator {
      * @param hashes the set to populate with found hashes
      */
     private void extractNestedSdHashes(Map<String, Object> claims, Set<String> hashes) {
-        for (Object value : claims.values()) {
-            if (value instanceof Map<?, ?> nestedObject) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> nestedMap = (Map<String, Object>) nestedObject;
-                Object nestedSd = nestedMap.get("_sd");
-                if (nestedSd instanceof List<?> nestedList) {
-                    for (Object item : nestedList) {
-                        if (item instanceof String hash) {
-                            hashes.add(hash);
-                        }
-                    }
-                }
-                // Recursively search deeper levels
-                extractNestedSdHashes(nestedMap, hashes);
-            } else if (value instanceof List<?> list) {
-                // Handle arrays that might contain objects with _sd
-                for (Object item : list) {
-                    if (item instanceof Map<?, ?> mapItem) {
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> itemMap = (Map<String, Object>) mapItem;
-                        extractNestedSdHashes(itemMap, hashes);
+        // Delegation an die generische Hilfsmethode
+        traverseForSdHashes(claims, hashes);
+    }
+
+    private void traverseForSdHashes(Object node, Set<String> hashes) {
+        if (node instanceof Map<?, ?> map) {
+            // 1. collect _sd Hashes
+            if (map.get("_sd") instanceof List<?> sdList) {
+                for (Object item : sdList) {
+                    if (item instanceof String hash) {
+                        hashes.add(hash);
                     }
                 }
             }
+            // 2. Recursion
+            for (Object value : map.values()) {
+                traverseForSdHashes(value, hashes);
+            }
+
+        } else if (node instanceof Iterable<?> iterable) {
+            for (Object item : iterable) {
+                traverseForSdHashes(item, hashes);
+            }
         }
     }
+
 
     /**
      * Computes the SHA-256 hash of a disclosure and returns it as a base64url-encoded string.
