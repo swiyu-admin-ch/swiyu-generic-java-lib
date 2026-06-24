@@ -273,11 +273,17 @@ public enum ExampleTrustStatement {
     private final String header;
     private final String body;
 
-    public String getCombinedJson() {
+    public String getBodyJson() {
+        var mapper = new ObjectMapper();
+        HashMap<String, Object> claims = new HashMap<>();
+        assertDoesNotThrow(() -> claims.putAll(mapper.readValue(this.getBody(), Map.class)));
+        return assertDoesNotThrow(() -> mapper.writeValueAsString(claims));
+    }
+
+    public String getHeaderJson() {
         var mapper = new ObjectMapper();
         HashMap<String, Object> claims = new HashMap<>();
         assertDoesNotThrow(() -> claims.putAll(mapper.readValue(this.getHeader(), Map.class)));
-        assertDoesNotThrow(() -> claims.putAll(mapper.readValue(this.getBody(), Map.class)));
         return assertDoesNotThrow(() -> mapper.writeValueAsString(claims));
     }
 

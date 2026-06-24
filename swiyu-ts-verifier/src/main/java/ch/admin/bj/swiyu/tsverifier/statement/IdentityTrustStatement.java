@@ -12,7 +12,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class IdentityTrustStatement extends TrustStatement{
+public class IdentityTrustStatement extends TrustStatement {
     /**
      * human-readable string identifying the actor in the real world
      * May include localizations
