@@ -62,7 +62,7 @@ public class SdJwtVcValidator {
     private static final int OBJECT_PROPERTY_DISCLOSURES_SIZE = 3;
     
     /**
-     * Registered JWT claims that MUST NOT appear in any Disclosure per RFC 9901 4.1 & 7
+     * Registered JWT claims that MUST NOT appear in any Disclosure per RFC 9901 4.1 and 7
      * and the Swiss Profile VC specification.
      */
     public static final Set<String> PROTECTED_CLAIMS = Set.of(
