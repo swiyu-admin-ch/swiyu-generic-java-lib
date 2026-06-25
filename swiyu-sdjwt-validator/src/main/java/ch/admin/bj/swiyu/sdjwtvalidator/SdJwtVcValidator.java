@@ -66,8 +66,7 @@ public class SdJwtVcValidator {
      * and the Swiss Profile VC specification.
      */
     public static final Set<String> PROTECTED_CLAIMS = Set.of(
-            "sub",
-            "iss", 
+            "iss",
             "nbf", 
             "exp", 
             "iat", 
