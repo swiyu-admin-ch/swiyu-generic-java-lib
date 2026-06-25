@@ -1,4 +1,7 @@
-# swiyu-sdjwt-validator
+# swiyu-sdjwt-validator (draft)
+
+**This library is not yet production-ready and is still under development. Therefore, this library should not be used anywhere yet.**
+
 
 Validates SD-JWT VC tokens according to the **Swiss Profile VC specification** (RFC 9901).
 
