@@ -42,7 +42,6 @@ public class StatementParser {
             }
 
             // get claims in jwt payload and map it to statement
-            // String bodyClaims = mapper.writeValueAsString(parsedStatement.getJWTClaimsSet().getClaims());
             Statement statement = mapper.convertValue(parsedStatement.getJWTClaimsSet().getClaims(), statementType.get().getStatementClass());
 
             // add original jwt to statement
