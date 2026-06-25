@@ -7,10 +7,14 @@ import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListTokenDto;
 import ch.admin.bj.swiyu.tsverifier.statement.ExampleTrustStatement;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,6 +63,56 @@ class TrustStatementVerifierTest {
         var verifier = new TrustStatementVerifier(statements, Mockito.mock(UrlRestriction.class), new DidKidParser());
         var ids = verifier.getRequiredKeyIds();
         assertThat(ids).hasSize(2).contains("did:example:trust-issuer#key-1", "did:example:verification-statment-issuer#key-1");
+    }
+
+    @Test
+    void testGetKeyIds_withKidInHeaderAndBody_shouldTakeHeader_thenSuccess() {
+        var headerWithKid = """
+                {
+                    "typ": "swiyu-identity-trust-statement+jwt",
+                    "alg": "ES256",
+                    "kid": "did:example:trust-issuer#key-1",
+                    "profile_version": "swiss-profile-trust:1.0.0"
+                }
+            """;
+        var bodyWithKid = """
+        {
+            "sub": "did:example:actor",
+                "iat": 1690360968,
+                "exp": 32503676400,
+                "kid": "did:example:trust-different-issuer#key-1",
+                "status":  {
+                    "status_list": {
+                        "idx": 1,
+                        "uri": "https://example.com/statuslists/1"
+                    }
+                },
+                "entity_name": "John Smith's Smithery",
+                "entity_name#de": "John Smith's Schmiderei",
+                "entity_name#de-CH": "John Smith's Schmiderei",
+                "is_state_actor": false,
+                "registry_ids": [
+                    {
+                        "type": "UID",
+                        "value": "CHE-000.000.000"
+                    },
+                    {
+                        "type": "LEI",
+                        "value": "0A1B2C3D4E5F6G7H8J9I"
+                    }
+                ]
+        }""";
+
+        var jwt = assertDoesNotThrow(() -> new SignedJWT(JWSHeader.parse(headerWithKid), JWTClaimsSet.parse(bodyWithKid)));
+        assertDoesNotThrow(() -> jwt.sign(new ECDSASigner(trustIssuerKey)));
+        var serialized = jwt.serialize();
+
+        getTrustStatements(ExampleTrustStatement.idTS, ExampleTrustStatement.ncTLS, ExampleTrustStatement.vqPS_protected_claim);
+
+
+        var verifier = new TrustStatementVerifier(List.of(serialized), Mockito.mock(UrlRestriction.class), new DidKidParser());
+        var ids = verifier.getRequiredKeyIds();
+        assertThat(ids).hasSize(1).contains("did:example:trust-issuer#key-1");
     }
 
     @Test
@@ -197,7 +251,7 @@ class TrustStatementVerifierTest {
         for (int index : revokedIndexes) {
             statusList.setStatus(index, 1);
         }
-        var lst = assertDoesNotThrow( () -> statusList.getStatusListData());
+        var lst = assertDoesNotThrow(statusList::getStatusListData);
         return assertDoesNotThrow(() -> mapper.readValue(
                 """
                         {

@@ -1,5 +1,6 @@
 package ch.admin.bj.swiyu.tsverifier.statement;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.ECDSASigner;
@@ -278,6 +279,15 @@ public enum ExampleTrustStatement {
         HashMap<String, Object> claims = new HashMap<>();
         assertDoesNotThrow(() -> claims.putAll(mapper.readValue(this.getBody(), Map.class)));
         return assertDoesNotThrow(() -> mapper.writeValueAsString(claims));
+    }
+
+    public StatementHeader getHeaderMap() {
+        var mapper = new ObjectMapper();
+        try {
+            return mapper.readValue(this.getHeader(), StatementHeader.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public String getHeaderJson() {

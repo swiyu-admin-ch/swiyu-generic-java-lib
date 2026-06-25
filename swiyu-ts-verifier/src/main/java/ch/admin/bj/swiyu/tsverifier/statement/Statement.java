@@ -26,7 +26,6 @@ public class Statement {
      * Expiration time of the trust statement
      */
     private long exp;
-
     /**
      * Full Serialized JWT
      */

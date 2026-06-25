@@ -12,7 +12,7 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StatementHeader {
-        /**
+    /**
      * The specific statements define the typ string.
      */
     private StatementType typ;
