@@ -1,6 +1,5 @@
 package ch.admin.bj.swiyu.tsverifier.statement;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
@@ -41,14 +40,22 @@ public class StatementParser {
             if (statementType.isEmpty()) {
                 return Optional.empty();
             }
-            var allClaims = createCombinedClaims(parsedStatement);
-            Statement statement = mapper.readValue(allClaims, statementType.get().getStatementClass());
+
+            // get claims in jwt payload and map it to statement
+            Statement statement = mapper.convertValue(parsedStatement.getJWTClaimsSet().getClaims(), statementType.get().getStatementClass());
+
+            // add original jwt to statement
             statement.setSerializedJwt(serializedJwt);
+
+            // add jwt header to statement
+            StatementHeader headers = mapper.convertValue(parsedStatement.getHeader().toJSONObject(), StatementHeader.class);
+            statement.setStatementHeaders(headers);
+
             if (hasMissingClaim(statement)) {
                 return Optional.empty();
             }
             return Optional.of(statement);
-        } catch (ParseException | JsonProcessingException e) {
+        } catch (ParseException e) {
             log.info("Trust Statement {} is not parseable", serializedJwt, e);
             return Optional.empty();
         }
@@ -72,11 +79,5 @@ public class StatementParser {
             }
         }
         return false;
-    }
-
-    private String createCombinedClaims(SignedJWT parsedStatement) throws ParseException, JsonProcessingException {
-        var allClaims = parsedStatement.getHeader().toJSONObject();
-        allClaims.putAll(parsedStatement.getJWTClaimsSet().getClaims());
-        return mapper.writeValueAsString(allClaims);
     }
 }

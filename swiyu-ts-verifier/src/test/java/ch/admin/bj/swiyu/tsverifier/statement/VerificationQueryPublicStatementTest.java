@@ -12,9 +12,12 @@ class VerificationQueryPublicStatementTest {
 
     @Test
     void testParseExample() throws JsonProcessingException {
-        var pvaTS = mapper.readValue(ExampleTrustStatement.vqPS_protected_claim.getCombinedJson(), VerificationQueryPublicStatement.class);
-        assertThat(pvaTS.getTyp()).isEqualTo(StatementType.VERIFICATION_QUERY_PUBLIC_STATEMENT);
-        assertThat(pvaTS.getRequest()).isNotNull();
-        assertThat(pvaTS.getRequest().getQuery()).isNotNull();
+        var vqPS = mapper.readValue(ExampleTrustStatement.vqPS_protected_claim.getBodyJson(), VerificationQueryPublicStatement.class);
+        var header = mapper.readValue(ExampleTrustStatement.vqPS.getHeaderJson(), StatementHeader.class);
+        vqPS.setStatementHeaders(header);
+
+        assertThat(vqPS.getStatementHeaders().getTyp()).isEqualTo(StatementType.VERIFICATION_QUERY_PUBLIC_STATEMENT);
+        assertThat(vqPS.getRequest()).isNotNull();
+        assertThat(vqPS.getRequest().getQuery()).isNotNull();
     }
 }

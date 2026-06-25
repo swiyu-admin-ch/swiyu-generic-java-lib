@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TrustStatementVerifier {
 
-    private final List<String> serializedTrustStatementJwt;
     private final List<Statement> statements;
     private final UrlRestriction urlRestriction;
     private final DidKidParser kidParser;
@@ -43,8 +42,7 @@ public class TrustStatementVerifier {
      * @param kidParser parser for DIDs
      */
     public TrustStatementVerifier(List<String> serializedTrustStatementJwt, UrlRestriction urlRestriction, DidKidParser kidParser) {
-        this.serializedTrustStatementJwt = serializedTrustStatementJwt;
-        this.statements = parseStatements(this.serializedTrustStatementJwt);
+        this.statements = parseStatements(serializedTrustStatementJwt);
         this.urlRestriction = urlRestriction;
         this.kidParser = kidParser;
     }
@@ -57,7 +55,7 @@ public class TrustStatementVerifier {
      */
     public Set<String> getRequiredKeyIds() {
         return this.statements.stream()
-                .map(Statement::getKid)
+                .map(s -> s.getStatementHeaders().getKid())
                 .collect(Collectors.toSet());
     }
 
@@ -146,7 +144,7 @@ public class TrustStatementVerifier {
                 .filter(sl -> sl.getSub().equals(statefulStatement.getStatusListUri()))
                 .findAny();
         if (referencedStatusList.isEmpty()) {
-            log.info("No matching token status list found for statement type {} with uri {}", s.getTyp().getType(), statefulStatement.getStatusListUri());
+            log.info("No matching token status list found for statement type {} with uri {}", s.getStatementHeaders().getTyp().getType(), statefulStatement.getStatusListUri());
             return null;
         }
         return referencedStatusList.get().getStatusList();
@@ -154,8 +152,8 @@ public class TrustStatementVerifier {
 
 
     private boolean hasTrustedIssuer(Statement s, String trustRootDid, String publicStatementIssuerDid) {
-        String statementIssuer = kidParser.getDidFromAbsoluteKid(s.getKid());
-        if (s.getTyp().equals(StatementType.VERIFICATION_QUERY_PUBLIC_STATEMENT)) {
+        String statementIssuer = kidParser.getDidFromAbsoluteKid(s.getStatementHeaders().getKid());
+        if (s.getStatementHeaders().getTyp().equals(StatementType.VERIFICATION_QUERY_PUBLIC_STATEMENT)) {
             return statementIssuer.equals(publicStatementIssuerDid);
         }
         return statementIssuer.equals(trustRootDid);
@@ -166,7 +164,7 @@ public class TrustStatementVerifier {
             new DidJwtValidator(urlRestriction).validateJwt(s.getSerializedJwt(), publicKeySet);
             return true;
         } catch (JwtUtilException | JwtValidatorException e) {
-            log.info("Trust Statement {} is not a valid JWT - invalid Signature or not valid", s.getTyp().getType(), e);
+            log.info("Trust Statement {} is not a valid JWT - invalid Signature or not valid", s.getStatementHeaders().getTyp().getType(), e);
             return false;
         }
     }
