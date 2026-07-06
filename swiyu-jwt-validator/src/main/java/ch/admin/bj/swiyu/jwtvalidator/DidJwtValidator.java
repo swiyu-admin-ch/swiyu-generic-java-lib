@@ -149,7 +149,7 @@ public class DidJwtValidator {
      * <p>The public key is extracted from {@code didDocument} using the {@code kid} from the
      * JWT header via {@code getKeyByMethodId(kid)}.
      * The {@code iss} claim is <em>not</em> validated; trust is established solely via the
-     * {@code kid}.</p>
+     * {@code kid}.</p> which is extracted from the JWT header and used to find the corresponding public key in the DID Document.
      *
      * @param jwtString   the compact serialized JWT
      * @param didDocument the resolved DID Document containing the verification methods
@@ -158,6 +158,24 @@ public class DidJwtValidator {
      */
     public void validateJwt(String jwtString, DidDoc didDocument) {
         String kid = didKidParser.extractKidFromHeader(jwtString);
+
+        validateJwt(jwtString, didDocument, kid);
+    }
+
+
+    /**
+     * Step 2 of Flow B – validates the JWT signature against the pre-fetched DID Document.
+     *
+     * <p>This method uses the provided {@code kid} to extract the corresponding public key
+     * from the {@code didDocument} and then performs the standard validation steps:
+     *
+     * @param jwtString   the compact serialized JWT
+     * @param didDocument the resolved DID Document containing the verification methods
+     * @param kid         the absolute verification method id (kid) to use for signature verification
+     * @throws JwtValidatorException if the JWT is malformed, the key cannot be found in the
+      *                               DID Document, or the signature verification fails
+     */
+    public void validateJwt(String jwtString, DidDoc didDocument, String kid) {
 
         Jwk jwk;
         try {
