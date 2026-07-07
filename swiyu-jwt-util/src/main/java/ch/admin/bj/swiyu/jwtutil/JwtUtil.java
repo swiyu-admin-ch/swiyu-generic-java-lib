@@ -108,6 +108,24 @@ public final class JwtUtil {
     }
 
     /**
+     * Verifies a JWT string using the provided JWKSet.
+     *
+     * @param jwtString JWT as a string.
+     * @param jwk JWK for verification.
+     * @return Claims map extracted from the JWT.
+     * @throws JwtUtilException if parsing or verification fails.
+     */
+    public static Map<String, Object> verifyJwt(String jwtString, JWK jwk)
+            throws JwtUtilException {
+        try {
+            SignedJWT jwt = SignedJWT.parse(jwtString);
+            return verifySignedJwt(jwt, jwk);
+        } catch (ParseException e) {
+            throw new JwtUtilException("Failed to parse JWT", e);
+        }
+    }
+
+    /**
      * Verifies a SignedJWT using the provided JWKSet.
      *
      * @param jwt SignedJWT object.
@@ -132,6 +150,31 @@ public final class JwtUtil {
             throw new JwtUtilException("Failed to verify JWT", e);
         }
     }
+
+    /**
+     * Verifies a SignedJWT using the provided JWKSet.
+     *
+     * @param jwt SignedJWT object.
+     * @param jwk JWK for verification.
+     * @return Claims map extracted from the JWT.
+     * @throws JwtUtilException if verification fails.
+     */
+    public static Map<String, Object> verifySignedJwt(SignedJWT jwt, JWK jwk)
+            throws JwtUtilException {
+        try {
+            if (jwk == null) {
+                throw new JwtUtilException("No matching key found");
+            }
+            JWSVerifier verifier = buildVerifier(jwk.getKeyType(), jwk);
+            if (!jwt.verify(verifier)) {
+                throw new JwtUtilException("JWT signature verification failed");
+            }
+            return jwt.getJWTClaimsSet().toJSONObject();
+        } catch (JOSEException | ParseException e) {
+            throw new JwtUtilException("Failed to verify JWT", e);
+        }
+    }
+
 
     /**
      * Builds a JWSVerifier for the given key type and key.

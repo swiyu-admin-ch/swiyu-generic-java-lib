@@ -159,24 +159,6 @@ public class DidJwtValidator {
     public void validateJwt(String jwtString, DidDoc didDocument) {
         String kid = didKidParser.extractKidFromHeader(jwtString);
 
-        validateJwt(jwtString, didDocument, kid);
-    }
-
-
-    /**
-     * Step 2 of Flow B – validates the JWT signature against the pre-fetched DID Document.
-     *
-     * <p>This method uses the provided {@code kid} to extract the corresponding public key
-     * from the {@code didDocument} and then performs the standard validation steps:
-     *
-     * @param jwtString   the compact serialized JWT
-     * @param didDocument the resolved DID Document containing the verification methods
-     * @param kid         the absolute verification method id (kid) to use for signature verification
-     * @throws JwtValidatorException if the JWT is malformed, the key cannot be found in the
-      *                               DID Document, or the signature verification fails
-     */
-    public void validateJwt(String jwtString, DidDoc didDocument, String kid) {
-
         Jwk jwk;
         try {
             jwk = didDocument.getKeyByMethodId(kid);
@@ -185,8 +167,8 @@ public class DidJwtValidator {
         }
 
         validateTimeClaims(jwtString);
-        JWKSet jwkSet = toJwkSet(jwk);
-        verifySignature(jwtString, jwkSet);
+        JWK jwkNimbus = toJwk(jwk);
+        verifySignature(jwtString, jwkNimbus);
     }
 
     /**
@@ -257,18 +239,11 @@ public class DidJwtValidator {
         }
     }
 
-    /**
-     * Converts the did_sidekicks {@link Jwk} data class to a Nimbus {@link JWKSet}.
-     *
-     * @param jwk the JWK from the DID Document
-     * @return a single-key {@link JWKSet}
-     * @throws JwtValidatorException if the JWK cannot be parsed
-     */
-    private JWKSet toJwkSet(Jwk jwk) {
+    private JWK toJwk(Jwk jwk) {
         try {
-            return new JWKSet(JWK.parse(buildJwkMap(jwk)));
-        } catch (ParseException | IllegalArgumentException e) {
-            throw new JwtValidatorException("Failed to convert JWK from DID Document", e);
+            return JWK.parse(buildJwkMap(jwk));
+        } catch (ParseException e) {
+            throw new JwtValidatorException("Failed to parse JWK from DID Document", e);
         }
     }
 
@@ -282,6 +257,23 @@ public class DidJwtValidator {
     private Map<String, Object> buildJwkMap(Jwk jwk) {
         return OBJECT_MAPPER.convertValue(jwk, new TypeReference<>() {
         });
+    }
+
+    /**
+     * Delegates signature verification to {@link JwtUtil} and maps any exception to
+     * {@link JwtValidatorException}.
+     *
+     * @param jwtString the compact serialized JWT
+     * @param jwk    the JWK set to verify against
+     * @throws JwtValidatorException if verification fails for any reason
+     */
+    private void verifySignature(String jwtString, JWK jwk) {
+        try {
+            JwtUtil.verifyJwt(jwtString, jwk);
+            log.debug("JWT signature verification succeeded");
+        } catch (JwtUtilException e) {
+            throw new JwtValidatorException("JWT signature verification failed", e);
+        }
     }
 
     /**
