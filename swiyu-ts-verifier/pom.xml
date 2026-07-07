@@ -114,6 +114,18 @@
 
     </dependencies>
 
+    <dependencyManagement>
+        <dependencies>
+
+            <!-- Fixes CVE-2026-13006 -->
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>1.5.37</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <build>
         <plugins>
             <!-- Compiler plugin -->

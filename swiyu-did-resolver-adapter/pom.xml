@@ -142,8 +142,15 @@
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-core</artifactId>
-                <version>11.0.22</version>
+                <version>11.0.23</version>
                 <scope>compile</scope>
+            </dependency>
+
+            <!-- Fixes CVE-2026-13006 -->
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>1.5.37</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
