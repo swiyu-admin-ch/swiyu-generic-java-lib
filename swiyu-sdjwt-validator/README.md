@@ -1,4 +1,6 @@
-# swiyu-sdjwt-validator
+# swiyu-sdjwt-validator (draft)
+
+**This library is not yet production-ready and is still under development. Therefore, this library should not be used anywhere yet.**
 
 Validates SD-JWT VC tokens according to the **Swiss Profile VC specification** (RFC 9901).
 
@@ -19,7 +21,7 @@ Delegates DID-based signature verification to [`swiyu-jwt-validator`](../swiyu-j
 <dependency>
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-sdjwt-validator</artifactId>
-    <version>1.7.0-SNAPSHOT</version>
+    <version>1.7.0</version>
 </dependency>
 ```
 

@@ -1,4 +1,6 @@
-# Claims Pointer Utilities
+# Claims Pointer Utilities (draft)
+
+**This library is not yet production-ready and is still under development. Therefore, this library should not be used anywhere yet.**
 
 Utilities for working with claim pointers / JSON pointers in the Swiyu ecosystem.
 
@@ -10,7 +12,7 @@ Add the dependency to your `pom.xml`:
 <dependency>
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-claims-path-pointer-util</artifactId>
-    <version>1.7.0-SNAPSHOT</version>
+    <version>1.7.0</version>
 </dependency>
 ```
 
