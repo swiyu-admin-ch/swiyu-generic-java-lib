@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [NEXT] – next
 - Separate header from body claims in trust-statement so that header claims and body claims can be distinguished and validated independently
+- JWKSet no longer used for signature checks for jwt via DidDocument, instead use the JWK from keys directly.
 
 ## [1.6.2] – 2026-06-03
 - Bump didresolver to 2.8.0 for security updates.
