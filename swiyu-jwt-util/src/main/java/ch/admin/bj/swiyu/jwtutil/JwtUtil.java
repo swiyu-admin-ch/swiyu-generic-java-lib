@@ -108,7 +108,7 @@ public final class JwtUtil {
     }
 
     /**
-     * Verifies a JWT string using the provided JWKSet.
+     * Verifies a JWT string using the provided JWK.
      *
      * @param jwtString JWT as a string.
      * @param jwk JWK for verification.
@@ -152,7 +152,7 @@ public final class JwtUtil {
     }
 
     /**
-     * Verifies a SignedJWT using the provided JWKSet.
+     * Verifies a SignedJWT using the provided JWK.
      *
      * @param jwt SignedJWT object.
      * @param jwk JWK for verification.
