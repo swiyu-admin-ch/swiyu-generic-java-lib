@@ -1,5 +1,6 @@
 package ch.admin.bj.swiyu.jwtutil;
 
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSVerifier;
@@ -41,6 +42,22 @@ class JwtUtilTest {
     }
 
     /**
+     * Unit tests for JwtUtil.
+     * Covers EC/RSA verification with JWK, missing key, and unsupported key type.
+     */
+    @Test
+    void verifyJwt_validECKeyWithJWK_success() throws Exception {
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256).keyID("ec1").generate();
+        SignedJWT jwt = new SignedJWT(
+                new JWSHeader.Builder(JWSAlgorithm.ES256).keyID("ec1").build(),
+                new JWTClaimsSet.Builder().claim("foo", "bar").build()
+        );
+        jwt.sign(new ECDSASigner(ecKey));
+        Map<String, Object> claims = JwtUtil.verifyJwt(jwt.serialize(), ecKey.toPublicJWK());
+        assertEquals("bar", claims.get("foo"));
+    }
+
+    /**
      * Verifies a valid RSA JWT is accepted and claims are correct.
      */
     @Test
@@ -53,6 +70,21 @@ class JwtUtilTest {
         );
         jwt.sign(new RSASSASigner(rsaKey));
         Map<String, Object> claims = JwtUtil.verifyJwt(jwt.serialize(), jwkSet);
+        assertEquals(42L, claims.get("baz"));
+    }
+
+    /**
+     * Verifies a valid RSA JWT is accepted and claims are correct with JWK param.
+     */
+    @Test
+    void verifyJwt_validRSAKeyWithJWK_success() throws Exception {
+        RSAKey rsaKey = new RSAKeyGenerator(2048).keyID("rsa1").generate();
+        SignedJWT jwt = new SignedJWT(
+                new JWSHeader.Builder(JWSAlgorithm.RS256).keyID("rsa1").build(),
+                new JWTClaimsSet.Builder().claim("baz", 42).build()
+        );
+        jwt.sign(new RSASSASigner(rsaKey));
+        Map<String, Object> claims = JwtUtil.verifyJwt(jwt.serialize(), rsaKey.toPublicJWK());
         assertEquals(42L, claims.get("baz"));
     }
 
@@ -97,6 +129,19 @@ class JwtUtilTest {
     }
 
     /**
+     * Tests signJwt with EC key and verifies the signature with JWK param.
+     */
+    @Test
+    void signJwt_ecKeyWithJWK_success() throws Exception {
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256).keyID("ec-sign").generate();
+        JWSHeader header = JwtUtil.buildHeader(JWSAlgorithm.ES256, "ec-sign", "JWT");
+        JWTClaimsSet claims = new JWTClaimsSet.Builder().claim("test", "ec").build();
+        SignedJWT jwt = JwtUtil.signJwt(claims, header, new ECDSASigner(ecKey));
+        Map<String, Object> verifiedClaims = JwtUtil.verifyJwt(jwt.serialize(), ecKey.toPublicJWK());
+        assertEquals("ec", verifiedClaims.get("test"));
+    }
+
+    /**
      * Tests signJwt with RSA key and verifies the signature.
      */
     @Test
@@ -107,6 +152,19 @@ class JwtUtilTest {
         SignedJWT jwt = JwtUtil.signJwt(claims, header, new RSASSASigner(rsaKey));
         JWKSet jwkSet = new JWKSet(rsaKey.toPublicJWK());
         Map<String, Object> verifiedClaims = JwtUtil.verifyJwt(jwt.serialize(), jwkSet);
+        assertEquals("rsa", verifiedClaims.get("test"));
+    }
+
+    /**
+     * Tests signJwt with RSA key and verifies the signature with JWK param.
+     */
+    @Test
+    void signJwt_rsaKeyWithJWK_success() throws Exception {
+        RSAKey rsaKey = new RSAKeyGenerator(2048).keyID("rsa-sign").generate();
+        JWSHeader header = JwtUtil.buildHeader(JWSAlgorithm.RS256, "rsa-sign", "JWT");
+        JWTClaimsSet claims = new JWTClaimsSet.Builder().claim("test", "rsa").build();
+        SignedJWT jwt = JwtUtil.signJwt(claims, header, new RSASSASigner(rsaKey));
+        Map<String, Object> verifiedClaims = JwtUtil.verifyJwt(jwt.serialize(), rsaKey.toPublicJWK());
         assertEquals("rsa", verifiedClaims.get("test"));
     }
 
@@ -166,6 +224,16 @@ class JwtUtilTest {
     void verifyJwt_invalidJwtString_throws() {
         JWKSet jwkSet = new JWKSet();
         assertThrows(JwtUtilException.class, () -> JwtUtil.verifyJwt("not-a-jwt", jwkSet));
+    }
+
+    /**
+     * Tests verifyJwt with invalid JWT string with JWK param.
+     */
+    @Test
+    void verifyJwt_invalidJwtStringWithJWK_throws() throws JOSEException {
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256).keyID("ec4").generate();
+
+        assertThrows(JwtUtilException.class, () -> JwtUtil.verifyJwt("not-a-jwt", ecKey.toPublicJWK()));
     }
 
 }
