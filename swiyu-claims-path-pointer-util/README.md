@@ -12,7 +12,7 @@ Add the dependency to your `pom.xml`:
 <dependency>
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-claims-path-pointer-util</artifactId>
-    <version>1.7.0</version>
+    <version>1.8.0-SNAPSHOT</version>
 </dependency>
 ```
 
