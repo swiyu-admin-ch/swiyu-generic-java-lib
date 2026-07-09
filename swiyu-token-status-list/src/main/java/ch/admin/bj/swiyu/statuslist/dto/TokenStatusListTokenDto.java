@@ -76,6 +76,19 @@ public class TokenStatusListTokenDto {
          */
         @JsonProperty(value = "lst", required = true)
         private String statusListData;
+
+        public boolean hasRequiredClaims() {
+            // bits (must be 1,2,4,8)
+            if (bits != 1 && bits != 2 && bits != 4 && bits != 8) {
+                return false;
+            }
+
+            // lst (required, non‑blank)
+            if (statusListData == null || statusListData.isBlank()) {
+                return false;
+            }
+            return true;
+        }
     }
 
     /**
@@ -107,23 +120,11 @@ public class TokenStatusListTokenDto {
             return false;
         }
 
-        //  bits (must be 1,2,4,8)
-        int bits = statusList.getBits();
-        if (bits != 1 && bits != 2 && bits != 4 && bits != 8) {
-            return false;
-        }
-
-        //  lst (required, non‑blank) 
-        String lst = statusList.getStatusListData();
-        if (lst == null || lst.isBlank()) {
-            return false;
-        }
-
         //  ttl (optional, must be positive if present) 
         if (ttl != null && ttl <= 0) {
             return false;
         }
 
-        return true;
+        return statusList.hasRequiredClaims();
     }
 }
