@@ -49,10 +49,10 @@ public class TokenStatusListTokenDto {
     private String sub;
 
     @JsonProperty(value = "iat", required = true)
-    private Integer iat;
+    private Long iat;
 
     @JsonProperty(value = "exp", required = false)
-    private Integer exp;
+    private Long exp;
     /**
      * The ttl (time to live) claim, if present, MUST specify the maximum amount of time, in seconds,
      * that the Status List Token can be cached by a consumer before a fresh copy SHOULD be retrieved.
