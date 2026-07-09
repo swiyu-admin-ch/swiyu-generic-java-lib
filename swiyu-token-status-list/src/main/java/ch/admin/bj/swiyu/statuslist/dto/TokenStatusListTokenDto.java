@@ -34,21 +34,30 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TokenStatusListTokenDto {
 
-    @JsonProperty("status_list")
+
+    @JsonProperty(value = "iss", required = false)
+    private String issuer;
+
+    @JsonProperty(value = "status_list", required = true)
     private TokenStatusListDto statusList;
 
     /**
      * The sub (subject) claim MUST specify the URI of the Status List Token.
      * The value MUST be equal to that of the uri claim contained in the status_list claim of the Referenced Token
      */
-    @JsonProperty("sub")
+    @JsonProperty(value = "sub", required = true)
     private String sub;
 
+    @JsonProperty(value = "iat", required = true)
+    private Integer iat;
+
+    @JsonProperty(value = "exp", required = false)
+    private Integer exp;
     /**
      * The ttl (time to live) claim, if present, MUST specify the maximum amount of time, in seconds,
      * that the Status List Token can be cached by a consumer before a fresh copy SHOULD be retrieved.
      */
-    @JsonProperty("ttl")
+    @JsonProperty(value = "ttl", required = false)
     private Integer ttl;
 
     @Getter
@@ -60,12 +69,61 @@ public class TokenStatusListTokenDto {
          * specifying the number of bits per Referenced Token in the compressed byte array (lst).
          * The allowed values for bits are 1, 2, 4, and 8.
          */
-        @JsonProperty("bits")
+        @JsonProperty(value = "bits", required = true)
         private int bits;
         /**
          * A base64url-encoded compressed byte array of the statuses
          */
-        @JsonProperty("lst")
+        @JsonProperty(value = "lst", required = true)
         private String statusListData;
+    }
+
+    /**
+     * Checks whether this DTO contains every claim that the Status List
+     * specification mandates for a status‑list token.
+     *
+     * <p>The method performs the following validations:</p>
+     * <ul>
+     *   <li>{@code sub} must be non‑null and non‑blank.</li>
+     *   <li>{@code statusList} must be non‑null.</li>
+     *   <li>{@code statusList.bits} must be one of {@code 1, 2, 4, 8}.</li>
+     *   <li>{@code statusList.statusListData} must be non‑null and non‑blank.</li>
+     *   <li>If {@code ttl} is present, it must be a positive integer.</li>
+     * </ul>
+     *
+     * @return {@code true} if all required fields are present and satisfy the
+     *         constraints; {@code false} otherwise.
+     */
+    public boolean hasRequiredClaims() {
+        if (sub == null || sub.isBlank()) {
+            return false;
+        }
+        if (iat == null) {
+            return false;
+        }
+
+        //  status_list (required)
+        if (statusList == null) {
+            return false;
+        }
+
+        //  bits (must be 1,2,4,8)
+        int bits = statusList.getBits();
+        if (bits != 1 && bits != 2 && bits != 4 && bits != 8) {
+            return false;
+        }
+
+        //  lst (required, non‑blank) 
+        String lst = statusList.getStatusListData();
+        if (lst == null || lst.isBlank()) {
+            return false;
+        }
+
+        //  ttl (optional, must be positive if present) 
+        if (ttl != null && ttl <= 0) {
+            return false;
+        }
+
+        return true;
     }
 }

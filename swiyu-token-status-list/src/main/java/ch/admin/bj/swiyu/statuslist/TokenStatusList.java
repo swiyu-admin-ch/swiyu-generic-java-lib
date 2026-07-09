@@ -60,7 +60,7 @@ public class TokenStatusList {
     }
 
     public static TokenStatusList loadTokenStatusListToken(int bits, String lst) throws IOException {
-        return new TokenStatusList(bits, decodeStatusList(lst, BUFFER_SIZE));
+        return loadTokenStatusListToken(bits, lst, BUFFER_SIZE);
     }
 
     public static TokenStatusList loadTokenStatusListToken(int bits, String lst, int maxBufferSize) throws IOException {

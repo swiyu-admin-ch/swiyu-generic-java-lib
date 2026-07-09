@@ -19,10 +19,38 @@ Note: use an ObjectMapper to parse JWT bodies into the DTOs.
 
 ```java
 import ch.admin.bj.swiyu.statuslist.TokenStatusList;
+import ch.admin.bj.swiyu.statuslist.TokenStatusListVerifier;
 import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListTokenDto;
 import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListReferenceDto;
 
 public class MyStatusListExample {
+
+    // Resolves must be writte by the implementing application to get the status list jwt or did
+    private VerificationObjectResolver resolver;
+
+    private DidJwtValidator didJwtValidator;
+    private TokenStatusListVerifier verifier;
+    
+
+    public VerificationResultDto validateTokenStatus(JWTClaimSet vcClaims) {
+        TokenStatusListReferenceDto reference = TokenStatusListMapper.toTokenStatusListReference(vcClaims.getClaims())
+        String statusListJWT = resolver.resolveStatusList(reference.getReferencedStatusListUri());
+        String didUrl = didJwtValidator.getAndValidateResolutionUrl(statusListJWT);
+        DidDocument didDocument = resolver.resolveDidDocument(didUrl);
+        // Validates Signature & timing constraints
+        didJwtValidator.validateJwt(statusListJWT, didDocument);
+        SignedJWT tokenStatusListJwt = SignedJWT.parse(statusListJWT);
+        if(hasValidTokenStatusListTokenHeader(tokenStatusListJwt.getHeader())) {
+            throw new IllegalArgumentException("Illegal Token Status List Token!");
+        }
+        TokenStatusListTokenDto statusList = TokenStatusListMapper.toTokenStatusListToken(tokenStatusListJwt.getJWTClaimsSet().getClaims()
+        // If using caching update according to minimum of statusList.getTtl() and statusList.getExp()
+)       return verifier.verifyStatus(reference, statusList);
+    }
+
+    /**
+     * Get Status form a status list
+     */
     public String getStatus(TokenStatusListReferenceDto ref, TokenStatusListTokenDto token) {
         var sl = token.getStatusList();
         var statusList = TokenStatusList.loadTokenStatusListToken(sl.getBits(), sl.getStatusListData());
