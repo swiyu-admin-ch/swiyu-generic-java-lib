@@ -12,8 +12,10 @@ class ProtectedIssuanceTrustListStatementTest {
 
     @Test
     void testParseExample() throws JsonProcessingException {
-        var piTLS = mapper.readValue(ExampleTrustStatement.piTLS.getCombinedJson(), ProtectedIssuanceTrustListStatement.class);
-        assertThat(piTLS.getTyp()).isEqualTo(StatementType.PROTECTED_ISSUANCE_TRUST_LIST_STATEMENT);
-        assertThat(piTLS.getVctValues()).hasSize(3).contains("urn:ch.admin.fedpol.betaid", "urn:ch.admin.fedpol.eid");
+        var piTLS = mapper.readValue(ExampleTrustStatement.piTLS.getBodyJson(), ProtectedIssuanceTrustListStatement.class);
+        var header = mapper.readValue(ExampleTrustStatement.piTLS.getHeaderJson(), StatementHeader.class);
+        piTLS.setStatementHeaders(header);
+        assertThat(piTLS.getStatementHeaders().getTyp()).isEqualTo(StatementType.PROTECTED_ISSUANCE_TRUST_LIST_STATEMENT);
+        assertThat(piTLS.getVctValues()).hasSize(3).contains("urn:ch.admin.fedpol.betaid", "urn:ch.admin.fedpol.eid", "urn:com.example.otherCredential");
     }
 }

@@ -3,7 +3,6 @@ package ch.admin.bj.swiyu.tsverifier.statement;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.ECDSASigner;
@@ -23,7 +22,6 @@ import java.util.stream.Stream;
 class StatementParserTest {
     
     static ECKey key;
-    static ObjectMapper mapper = new ObjectMapper();
     
     @BeforeAll
     static void init() throws JOSEException {
@@ -51,6 +49,9 @@ class StatementParserTest {
                 .isNotNull()
                 .as("Parsed statement should be of type %s", expectedClass.getSimpleName())
                 .isInstanceOf(expectedClass);
+        assertThat(parsed.getStatementHeaders())
+                .isNotNull();
+        assertThat(parsed.getStatementHeaders().getTyp()).isEqualTo(example.getHeaderMap().getTyp());
         assertThat(parsed.getSerializedJwt())
                 .as("Serialized JWT should be stored in the statement")
                 .isEqualTo(serializedJwt);

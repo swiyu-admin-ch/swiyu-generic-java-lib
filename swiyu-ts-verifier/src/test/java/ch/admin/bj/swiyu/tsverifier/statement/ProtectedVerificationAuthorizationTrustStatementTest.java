@@ -12,8 +12,10 @@ class ProtectedVerificationAuthorizationTrustStatementTest {
 
     @Test
     void testParseExample() throws JsonProcessingException {
-        var pvaTS = mapper.readValue(ExampleTrustStatement.pvaTS.getCombinedJson(), ProtectedVerificationAuthorizationTrustStatement.class);
-        assertThat(pvaTS.getTyp()).isEqualTo(StatementType.PROTECTED_VERIFICATION_AUTHORIZATION_TRUST_STATEMENT);
+        var pvaTS = mapper.readValue(ExampleTrustStatement.pvaTS.getBodyJson(), ProtectedVerificationAuthorizationTrustStatement.class);
+        var header = mapper.readValue(ExampleTrustStatement.pvaTS.getHeaderJson(), StatementHeader.class);
+        pvaTS.setStatementHeaders(header);
+        assertThat(pvaTS.getStatementHeaders().getTyp()).isEqualTo(StatementType.PROTECTED_VERIFICATION_AUTHORIZATION_TRUST_STATEMENT);
         assertThat(pvaTS.getAuthorizedFields()).hasSize(1).contains("personal_administrative_number");
     }
 }

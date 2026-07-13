@@ -11,8 +11,10 @@ class NonComplianceTrustListStatementTest {
 
     @Test
     void testParseExample()  throws JsonProcessingException {
-        var ncTLS = mapper.readValue(ExampleTrustStatement.ncTLS.getCombinedJson(), NonComplianceTrustListStatement.class);
-        assertThat(ncTLS.getTyp()).isEqualTo(StatementType.NON_COMPLIANCE_TRUST_LIST_STATEMENT);
+        var ncTLS = mapper.readValue(ExampleTrustStatement.ncTLS.getBodyJson(), NonComplianceTrustListStatement.class);
+        var header = mapper.readValue(ExampleTrustStatement.ncTLS.getHeaderJson(), StatementHeader.class);
+        ncTLS.setStatementHeaders(header);
+        assertThat(ncTLS.getStatementHeaders().getTyp()).isEqualTo(StatementType.NON_COMPLIANCE_TRUST_LIST_STATEMENT);
         assertThat(ncTLS.getNonCompliantActors())
                 .as("Should parse both entries")
                 .hasSize(2)

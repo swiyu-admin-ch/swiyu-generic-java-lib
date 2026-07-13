@@ -7,10 +7,14 @@ import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListTokenDto;
 import ch.admin.bj.swiyu.tsverifier.statement.ExampleTrustStatement;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,12 +32,14 @@ class TrustStatementVerifierTest {
 
     static final String TRUST_ROOT_DID = "did:example:trust-issuer";
     static final String PUBLIC_STATEMENT_ISSUER_DID = "did:example:verification-statment-issuer";
+    static final String ATTACKER_DID = "did:example:attacker";
     static final String ACTOR_DID = "did:example:actor";
     static final String PROTECTED_VCT_WITH_AUTHORIZATION = "urn:ch.admin.fedpol.betaid";
     static final String PROTECTED_VCT_WITHOUT_AUTHORIZATION = "urn:ch.admin.fedpol.eid";
     static final ObjectMapper mapper = new ObjectMapper();
     static ECKey trustIssuerKey;
     static ECKey publicIssuerKey;
+    static ECKey attackerKey;
 
     UrlRestriction mockRestriction;
     DidKidParser mockKidParser;
@@ -42,6 +48,7 @@ class TrustStatementVerifierTest {
     static void init() throws JOSEException {
         trustIssuerKey = new ECKeyGenerator(Curve.P_256).keyID("%s#key-1".formatted(TRUST_ROOT_DID)).generate();
         publicIssuerKey = new ECKeyGenerator(Curve.P_256).keyID("%s#key-1".formatted(PUBLIC_STATEMENT_ISSUER_DID)).generate();
+        attackerKey = new ECKeyGenerator(Curve.P_256).keyID("%s#key-1".formatted(ATTACKER_DID)).generate();
     }
 
     @BeforeEach
@@ -59,6 +66,98 @@ class TrustStatementVerifierTest {
         var verifier = new TrustStatementVerifier(statements, Mockito.mock(UrlRestriction.class), new DidKidParser());
         var ids = verifier.getRequiredKeyIds();
         assertThat(ids).hasSize(2).contains("did:example:trust-issuer#key-1", "did:example:verification-statment-issuer#key-1");
+    }
+
+    @Test
+    void testGetKeyIds_withKidInHeaderAndBody_shouldTakeHeader_thenSuccess() {
+        var headerWithKid = """
+                {
+                    "typ": "swiyu-identity-trust-statement+jwt",
+                    "alg": "ES256",
+                    "kid": "did:example:trust-issuer#key-1",
+                    "profile_version": "swiss-profile-trust:1.0.0"
+                }
+            """;
+        var bodyWithKid = """
+        {
+            "sub": "did:example:actor",
+                "iat": 1690360968,
+                "exp": 32503676400,
+                "kid": "did:example:trust-different-issuer#key-1",
+                "status":  {
+                    "status_list": {
+                        "idx": 1,
+                        "uri": "https://example.com/statuslists/1"
+                    }
+                },
+                "entity_name": "John Smith's Smithery",
+                "entity_name#de": "John Smith's Schmiderei",
+                "entity_name#de-CH": "John Smith's Schmiderei",
+                "is_state_actor": false,
+                "registry_ids": [
+                    {
+                        "type": "UID",
+                        "value": "CHE-000.000.000"
+                    },
+                    {
+                        "type": "LEI",
+                        "value": "0A1B2C3D4E5F6G7H8J9I"
+                    }
+                ]
+        }""";
+
+        var jwt = assertDoesNotThrow(() -> new SignedJWT(JWSHeader.parse(headerWithKid), JWTClaimsSet.parse(bodyWithKid)));
+        assertDoesNotThrow(() -> jwt.sign(new ECDSASigner(trustIssuerKey)));
+        var serialized = jwt.serialize();
+
+        getTrustStatements(ExampleTrustStatement.idTS, ExampleTrustStatement.ncTLS, ExampleTrustStatement.vqPS_protected_claim);
+
+
+        var verifier = new TrustStatementVerifier(List.of(serialized), Mockito.mock(UrlRestriction.class), new DidKidParser());
+        var ids = verifier.getRequiredKeyIds();
+        assertThat(ids).hasSize(1).contains("did:example:trust-issuer#key-1");
+    }
+
+    @Test
+    void testVerifyIssuanceStatements_whenPayloadKidClaimsTrustedDidButHeaderKidIsAttacker_thenIdentityTrustRejected() {
+        var serialized = getSignedIdentityTrustStatement(
+                "%s#key-1".formatted(ATTACKER_DID),
+                "%s#key-1".formatted(TRUST_ROOT_DID),
+                attackerKey);
+
+        var verifier = new TrustStatementVerifier(List.of(serialized), mockRestriction, mockKidParser);
+        var result = verifier.verifyIssuanceStatements(
+                TRUST_ROOT_DID,
+                ACTOR_DID,
+                PROTECTED_VCT_WITH_AUTHORIZATION,
+                new JWKSet(attackerKey),
+                List.of(generateStatusListToken()));
+
+        var markers = result.markers();
+        assertThat(markers.identityTrustMarker())
+                .as("A trusted payload kid must not override an untrusted JOSE header kid")
+                .isFalse();
+        assertThat(markers.isTrustedIssuer()).as("Issuer must not be trusted").isFalse();
+    }
+
+    @Test
+    void testVerifyIssuanceStatements_whenPayloadKidClaimsAttackerDidButHeaderKidIsTrusted_thenIdentityTrustAccepted() {
+        var serialized = getSignedIdentityTrustStatement(
+                "%s#key-1".formatted(TRUST_ROOT_DID),
+                "%s#key-1".formatted(ATTACKER_DID),
+                trustIssuerKey);
+
+        var verifier = new TrustStatementVerifier(List.of(serialized), mockRestriction, mockKidParser);
+        var result = verifier.verifyIssuanceStatements(
+                TRUST_ROOT_DID,
+                ACTOR_DID,
+                PROTECTED_VCT_WITH_AUTHORIZATION,
+                new JWKSet(trustIssuerKey),
+                List.of(generateStatusListToken()));
+
+        assertThat(result.markers().identityTrustMarker())
+                .as("An untrusted payload kid must not override the trusted JOSE header kid")
+                .isTrue();
     }
 
     @Test
@@ -201,6 +300,49 @@ class TrustStatementVerifierTest {
                 .toList();
     }
 
+    private static String getSignedIdentityTrustStatement(String headerKid, String payloadKid, ECKey signingKey) {
+        var header = """
+                {
+                    "typ": "swiyu-identity-trust-statement+jwt",
+                    "alg": "ES256",
+                    "kid": "%s",
+                    "profile_version": "swiss-profile-trust:1.0.0"
+                }
+                """.formatted(headerKid);
+        var body = """
+                {
+                    "sub": "%s",
+                    "iat": 1690360968,
+                    "exp": 32503676400,
+                    "kid": "%s",
+                    "status":  {
+                        "status_list": {
+                            "idx": 1,
+                            "uri": "https://example.com/statuslists/1"
+                        }
+                    },
+                    "entity_name": "My entity",
+                    "entity_name#de": "My entity (de)",
+                    "entity_name#de-CH": "My entity (de-CH)",
+                    "is_state_actor": false,
+                    "registry_ids": [
+                        {
+                            "type": "UID",
+                            "value": "CHE-000.000.000"
+                        },
+                        {
+                            "type": "LEI",
+                            "value": "0A1B2C3D4E5F6G7H8J9I"
+                        }
+                    ]
+                }
+                """.formatted(ACTOR_DID, payloadKid);
+
+        var jwt = assertDoesNotThrow(() -> new SignedJWT(JWSHeader.parse(header), JWTClaimsSet.parse(body)));
+        assertDoesNotThrow(() -> jwt.sign(new ECDSASigner(signingKey)));
+        return jwt.serialize();
+    }
+
     /**
      * Generates a status list with 1 bits where no entries are revoked
      */
@@ -209,7 +351,7 @@ class TrustStatementVerifierTest {
         for (int index : revokedIndexes) {
             statusList.setStatus(index, 1);
         }
-        var lst = assertDoesNotThrow( () -> statusList.getStatusListData());
+        var lst = assertDoesNotThrow(statusList::getStatusListData);
         return assertDoesNotThrow(() -> mapper.readValue(
                 """
                         {

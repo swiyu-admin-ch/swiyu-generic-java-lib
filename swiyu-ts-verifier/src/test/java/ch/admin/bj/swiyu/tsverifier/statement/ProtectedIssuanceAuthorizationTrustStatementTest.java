@@ -12,8 +12,10 @@ class ProtectedIssuanceAuthorizationTrustStatementTest {
 
     @Test
     void testParseExample() throws JsonProcessingException {
-        var piaTS = mapper.readValue(ExampleTrustStatement.piaTS.getCombinedJson(), ProtectedIssuanceAuthorizationTrustStatement.class);
-        assertThat(piaTS.getTyp()).isEqualTo(StatementType.PROTECTED_ISSUANCE_AUTHORIZATION_TRUST_STATEMENT);
+        var piaTS = mapper.readValue(ExampleTrustStatement.piaTS.getBodyJson(), ProtectedIssuanceAuthorizationTrustStatement.class);
+        var header = mapper.readValue(ExampleTrustStatement.piaTS.getHeaderJson(), StatementHeader.class);
+        piaTS.setStatementHeaders(header);
+        assertThat(piaTS.getStatementHeaders().getTyp()).isEqualTo(StatementType.PROTECTED_ISSUANCE_AUTHORIZATION_TRUST_STATEMENT);
         assertThat(piaTS.getCanIssue())
                 .as("Should have a can_issue authorization")
                 .isNotNull();
