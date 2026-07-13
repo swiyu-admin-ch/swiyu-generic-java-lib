@@ -201,6 +201,35 @@ public enum ExampleTrustStatement {
             }
             """),
     /**
+     * secondary protected-issuance-authorization-trust-statement
+     */
+    piaTS_other("""
+            {
+                "typ": "swiyu-protected-issuance-authorization-trust-statement+jwt",
+                "alg": "ES256",
+                "kid": "did:example:trust-issuer#key-1",
+            	  "profile_version": "swiss-profile-trust:1.0.0"
+            }
+            """, """
+            {
+              "jti": "07f289d5-8b1f-4604-bf72-53bdcb71ee06",
+              "sub": "did:example:actor",
+              "iat": 1690360968,
+              "exp": 32503676400,
+              "status": {
+                "status_list": {
+                  "idx": 1,
+                  "uri": "https://example.com/statuslists/1"
+                }
+              },
+              "can_issue": {
+                "vct": "urn:com.example.otherCredential",
+                "vct_name": "Some Other credential",
+                "reason": "This issuer is eglible to issue some other example credential"
+              }
+            }
+            """),
+    /**
      * protected-issuance-trust-list-statement
      */
     piTLS("""
@@ -223,7 +252,8 @@ public enum ExampleTrustStatement {
               },
               "vct_values": [
                 "urn:ch.admin.fedpol.eid",
-                "urn:ch.admin.fedpol.betaid"
+                "urn:ch.admin.fedpol.betaid",
+                "urn:com.example.otherCredential"
               ]
             }"""),
     /**

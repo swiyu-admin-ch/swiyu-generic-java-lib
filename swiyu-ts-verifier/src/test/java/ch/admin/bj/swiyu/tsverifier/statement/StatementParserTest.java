@@ -61,12 +61,11 @@ class StatementParserTest {
     @MethodSource("statementsProvider")
     void parseStatement_mismatchStatement(ExampleTrustStatement example) {
         // Create Wrong statements where the body does not match the type
-        var nextStatement = ExampleTrustStatement.values()[(example.ordinal()+1)%ExampleTrustStatement.values().length];
+        var nextStatement = ExampleTrustStatement.values()[(example.ordinal()+3)%ExampleTrustStatement.values().length];
         var jwt = assertDoesNotThrow(() -> new SignedJWT(JWSHeader.parse(example.getHeader()), JWTClaimsSet.parse(nextStatement.getBody())));
         assertDoesNotThrow(() -> jwt.sign(new ECDSASigner(key)));
         var serializedJwt = jwt.serialize();
         StatementParser parser = new StatementParser();
         var parsedStatement = assertDoesNotThrow(() -> parser.parse(serializedJwt));
-        assertThat(parsedStatement).isEmpty();
-    }
-}
+        assertThat(parsedStatement).as("Statement Header %s does not match the statement body".formatted(example.getHeader())).isEmpty();
+    }}
