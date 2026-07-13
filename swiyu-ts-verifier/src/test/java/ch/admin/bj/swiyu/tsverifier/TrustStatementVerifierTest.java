@@ -1,7 +1,6 @@
 package ch.admin.bj.swiyu.tsverifier;
 
 import ch.admin.bj.swiyu.jwtvalidator.DidKidParser;
-import ch.admin.bj.swiyu.jwtvalidator.UrlRestriction;
 import ch.admin.bj.swiyu.statuslist.TokenStatusList;
 import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListTokenDto;
 import ch.admin.bj.swiyu.tsverifier.statement.ExampleTrustStatement;
@@ -11,7 +10,6 @@ import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
-import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
@@ -41,7 +39,6 @@ class TrustStatementVerifierTest {
     static ECKey publicIssuerKey;
     static ECKey attackerKey;
 
-    UrlRestriction mockRestriction;
     DidKidParser mockKidParser;
 
     @BeforeAll
@@ -53,8 +50,6 @@ class TrustStatementVerifierTest {
 
     @BeforeEach
     void setup() {
-        mockRestriction = Mockito.mock(UrlRestriction.class);
-        when(mockRestriction.validateUrl(any())).thenReturn(true);
         mockKidParser = Mockito.mock(DidKidParser.class);
         when(mockKidParser.getDidFromAbsoluteKid(any())).thenAnswer(invocation ->  invocation.getArguments()[0].toString().split("#")[0]);
     }
@@ -63,7 +58,7 @@ class TrustStatementVerifierTest {
     void testGetKeyIds() {
         var statements = getValidExampleTrustStatements();
 
-        var verifier = new TrustStatementVerifier(statements, Mockito.mock(UrlRestriction.class), new DidKidParser());
+        var verifier = new TrustStatementVerifier(statements, new DidKidParser());
         var ids = verifier.getRequiredKeyIds();
         assertThat(ids).hasSize(2).contains("did:example:trust-issuer#key-1", "did:example:verification-statment-issuer#key-1");
     }
@@ -113,7 +108,7 @@ class TrustStatementVerifierTest {
         getTrustStatements(ExampleTrustStatement.idTS, ExampleTrustStatement.ncTLS, ExampleTrustStatement.vqPS_protected_claim);
 
 
-        var verifier = new TrustStatementVerifier(List.of(serialized), Mockito.mock(UrlRestriction.class), new DidKidParser());
+        var verifier = new TrustStatementVerifier(List.of(serialized), new DidKidParser());
         var ids = verifier.getRequiredKeyIds();
         assertThat(ids).hasSize(1).contains("did:example:trust-issuer#key-1");
     }
@@ -125,13 +120,11 @@ class TrustStatementVerifierTest {
                 "%s#key-1".formatted(TRUST_ROOT_DID),
                 attackerKey);
 
-        var verifier = new TrustStatementVerifier(List.of(serialized), mockRestriction, mockKidParser);
+        var verifier = new TrustStatementVerifier(List.of(serialized), mockKidParser);
         var result = verifier.verifyIssuanceStatements(
                 TRUST_ROOT_DID,
                 ACTOR_DID,
-                PROTECTED_VCT_WITH_AUTHORIZATION,
-                new JWKSet(attackerKey),
-                List.of(generateStatusListToken()));
+                PROTECTED_VCT_WITH_AUTHORIZATION);
 
         var markers = result.markers();
         assertThat(markers.identityTrustMarker())
@@ -147,13 +140,11 @@ class TrustStatementVerifierTest {
                 "%s#key-1".formatted(ATTACKER_DID),
                 trustIssuerKey);
 
-        var verifier = new TrustStatementVerifier(List.of(serialized), mockRestriction, mockKidParser);
+        var verifier = new TrustStatementVerifier(List.of(serialized), mockKidParser);
         var result = verifier.verifyIssuanceStatements(
                 TRUST_ROOT_DID,
                 ACTOR_DID,
-                PROTECTED_VCT_WITH_AUTHORIZATION,
-                new JWKSet(trustIssuerKey),
-                List.of(generateStatusListToken()));
+                PROTECTED_VCT_WITH_AUTHORIZATION);
 
         assertThat(result.markers().identityTrustMarker())
                 .as("An untrusted payload kid must not override the trusted JOSE header kid")
@@ -161,18 +152,10 @@ class TrustStatementVerifierTest {
     }
 
     @Test
-    void testGetStatusListUris() {
-        var statements = getValidExampleTrustStatements();
-        var verifier = new TrustStatementVerifier(statements, Mockito.mock(UrlRestriction.class), new DidKidParser());
-        var statusListUris = verifier.getRequiredStatusLists();
-        assertThat(statusListUris).hasSize(1).contains("https://example.com/statuslists/1");
-    }
-
-    @Test
     void testVerifyIssuanceStatements_whenGovernedUseCase_thenAllMarks() {
         var statements = getValidExampleTrustStatements();
-        var verifier = new TrustStatementVerifier(statements, mockRestriction, mockKidParser);
-        var result = verifier.verifyIssuanceStatements(TRUST_ROOT_DID, ACTOR_DID, PROTECTED_VCT_WITH_AUTHORIZATION, new JWKSet(trustIssuerKey), List.of(generateStatusListToken()));
+        var verifier = new TrustStatementVerifier(statements, mockKidParser);
+        var result = verifier.verifyIssuanceStatements(TRUST_ROOT_DID, ACTOR_DID, PROTECTED_VCT_WITH_AUTHORIZATION);
         assertThat(result.evaluatedActorDid()).isEqualTo(ACTOR_DID);
         var markers = result.markers();
         assertThat(markers.isTrustedIssuer()).as("All Trust Statements were valid and provided").isTrue();
@@ -183,8 +166,8 @@ class TrustStatementVerifierTest {
     @Test
     void testVerifyIssuanceStatements_whenGovernedUseCase_lackingAuthorization_thenNotTrusted() {
         var statements = getExampleStatementsNoAuthorization();
-        var verifier = new TrustStatementVerifier(statements, mockRestriction, mockKidParser);
-        var result = verifier.verifyIssuanceStatements(TRUST_ROOT_DID, ACTOR_DID, PROTECTED_VCT_WITHOUT_AUTHORIZATION, new JWKSet(trustIssuerKey), List.of(generateStatusListToken()));
+        var verifier = new TrustStatementVerifier(statements, mockKidParser);
+        var result = verifier.verifyIssuanceStatements(TRUST_ROOT_DID, ACTOR_DID, PROTECTED_VCT_WITHOUT_AUTHORIZATION);
         assertThat(result.evaluatedActorDid()).isEqualTo(ACTOR_DID);
         var markers = result.markers();
         assertThat(markers.isTrustedIssuer()).as("Issuer should not be trusted").isFalse();
@@ -193,26 +176,10 @@ class TrustStatementVerifierTest {
     }
 
     @Test
-    void testVerifyIssuanceStatement_whenRevoked_thenNotTrusted() {
-        var statements = getValidExampleTrustStatements();
-        var verifier = new TrustStatementVerifier(statements, mockRestriction, mockKidParser);
-        // Create Status Lists with revocation
-        var statusLists = List.of(generateStatusListToken(1));
-        var result = verifier.verifyIssuanceStatements(TRUST_ROOT_DID, ACTOR_DID, PROTECTED_VCT_WITH_AUTHORIZATION, new JWKSet(trustIssuerKey), statusLists);
-        assertThat(result.evaluatedActorDid()).isEqualTo(ACTOR_DID);
-        var markers = result.markers();
-        assertThat(markers.isTrustedIssuer()).as("One or more statements were revoked").isFalse();
-        assertThat(markers.identityTrustMarker()).as("Is revoked").isFalse();
-        assertThat(markers.compliantActorTrustMarker()).as("Is revoked").isFalse();
-        assertThat(markers.governedUseCaseTrustMarker()).as("All Claims are assumed to be protected when no valid protected issuance trust list statement (piTLS) is provided").isTrue();
-        assertThat(markers.governedUseCaseAuthorizationTrustMarker()).as("Is revoked").isFalse();
-    }
-
-    @Test
     void testVerifyVerifierStatements_whenGovernedUseCase_thenAllMarks() {
         var statements = getValidExampleTrustStatements();
-        var verifier = new TrustStatementVerifier(statements, mockRestriction, mockKidParser);
-        var result = verifier.verifyVerifierStatements(TRUST_ROOT_DID, PUBLIC_STATEMENT_ISSUER_DID, ACTOR_DID, new JWKSet(List.of(trustIssuerKey, publicIssuerKey)), List.of(generateStatusListToken()));
+        var verifier = new TrustStatementVerifier(statements, mockKidParser);
+        var result = verifier.verifyVerifierStatements(TRUST_ROOT_DID, PUBLIC_STATEMENT_ISSUER_DID, ACTOR_DID);
         assertThat(result.evaluatedActorDid()).isEqualTo(ACTOR_DID);
         var markers = result.markers();
         assertThat(markers.isTrustedVerifier()).as("All Trust Statements were valid and provided").isTrue();
@@ -224,8 +191,8 @@ class TrustStatementVerifierTest {
     @Test
     void testVerifyVerifierStatements_whenGovernedUseCase_lackingAuthorization_thenNotTrusted() {
         var statements = getTrustStatements(ExampleTrustStatement.idTS, ExampleTrustStatement.ncTLS, ExampleTrustStatement.vqPS_protected_claim);
-        var verifier = new TrustStatementVerifier(statements, mockRestriction, mockKidParser);
-        var result = verifier.verifyVerifierStatements(TRUST_ROOT_DID, PUBLIC_STATEMENT_ISSUER_DID, ACTOR_DID, new JWKSet(List.of(trustIssuerKey, publicIssuerKey)), List.of(generateStatusListToken()));
+        var verifier = new TrustStatementVerifier(statements, mockKidParser);
+        var result = verifier.verifyVerifierStatements(TRUST_ROOT_DID, PUBLIC_STATEMENT_ISSUER_DID, ACTOR_DID);
         assertThat(result.evaluatedActorDid()).isEqualTo(ACTOR_DID);
         var markers = result.markers();
         assertThat(markers.isTrustedVerifier()).as("No Statement for authorization was provided").isFalse();
@@ -236,8 +203,8 @@ class TrustStatementVerifierTest {
     @Test
     void testVerifyVerifierStatements_whenUngovernedUseCase_lackingAuthorization_thenTrusted() {
         var statements = getTrustStatements(ExampleTrustStatement.idTS, ExampleTrustStatement.ncTLS, ExampleTrustStatement.vqPS);
-        var verifier = new TrustStatementVerifier(statements, mockRestriction, mockKidParser);
-        var result = verifier.verifyVerifierStatements(TRUST_ROOT_DID, PUBLIC_STATEMENT_ISSUER_DID, ACTOR_DID, new JWKSet(List.of(trustIssuerKey, publicIssuerKey)), List.of(generateStatusListToken()));
+        var verifier = new TrustStatementVerifier(statements, mockKidParser);
+        var result = verifier.verifyVerifierStatements(TRUST_ROOT_DID, PUBLIC_STATEMENT_ISSUER_DID, ACTOR_DID);
         assertThat(result.evaluatedActorDid()).isEqualTo(ACTOR_DID);
         var markers = result.markers();
         assertThat(markers.identityTrustMarker()).isTrue();
@@ -246,23 +213,6 @@ class TrustStatementVerifierTest {
         assertThat(markers.governedUseCaseTrustMarker()).as("personal_administrative_number is not requested").isFalse();
         assertThat(markers.governedUseCaseAuthorizationTrustMarker()).as("No Authorization was provided").isFalse();
         assertThat(markers.isTrustedVerifier()).as("All Trust Statements were valid and provided").isTrue();
-    }
-
-    @Test
-    void testVerifyVerifierStatements_whenRevoked_thenNotTrusted() {
-        var statements = getValidExampleTrustStatements();
-        var verifier = new TrustStatementVerifier(statements, mockRestriction, mockKidParser);
-        // Create Status Lists with revocation
-        var statusLists = List.of(generateStatusListToken(1));
-        var result = verifier.verifyVerifierStatements(TRUST_ROOT_DID, PUBLIC_STATEMENT_ISSUER_DID, ACTOR_DID, new JWKSet(List.of(trustIssuerKey, publicIssuerKey)), statusLists);
-        assertThat(result.evaluatedActorDid()).isEqualTo(ACTOR_DID);
-        var markers = result.markers();
-        assertThat(markers.isTrustedIssuer()).as("One or more statements were revoked").isFalse();
-        assertThat(markers.identityTrustMarker()).as("Is revoked").isFalse();
-        assertThat(markers.compliantActorTrustMarker()).as("Is revoked").isFalse();
-        assertThat(markers.governedUseCaseTrustMarker()).as("administrative number is regarded still as protected").isTrue();
-        assertThat(markers.governedUseCaseAuthorizationTrustMarker()).as("Is revoked").isFalse();
-        assertThat(markers.transparentVerificationTrustMarker()).as("vqPS cannot be revoked").isTrue();
     }
 
     private static List<String> getValidExampleTrustStatements() {
