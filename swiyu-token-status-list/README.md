@@ -40,10 +40,10 @@ public class MyStatusListExample {
         // Validates Signature & timing constraints
         didJwtValidator.validateJwt(statusListJWT, didDocument);
         SignedJWT tokenStatusListJwt = SignedJWT.parse(statusListJWT);
-        if(hasValidTokenStatusListTokenHeader(tokenStatusListJwt.getHeader())) {
+        if(!verifier.hasValidTokenStatusListTokenHeader(tokenStatusListJWT.getHeader())) {
             throw new IllegalArgumentException("Illegal Token Status List Token!");
         }
-        TokenStatusListTokenDto statusList = TokenStatusListMapper.toTokenStatusListToken(tokenStatusListJwt.getJWTClaimsSet().getClaims()
+        TokenStatusListTokenDto statusList = TokenStatusListMapper.toTokenStatusListToken(tokenStatusListJWT.getJWTClaimsSet().getClaims()
         // If using caching update according to minimum of statusList.getTtl() and statusList.getExp()
 )       return verifier.verifyStatus(reference, statusList);
     }

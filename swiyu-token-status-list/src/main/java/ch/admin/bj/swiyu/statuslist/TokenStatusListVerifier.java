@@ -61,7 +61,7 @@ public class TokenStatusListVerifier {
         TokenStatusListDto sl = statusListTokenDto.getStatusList();
         TokenStatusList statusList = TokenStatusList.loadTokenStatusListToken(sl.getBits(), sl.getStatusListData());
         int status = statusList.getStatus(referenceDto.getStatus().getStatusList().getIndex());
-        return new StatusVerificationResultDto(status == 0, Optional.of(status));
+        return new StatusVerificationResultDto(status == TokenStatusListBit.VALID.getBitNumber(), Optional.of(status));
     }
 
     private boolean isValidStateTokens(TokenStatusListReferenceDto referenceDto,

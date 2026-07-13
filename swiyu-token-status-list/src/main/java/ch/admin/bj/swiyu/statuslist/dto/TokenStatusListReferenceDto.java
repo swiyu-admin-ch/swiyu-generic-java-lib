@@ -77,7 +77,7 @@ public class TokenStatusListReferenceDto {
      *         {@code sub} claim of the supplied token DTO
      */
     public boolean referencesStatusListToken(TokenStatusListTokenDto token) {
-        return this.getStatus().getStatusList().getUri().equals(token.getSub());
+        return this.getReferencedStatusListUri().equals(token.getSub());
     }
 
     /**

@@ -84,10 +84,7 @@ public class TokenStatusListTokenDto {
             }
 
             // lst (required, non‑blank)
-            if (statusListData == null || statusListData.isBlank()) {
-                return false;
-            }
-            return true;
+            return statusListData != null && !statusListData.isBlank();
         }
     }
 
@@ -115,16 +112,11 @@ public class TokenStatusListTokenDto {
             return false;
         }
 
-        //  status_list (required)
-        if (statusList == null) {
-            return false;
-        }
-
         //  ttl (optional, must be positive if present) 
         if (ttl != null && ttl <= 0) {
             return false;
         }
 
-        return statusList.hasRequiredClaims();
+        return statusList != null && statusList.hasRequiredClaims();
     }
 }
