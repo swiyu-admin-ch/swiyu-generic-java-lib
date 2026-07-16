@@ -119,10 +119,8 @@ class TrustMarkGenerator {
             if (s instanceof ProtectedIssuanceTrustListStatement piTLS) {
                 trustMarkersBuilder.governedUseCaseTrustMarker(piTLS.getVctValues().contains(vct));
             }
-            if (s instanceof ProtectedIssuanceAuthorizationTrustStatement piaTS) {
-                if (piaTS.getCanIssue().getVct().equals(vct)) {
-                    trustMarkersBuilder.governedUseCaseAuthorizationTrustMarker(true);
-                }
+            if (s instanceof ProtectedIssuanceAuthorizationTrustStatement piaTS && piaTS.getCanIssue().getVct().equals(vct)) {
+                trustMarkersBuilder.governedUseCaseAuthorizationTrustMarker(true);
             }
         }
         return trustMarkersBuilder.build();

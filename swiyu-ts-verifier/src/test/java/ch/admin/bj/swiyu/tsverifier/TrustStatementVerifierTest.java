@@ -1,8 +1,6 @@
 package ch.admin.bj.swiyu.tsverifier;
 
 import ch.admin.bj.swiyu.jwtvalidator.DidKidParser;
-import ch.admin.bj.swiyu.statuslist.TokenStatusList;
-import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListTokenDto;
 import ch.admin.bj.swiyu.tsverifier.statement.ExampleTrustStatement;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
@@ -291,31 +289,5 @@ class TrustStatementVerifierTest {
         var jwt = assertDoesNotThrow(() -> new SignedJWT(JWSHeader.parse(header), JWTClaimsSet.parse(body)));
         assertDoesNotThrow(() -> jwt.sign(new ECDSASigner(signingKey)));
         return jwt.serialize();
-    }
-
-    /**
-     * Generates a status list with 1 bits where no entries are revoked
-     */
-    private static TokenStatusListTokenDto generateStatusListToken(int... revokedIndexes) {
-        var statusList = new TokenStatusList(1, 100);
-        for (int index : revokedIndexes) {
-            statusList.setStatus(index, 1);
-        }
-        var lst = assertDoesNotThrow(statusList::getStatusListData);
-        return assertDoesNotThrow(() -> mapper.readValue(
-                """
-                        {
-                          "exp": 2291720170,
-                          "iat": 1686920170,
-                          "status_list": {
-                            "bits": 1,
-                            "lst": "%s"
-                          },
-                          "sub": "https://example.com/statuslists/1",
-                          "ttl": 43200
-                        }
-                        """.formatted(lst),
-                TokenStatusListTokenDto.class
-        ));
     }
 }
