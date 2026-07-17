@@ -54,6 +54,7 @@
         <lombok.version>1.18.30</lombok.version>
         <nimbus-jose-jwt.version>10.8</nimbus-jose-jwt.version>
         <didresolver.version>2.7.0</didresolver.version>
+        <jackson.version>2.21.5</jackson.version>
     </properties>
 
     <dependencies>
@@ -115,7 +116,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.21.4</version>
+            <version>${jackson.version}</version>
         </dependency>
 
         <!-- JNA for didresolver - override scope from runtime to compile -->
