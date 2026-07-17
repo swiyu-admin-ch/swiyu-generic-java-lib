@@ -10,12 +10,15 @@ import lombok.Builder;
  *
  * <p>Each field corresponds to a specific marker defined in the Trust Procotol 2.0
  * specification and is mapped to its JSON property name via {@link JsonProperty}.
- * 
- * @param identityTrustMarker aka viTM
- * @param compliantActorTrustMarker aka caTM
- * @param transparentVerificationTrustMarker aka tvTM
- * @param governedUseCaseTrustMarker aka gucTM
- * @param governedUseCaseAuthorizationTrustMarker aka gucaTM
+ *
+ * <p>Markers:
+ * <ul>
+ *   <li>identityTrustMarker (aka viTM)</li>
+ *   <li>compliantActorTrustMarker (aka caTM)</li>
+ *   <li>transparentVerificationTrustMarker (aka tvTM)</li>
+ *   <li>governedUseCaseTrustMarker (aka gucTM)</li>
+ *   <li>governedUseCaseAuthorizationTrustMarker (aka gucaTM)</li>
+ * </ul>
  */
 @Builder
 public record TrustMarkers(
