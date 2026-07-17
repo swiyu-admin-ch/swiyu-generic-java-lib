@@ -29,7 +29,7 @@ public class TokenStatusListVerifier {
      * @param tokenStatusListHeader
      * @return
      */
-    public boolean hasValidTokenStatusListTokenHeader(JWSHeader tokenStatusListHeader) {
+    public static boolean hasValidTokenStatusListTokenHeader(JWSHeader tokenStatusListHeader) {
         return TOKEN_STATUS_LIST_TOKEN_TYPE.equalsIgnoreCase(tokenStatusListHeader.getType().toString());
     }
 

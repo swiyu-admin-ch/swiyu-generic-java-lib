@@ -54,6 +54,7 @@
         <lombok.version>1.18.30</lombok.version>
         <nimbus-jose-jwt.version>10.8</nimbus-jose-jwt.version>
         <didresolver.version>2.7.0</didresolver.version>
+        <jackson.version>2.21.5</jackson.version>
     </properties>
 
     <dependencies>
@@ -115,7 +116,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.21.4</version>
+            <version>${jackson.version}</version>
         </dependency>
 
         <!-- JNA for didresolver - override scope from runtime to compile -->
@@ -137,6 +138,25 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- COMPLETELY EXCLUDE Jackson 3.x to prevent CVE-2026-59889 -->
+            <dependency>
+                <groupId>tools.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>3.1.5</version>
+                <scope>provided</scope> <!-- Mark as provided so it's never included -->
+            </dependency>
+            <dependency>
+                <groupId>tools.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>3.1.5</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>tools.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>3.1.5</version>
+                <scope>provided</scope>
+            </dependency>
 
         <!-- Check again on Spring Boot update -->
             <dependency>

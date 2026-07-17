@@ -5,19 +5,20 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 
 /**
+ * 
  * Container for the five trust‑markers.
  *
  * <p>Each field corresponds to a specific marker defined in the Trust Procotol 2.0
  * specification and is mapped to its JSON property name via {@link JsonProperty}.
  *
+ * <p>Markers:
  * <ul>
- *   <li><strong>viTM</strong> – Identity Trust Marker
- *   <li><strong>caTM</strong> – Compliant Actor Trust Marker
- *   <li><strong>tvTM</strong> – Transparent Verification Trust Marker
- *   <li><strong>gucTM</strong> – Governed Use‑Case Trust Marker
- *   <li><strong>gucaTM</strong> – Governed Use‑Case Authorization Trust Marker
+ *   <li>identityTrustMarker (aka viTM)</li>
+ *   <li>compliantActorTrustMarker (aka caTM)</li>
+ *   <li>transparentVerificationTrustMarker (aka tvTM)</li>
+ *   <li>governedUseCaseTrustMarker (aka gucTM)</li>
+ *   <li>governedUseCaseAuthorizationTrustMarker (aka gucaTM)</li>
  * </ul>
- *
  */
 @Builder
 public record TrustMarkers(

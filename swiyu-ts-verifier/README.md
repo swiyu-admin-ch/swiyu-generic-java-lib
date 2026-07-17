@@ -10,10 +10,10 @@ A Java library for verifying signed Trust Statements (JWTs) conforming to the Sw
 
 ## Dependencies
 
-- `swiyu-token-status-list`: Verification of Trust Statement Status.
+- `swiyu-token-status-list`: Parsing Trust Statement Status.
 - `swiyu-jwt-validator`: Verification of Trust Statement signatures.
 - **Jackson**: JSON processing.
-- **Nimbus JOSE + JWT**: Cryptographic operations.
+- **Nimbus JOSE + JWT**: Parsing of JWTs.
 
 ---
 
@@ -22,37 +22,22 @@ A Java library for verifying signed Trust Statements (JWTs) conforming to the Sw
 The primary entry point for this library is the `TrustStatementVerifier` facade. The verification process is split into three phases: Initialization, Fetching Dependencies, and Verification.
 
 ### 1. Initialization
-Instantiate the verifier by passing the raw, serialized Trust Statement JWTs and a URL restriction (to prevent resolving DIDs from untrusted hosts).
+Instantiate the verifier by passing the raw, serialized Trust Statement JWTs 
 
 ```java
-import ch.admin.bj.swiyu.jwtvalidator.UrlRestriction;
+import ch.admin.bj.swiyu.jwtvalidator.DidKidParser;
 import ch.admin.bj.swiyu.tsverifier.TrustStatementVerifier;
 import java.util.List;
 import java.util.Set;
 
-// 1. Define allowed Trust Registry hosts
-UrlRestriction urlRestriction = new UrlRestriction(Set.of("trust-reg.trust-infra.swiyu.admin.ch"));
 
-// 2. Initialize the Verifier with the incoming JWT strings
+// Initialize the Verifier with the validated JWT strings. 
+// If Trust Statements were not valid due to expiration or state, do NOT use them!
 List<String> rawJwts = List.of(idTsJwt, piaTsJwt, piTlsJwt);
-TrustStatementVerifier verifier = new TrustStatementVerifier(rawJwts, urlRestriction);
+TrustStatementVerifier verifier = new TrustStatementVerifier(rawJwts);
 ```
 
-### 2. Resolving Dependencies (Keys & Status Lists)
-Before verifying, the host application must fetch the required public keys (DID Documents) and Token Status Lists based on the provided statements. The facade tells you exactly what it needs:
-
-```java
-
-// Extract the required Key IDs (DIDs + Fragments) to fetch the corresponding public keys
-Set<String> requiredKIDs = verifier.getRequiredKeyIds();
-
-// Extract the required Status List URIs to fetch the revocation data
-Set<String> requiredStatusLists = verifier.getRequiredStatusLists();
-
-// -> TODO for the Host App: Fetch JWKSet and StatusList DTOs based on these sets.
-```
-
-### 3. Verification & Trust Evaluation
+### 2. Verification & Trust Evaluation
 Once the host application has fetched the required keys (JWKSet) and status lists (List<TokenStatusListTokenDto>), you can execute the final trust evaluation.
 
 Scenario A: Verifying an Issuer (e.g., inside a Wallet)
@@ -63,22 +48,20 @@ TrustVerificationResult result = verifier.verifyIssuanceStatements(
     "did:tdw:trust-registry-root", // The ecosystem's root anchor DID
     "did:tdw:issuer-actor",        // The DID of the issuer being evaluated
     "urn:ch.admin.fedpol.betaid",  // The VCT (Credential Type) being requested
-    fetchedPublicKeys,             // JWKSet containing the resolved keys
-    fetchedStatusLists             // List of verified Token Status Lists
 );
 
 // Check if the issuer is fully trusted for this specific credential
 boolean isTrusted = result.markers().isTrustedIssuer();
+```
+
 Scenario B: Verifying a Verifier (e.g., during Presentation)
 
-Java
+```Java
 
 TrustVerificationResult result = verifier.verifyVerifierStatements(
     "did:tdw:trust-registry-root", // The ecosystem's root anchor DID
     "did:tdw:verification-issuer", // The DID that issued the vqPS
     "did:tdw:verifier-actor",      // The DID of the verifier being evaluated
-    fetchedPublicKeys, 
-    fetchedStatusLists
 );
 
 // Check if the verifier is fully trusted to request the specified claims
