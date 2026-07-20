@@ -146,18 +146,12 @@ public final class DpopJwtValidator {
         String fullPath = extPath + intPath; // Fallback in case there is no overlap
 
         // Find the longest possible suffix of the external path
-        // that is simultaneously the prefix of the internal path.
-        if (intPath.startsWith(extPath)) {
-            fullPath = intPath; // No proxy stripping occurred
-        } else {
-            for (int i = 0; i < extPath.length(); i++) {
-                String suffix = extPath.substring(i);
-                if (intPath.startsWith(suffix)) {
-                    // Overlap found! Take the preceding part of the external path
-                    // and append the complete internal path.
-                    fullPath = extPath.substring(0, i) + intPath;
-                    break;
-                }
+        // that is a prefix of the internal path without splitting segments.
+        for (int index = 0; index >= 0; index = extPath.indexOf('/', index + 1)) {
+            var suffix = extPath.substring(index);
+            if (intPath.startsWith(suffix) && (suffix.length() == intPath.length() || intPath.charAt(suffix.length()) == '/')) {
+                fullPath = extPath.substring(0, index) + intPath;
+                break;
             }
         }
 
