@@ -49,7 +49,7 @@
         <slf4j.version>2.0.9</slf4j.version>
         <lombok.version>1.18.30</lombok.version>
         <nimbus-jose-jwt.version>10.8</nimbus-jose-jwt.version>
-        <didresolver.version>2.7.0</didresolver.version>
+        <didresolver.version>2.8.2</didresolver.version>
         <jna.version>5.17.0</jna.version>
         <slf4j.version>2.0.9</slf4j.version>
         <jackson.version>2.21.5</jackson.version>
