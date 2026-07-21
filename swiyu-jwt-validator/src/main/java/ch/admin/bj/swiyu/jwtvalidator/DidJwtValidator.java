@@ -191,6 +191,27 @@ public class DidJwtValidator {
         verifySignature(jwtString, jwkSet);
     }
 
+
+    /**
+     * Flow A – validates the JWT signature directly against the provided JWK.
+     *
+     * <p>Use this method when the JWK set is already available (e.g. for Trust Statements)
+     * and no DID resolution is required.
+     * The {@code iss} claim is <em>not</em> validated; trust is established solely via the
+     * {@code kid}.</p>
+     *
+     * @param jwtString the compact serialized JWT
+     * @param jwk    the JWK containing the public key to verify against
+     * @throws JwtValidatorException if the JWT is malformed, no matching key is found in the
+     *                               JWK set, or the signature verification fails
+     */
+    public void validateJwt(String jwtString, JWK jwk) {
+        // Validate kid header presence before delegating to JwtUtil
+        didKidParser.extractKidFromHeader(jwtString);
+        validateTimeClaims(jwtString);
+        verifySignature(jwtString, jwk);
+    }
+
     // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------
