@@ -114,7 +114,7 @@ public class TokenStatusListTokenDto {
         if (sub == null || sub.isBlank()) {
             return false;
         }
-        if (iat == null) {
+        if (iat == null || exp == null) {
             return false;
         }
 

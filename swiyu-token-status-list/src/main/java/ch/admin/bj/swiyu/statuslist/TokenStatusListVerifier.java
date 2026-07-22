@@ -92,15 +92,23 @@ public class TokenStatusListVerifier {
             return true;
         }
 
-        var tokenStatusListReferenceKid = referenceDto.getJwsHeader().getKeyID();
-        var statusListKid = statusListTokenDto.getJwsHeader().getKeyID();
+        String tokenStatusListReferenceKid = null;
+        String statusListKid = null;
 
-        // If one kid is missing we cannot validate -> reject
-        if (tokenStatusListReferenceKid == null || !tokenStatusListReferenceKid.contains("#") || statusListKid == null || !statusListKid.contains("#")) {
+        if (referenceDto != null && referenceDto.getJwsHeader() != null) {
+            tokenStatusListReferenceKid = referenceDto.getJwsHeader().getKeyID();
+        }
+        if (statusListTokenDto != null && statusListTokenDto.getJwsHeader() != null) {
+            statusListKid = statusListTokenDto.getJwsHeader().getKeyID();
+        }
+
+        // If one kid is missing or does not contain a DID fragment ('#') we cannot validate -> reject
+        if (tokenStatusListReferenceKid == null || statusListKid == null
+                || !tokenStatusListReferenceKid.contains("#") || !statusListKid.contains("#")) {
             return false;
         }
 
-        // remove key-ids from DIDs to compare issuers. Be defensive against
+        // remove key-ids from DIDs to compare issuers
         String tokenStatusListReferenceKidIssuer = tokenStatusListReferenceKid.split("#", 2)[0];
         String statusListKidIssuer = statusListKid.split("#", 2)[0];
 
