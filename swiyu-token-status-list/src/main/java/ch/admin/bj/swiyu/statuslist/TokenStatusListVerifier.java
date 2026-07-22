@@ -110,8 +110,7 @@ public class TokenStatusListVerifier {
 
         // remove key-ids from DIDs to compare issuers
         String tokenStatusListReferenceKidIssuer = tokenStatusListReferenceKid.split("#", 2)[0];
-        String statusListKidIssuer = statusListKid.split("#", 2)[0];
 
-        return tokenStatusListReferenceKidIssuer.equals(statusListKidIssuer);
+        return statusListKid.startsWith(tokenStatusListReferenceKidIssuer);
     }
 }
