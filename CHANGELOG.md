@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [NEXT]
+
+### Fixed
+- `swiyu-dpop-util`: fixed htu validation to fail on partial path segment match (#971).
+
 ## [1.8.3] – 2026-07-22
 - StatusListValidator checks now kid and not iss as required by Swiss Profile
 
@@ -12,10 +17,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add validateJwt with jwk param instead of jwkset.
 
 ## [1.7.0] – 2026-07-08
-- Separate header from body claims in trust-statement so that header claims and body claims can be distinguished and validated independently
+
+### Changed
+- Separate header from body claims in trust-statement so that header claims and body claims can be distinguished and validated independently.
 - JWKSet no longer used for signature checks for jwt via DidDocument, instead use the JWK from keys directly.
 
+---
+
 ## [1.6.2] – 2026-06-03
+
+### Changed
 - Bump didresolver to 2.8.0 for security updates.
 
 ---

@@ -168,6 +168,14 @@ class DpopJwtValidatorTest {
     }
 
     @Test
+    void validateHtu_rewrite_path_partialSegmentOverlap_throws() throws Exception {
+        SignedJWT signedJWT = buildSignedJwt("https://api.example.com/public/apiResource");
+        URI requestUri = new URI("https://internal.local/apiResource");
+        URI externalUri = new URI("https://api.example.com/public/api");
+        assertThrows(DpopValidationException.class, () -> DpopJwtValidator.validateHtu(requestUri, signedJWT.getJWTClaimsSet().getStringClaim("htu"), externalUri));
+    }
+
+    @Test
     void validateHtu_noPathPrefix_ok() throws Exception {
         SignedJWT signedJWT = buildSignedJwt("https://example.com/oid4vci/api/token");
         URI requestUri = new URI("https://internal.local/oid4vci/api/token");
@@ -188,7 +196,7 @@ class DpopJwtValidatorTest {
 
     @Test
     void validateHtu_withPathPrefix_wrongHtu_throws() throws Exception {
-        // htu fehlt der Pfadpräfix
+        // htu is missing the path prefix
         SignedJWT signedJWT = buildSignedJwt("https://example.com/oid4vci/api/token");
         URI requestUri = new URI("https://internal.local/oid4vci/api/token");
         URI externalUri = new URI("https://example.com/public/issuer/oid4vci");
@@ -197,7 +205,7 @@ class DpopJwtValidatorTest {
 
     @Test
     void validateHtu_trailingSlashOnExternalUri_ok() throws Exception {
-        // Trailing slash auf externalUri soll korrekt behandelt werden
+        // Trailing slash on externalUri must be handled correctly
         SignedJWT signedJWT = buildSignedJwt("https://example.com/public/issuer/oid4vci/api/token");
         URI requestUri = new URI("https://internal.local/oid4vci/api/token");
         URI externalUri = new URI("https://example.com/public/issuer/oid4vci/");
@@ -206,10 +214,10 @@ class DpopJwtValidatorTest {
 
     @Test
     void validateHtu_realWorld_vzAstra_ok() throws Exception {
-        // Reales Produktionsszenario: vz-api-d.astra.admin.ch
+        // Real production use-case: vz-api-d.astra.admin.ch
         // EXTERNAL_URL = https://vz-api-d.astra.admin.ch/public/issuer/oid4vci
-        // Proxy strippt /public/issuer → interner Request: POST /oid4vci/api/token
-        // iOS-Wallet signiert htu = https://vz-api-d.astra.admin.ch/public/issuer/oid4vci/api/token
+        // Proxy trims /public/issuer → internal Request: POST /oid4vci/api/token
+        // iOS-Wallet signs htu = https://vz-api-d.astra.admin.ch/public/issuer/oid4vci/api/token
         SignedJWT signedJWT = buildSignedJwt("https://vz-api-d.astra.admin.ch/public/issuer/oid4vci/api/token");
         URI requestUri = new URI("https://ba-vz-issuer-service-svc.astra-vz-issuer-service-d.svc.cluster.local/oid4vci/api/token");
         URI externalUri = new URI("https://vz-api-d.astra.admin.ch/public/issuer/oid4vci");
@@ -218,10 +226,10 @@ class DpopJwtValidatorTest {
 
     @Test
     void validateHtu_realWorld_bcsIntg_ok() throws Exception {
-        // Reales Produktionsszenario: bcs-intg.admin.ch
+        // Real production use-case: bcs-intg.admin.ch
         // EXTERNAL_URL = https://bcs-intg.admin.ch/bcs-web/issuer-agent/oid4vci
-        // Proxy strippt /bcs-web/issuer-agent → interner Request: POST /oid4vci/api/token
-        // Client signiert htu = https://bcs-intg.admin.ch/bcs-web/issuer-agent/oid4vci/api/token
+        // Proxy trims /bcs-web/issuer-agent → intenal Request: POST /oid4vci/api/token
+        // Client signs htu = https://bcs-intg.admin.ch/bcs-web/issuer-agent/oid4vci/api/token
         SignedJWT signedJWT = buildSignedJwt("https://bcs-intg.admin.ch/bcs-web/issuer-agent/oid4vci/api/token");
         URI requestUri = new URI("https://internal.bcs.local/oid4vci/api/token");
         URI externalUri = new URI("https://bcs-intg.admin.ch/bcs-web/issuer-agent/oid4vci");
@@ -230,7 +238,7 @@ class DpopJwtValidatorTest {
 
     @Test
     void validateHtu_realWorld_vzAstra_wrongHtu_throws() throws Exception {
-        // Angriff: htu enthält nicht den vollen externen Pfad
+        // Attack: htu doesn't include the complete external path
         SignedJWT signedJWT = buildSignedJwt("https://vz-api-d.astra.admin.ch/oid4vci/api/token");
         URI requestUri = new URI("https://ba-vz-issuer-service-svc.astra-vz-issuer-service-d.svc.cluster.local/oid4vci/api/token");
         URI externalUri = new URI("https://vz-api-d.astra.admin.ch/public/issuer/oid4vci");
