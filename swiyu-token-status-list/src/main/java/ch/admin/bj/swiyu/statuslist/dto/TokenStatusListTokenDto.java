@@ -2,6 +2,7 @@ package ch.admin.bj.swiyu.statuslist.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.nimbusds.jose.JWSHeader;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -34,8 +35,13 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TokenStatusListTokenDto {
 
+    @Getter
+    @Setter
+    @JsonProperty(value = "jws_header")
+    private JWSHeader jwsHeader;
 
-    @JsonProperty(value = "iss", required = false)
+    @Deprecated(since = "Swiss Profile 1.0")
+    @JsonProperty(value = "iss")
     private String issuer;
 
     @JsonProperty(value = "status_list", required = true)
@@ -51,7 +57,7 @@ public class TokenStatusListTokenDto {
     @JsonProperty(value = "iat", required = true)
     private Long iat;
 
-    @JsonProperty(value = "exp", required = false)
+    @JsonProperty(value = "exp", required = true)
     private Long exp;
     /**
      * The ttl (time to live) claim, if present, MUST specify the maximum amount of time, in seconds,
@@ -108,7 +114,7 @@ public class TokenStatusListTokenDto {
         if (sub == null || sub.isBlank()) {
             return false;
         }
-        if (iat == null) {
+        if (iat == null || exp == null) {
             return false;
         }
 
