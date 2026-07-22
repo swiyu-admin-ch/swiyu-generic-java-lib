@@ -2,6 +2,7 @@ package ch.admin.bj.swiyu.statuslist.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.nimbusds.jose.JWSHeader;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -32,7 +33,13 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TokenStatusListReferenceDto {
 
-    @JsonProperty(value = "iss", required = false)
+    @Getter
+    @Setter
+    @JsonProperty(value = "jws_header")
+    private JWSHeader jwsHeader;
+
+    @Deprecated(since = "Swiss Profile 1.0")
+    @JsonProperty(value = "iss")
     private String issuer;
 
     @JsonProperty(value = "status", required = true)

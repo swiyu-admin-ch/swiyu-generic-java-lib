@@ -3,13 +3,13 @@ package ch.admin.bj.swiyu.statuslist;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -19,6 +19,8 @@ import ch.admin.bj.swiyu.statuslist.dto.StatusVerificationResultDto;
 import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListReferenceDto;
 import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListTokenDto;
 
+import java.util.Map;
+
 class TokenStatusListVerifierTest {
 
     ObjectMapper mapper = new ObjectMapper();
@@ -27,30 +29,35 @@ class TokenStatusListVerifierTest {
     TokenStatusListTokenDto defaultStatusListToken;
 
     @BeforeEach
-    void setup() throws JsonMappingException, JsonProcessingException {
+    void setup() throws JsonProcessingException {
         verifier = new TokenStatusListVerifier(TokenStatusListVerifierConfig.builder().issuerMustMatch(true).build());
-        defaultReference = mapper.readValue("""
-        {
-            "iss": "did:example:123456789",
-            "status": {
-                "status_list": {
-                    "idx": 1,
-                    "uri": "https://www.example.com/status-lists/1"
+        defaultReference = TokenStatusListMapper.toTokenStatusListReference(
+            mapper.readValue("""
+            {
+                "iss": "did:example:22222222",
+                "status": {
+                    "status_list": {
+                        "idx": 1,
+                        "uri": "https://www.example.com/status-lists/1"
+                    }
                 }
-            }
-        }""", TokenStatusListReferenceDto.class);
-        defaultStatusListToken = mapper.readValue("""
-        {
-            "iss": "did:example:123456789",
-            "sub": "https://www.example.com/status-lists/1",
-            "iat": 123456789,
-            "exp": 234567891,
-            "ttl": 15,
-            "status_list": {
-              "bits": 2,
-              "lst": "eNrt2zENACEQAEEuoaBABP5VIO01fCjIHTMStt9ovGVIAAAAAABAbiEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEB5WwIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAID0ugQAAAAAAAAAAAAAAAAAQG12SgAAAAAAAAAAAAAAAAAAAAAAAAAAAOCSIQEAAAAAAAAAAAAAAAAAAAAAAAD8ExIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwJEuAQAAAAAAAAAAAAAAAAAAAAAAAMB9SwIAAAAAAAAAAAAAAAAAAACoYUoAAAAAAAAAAAAAAEBqH81gAQw"
-            }
-        }""", TokenStatusListTokenDto.class);
+            }""", Map.class),
+            new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).keyID("did:example:123456789#key-1").build());
+
+        defaultStatusListToken = TokenStatusListMapper.toTokenStatusListToken(
+            mapper.readValue("""
+            {
+                "sub": "https://www.example.com/status-lists/1",
+                "iat": 123456789,
+                "exp": 234567891,
+                "ttl": 15,
+                "status_list": {
+                "bits": 2,
+                "lst": "eNrt2zENACEQAEEuoaBABP5VIO01fCjIHTMStt9ovGVIAAAAAABAbiEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEB5WwIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAID0ugQAAAAAAAAAAAAAAAAAQG12SgAAAAAAAAAAAAAAAAAAAAAAAAAAAOCSIQEAAAAAAAAAAAAAAAAAAAAAAAD8ExIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwJEuAQAAAAAAAAAAAAAAAAAAAAAAAMB9SwIAAAAAAAAAAAAAAAAAAACoYUoAAAAAAAAAAAAAAEBqH81gAQw"
+                }
+            }""", Map.class),
+            new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).keyID("did:example:123456789#key-2").build());
+
     }
 
     @Test
@@ -96,7 +103,7 @@ class TokenStatusListVerifierTest {
     }
     @Test
     void testVerification_whenMismatchingIssuer() {
-        defaultStatusListToken.setIssuer("did:example:22222222");
+        defaultStatusListToken.setJwsHeader(new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).keyID("did:example:incorrect#key-2").build());
         StatusVerificationResultDto result = assertDoesNotThrow(() -> verifier.verifyStatus(defaultReference, defaultStatusListToken));
         assertThat(result.valid()).as("Validation of status failed").isFalse();
         assertThat(result.status()).as("Status Validation was not completed").isEmpty();

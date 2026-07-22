@@ -25,9 +25,9 @@ public class TokenStatusListVerifier {
      * "https://www.ietf.org/archive/id/draft-ietf-oauth-status-list-21.html#section-5.1">
      * 5.1</a>
      * typ MUST be statuslist+jwt
-     * 
-     * @param tokenStatusListHeader
-     * @return
+     *
+     * @param tokenStatusListHeader the {@link JWSHeader} to check
+     * @return {@code true} if the header is considered valid
      */
     public static boolean hasValidTokenStatusListTokenHeader(JWSHeader tokenStatusListHeader) {
         return TOKEN_STATUS_LIST_TOKEN_TYPE.equalsIgnoreCase(tokenStatusListHeader.getType().toString());
@@ -36,7 +36,7 @@ public class TokenStatusListVerifier {
     /**
      * Verifies the revocation status of a token referenced by {@code referenceDto}
      * against the data contained in a {@link TokenStatusListTokenDto}.
-     * 
+     *
      * @param referenceDto       the DTO representing the {@code status} claim of
      *                           the
      *                           token whose status is being checked
@@ -77,17 +77,33 @@ public class TokenStatusListVerifier {
             return false;
         }
         // Optional validation that issuer of the VC and Status List must be the same
-        if (config.isIssuerMustMatch() && !matchesIssuer(referenceDto, statusListTokenDto)) {
+        return matchesIssuerIfRequired(referenceDto, statusListTokenDto);
+    }
+
+    /**
+     *  If configured - the Status List Token MUST be signed by the same entity as the Referenced Token inside the SD-JWT VC but CAN use a different key.
+     * @param referenceDto the DTO representing the referenced token
+     * @param statusListTokenDto the DTO representing the status list token
+     * @return {@code true} if the issuers match or if issuer matching is not required, {@code false} otherwise
+     */
+    private boolean matchesIssuerIfRequired(TokenStatusListReferenceDto referenceDto, TokenStatusListTokenDto statusListTokenDto){
+
+        if (!config.isIssuerMustMatch()) {
+            return true;
+        }
+
+        var tokenStatusListReferenceKid = referenceDto.getJwsHeader().getKeyID();
+        var statusListKid = statusListTokenDto.getJwsHeader().getKeyID();
+
+        // If one kid is missing we cannot validate -> reject
+        if (tokenStatusListReferenceKid == null || !tokenStatusListReferenceKid.contains("#") || statusListKid == null || !statusListKid.contains("#")) {
             return false;
         }
-        // All checks passed
-        return true;
-    }
 
-    private boolean matchesIssuer(TokenStatusListReferenceDto referenceDto,
-            TokenStatusListTokenDto statusListTokenDto) {
-        return referenceDto.getIssuer() != null && statusListTokenDto.getIssuer() != null
-                && referenceDto.getIssuer().equals(statusListTokenDto.getIssuer());
-    }
+        // remove key-ids from DIDs to compare issuers. Be defensive against
+        String tokenStatusListReferenceKidIssuer = tokenStatusListReferenceKid.split("#", 2)[0];
+        String statusListKidIssuer = statusListKid.split("#", 2)[0];
 
+        return tokenStatusListReferenceKidIssuer.equals(statusListKidIssuer);
+    }
 }
