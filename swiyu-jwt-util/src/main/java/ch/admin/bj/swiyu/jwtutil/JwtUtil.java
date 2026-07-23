@@ -2,6 +2,7 @@ package ch.admin.bj.swiyu.jwtutil;
 
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
+import com.nimbusds.jose.crypto.Ed25519Verifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -38,11 +39,18 @@ public final class JwtUtil {
     private static final Map<KeyType, Function<JWK, JWSVerifier>> VERIFIER_FACTORIES = new HashMap<>();
 
     static {
+        VERIFIER_FACTORIES.put(KeyType.OKP, key -> {
+            try {
+                return new Ed25519Verifier(key.toOctetKeyPair());
+            } catch (JOSEException e) {
+                throw new JwtUtilException("Failed to create EdDSA verifier", e);
+            }
+        });
         VERIFIER_FACTORIES.put(KeyType.EC, key -> {
             try {
                 return new ECDSAVerifier(key.toECKey().toPublicJWK());
             } catch (JOSEException e) {
-                throw new JwtUtilException("Failed to create EC verifier", e);
+                throw new JwtUtilException("Failed to create ECDSA verifier", e);
             }
         });
         VERIFIER_FACTORIES.put(KeyType.RSA, key -> {
