@@ -49,7 +49,7 @@
         <slf4j.version>2.0.9</slf4j.version>
         <lombok.version>1.18.30</lombok.version>
         <nimbus-jose-jwt.version>10.8</nimbus-jose-jwt.version>
-        <jackson.version>2.21.5</jackson.version>
+        <jackson.version>3.2.1</jackson.version>
     </properties>
 
     <dependencies>
@@ -60,7 +60,7 @@
             <version>${nimbus-jose-jwt.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
+            <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
         </dependency>

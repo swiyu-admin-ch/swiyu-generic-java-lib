@@ -1,8 +1,8 @@
 package ch.admin.bj.swiyu.tsverifier;
 
 import ch.admin.bj.swiyu.tsverifier.statement.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
@@ -42,12 +42,12 @@ class TrustMarkGenerator {
     
     private final TrustMarkers.TrustMarkersBuilder trustMarkersBuilder;
     private final List<Statement> validStatements;
-    private static ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper();
     /**
      * Hardcoded list of Protected claims for verification. 
      * Swiss Profile 2.0 does not provide a Trust List statement for verification.
      */
-    private static List<String> PROTECTED_CLAIMS = List.of("personal_administrative_number");    
+    private static final List<String> PROTECTED_CLAIMS = List.of("personal_administrative_number");
 
     /**
      * Creates a new generator for the supplied list of already‑validated statements.
@@ -171,7 +171,7 @@ class TrustMarkGenerator {
                     usedProtectedFields.add(protectedClaim);
                 }
             }
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new TrustStatementException("Query of Verification Query Public Statement (vqPS) cannot be parsed", e);
         }
     }

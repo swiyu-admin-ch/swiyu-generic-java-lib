@@ -2,7 +2,6 @@ package ch.admin.bj.swiyu.tsverifier;
 
 import ch.admin.bj.swiyu.jwtvalidator.DidKidParser;
 import ch.admin.bj.swiyu.tsverifier.statement.ExampleTrustStatement;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.ECDSASigner;
@@ -32,7 +31,6 @@ class TrustStatementVerifierTest {
     static final String ACTOR_DID = "did:example:actor";
     static final String PROTECTED_VCT_WITH_AUTHORIZATION = "urn:ch.admin.fedpol.betaid";
     static final String PROTECTED_VCT_WITHOUT_AUTHORIZATION = "urn:ch.admin.fedpol.eid";
-    static final ObjectMapper mapper = new ObjectMapper();
     static ECKey trustIssuerKey;
     static ECKey publicIssuerKey;
     static ECKey attackerKey;

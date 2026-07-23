@@ -3,9 +3,9 @@ package ch.admin.bj.swiyu.sdjwtvalidator;
 import ch.admin.bj.swiyu.jwtvalidator.DidJwtValidator;
 import ch.admin.bj.swiyu.jwtvalidator.JwtValidatorException;
 import ch.admin.eid.did_sidekicks.DidDoc;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jwt.SignedJWT;
@@ -163,6 +163,7 @@ public class SdJwtVcValidator {
      */
     public void validateSdJwtVc(String sdJwt, JWKSet jwkSet) {
         String issuerJwt = validateStructure(sdJwt);
+        // TODO: EIDOMNI-1112 don't use jwkset
         didJwtValidator.validateJwt(issuerJwt, jwkSet);
     }
 
@@ -256,7 +257,7 @@ public class SdJwtVcValidator {
             JsonNode array = OBJECT_MAPPER.readTree(decoded);
             validateDisclosureStructure(array, decoded);
             validateDisclosureClaimName(array);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new JwtValidatorException("Failed to parse Disclosure: " + decoded, e);
         }
     }
@@ -292,7 +293,7 @@ public class SdJwtVcValidator {
      */
     private void validateDisclosureClaimName(JsonNode array) {
         if (array.size() == OBJECT_PROPERTY_DISCLOSURES_SIZE) {
-            String claimName = array.get(1).asText();
+            String claimName = array.get(1).asString();
             if (PROTECTED_CLAIMS.contains(claimName)) {
                 throw new JwtValidatorException(
                         "Registered claim '" + claimName +
