@@ -8,6 +8,7 @@ Utility library for JSON Web Encryption (JWE) in the Swiyu ecosystem. Provides s
 - Designed for integration in enterprise Java applications
 
 ## Installation
+
 Add the dependency to your `pom.xml`:
 
 ```xml

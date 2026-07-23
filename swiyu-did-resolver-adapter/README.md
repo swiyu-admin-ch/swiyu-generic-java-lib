@@ -13,7 +13,7 @@ A Spring Boot Auto-Configuration library for resolving Decentralized Identifiers
 
 ## Installation
 
-### Maven
+Add the dependency to your `pom.xml`:
 
 ```xml
 <dependency>

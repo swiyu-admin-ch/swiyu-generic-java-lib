@@ -14,7 +14,7 @@ It provides a type-safe, fluent builder API for all Trust Statement types define
 
 ## Installation
 
-### Maven
+Add the dependency to your `pom.xml`:
 
 ```xml
 <dependency>
