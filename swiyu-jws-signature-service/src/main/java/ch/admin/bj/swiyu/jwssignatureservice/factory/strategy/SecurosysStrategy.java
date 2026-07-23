@@ -12,8 +12,6 @@ import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.security.*;
 import java.security.cert.CertificateException;
-import java.security.interfaces.ECPrivateKey;
-import java.security.interfaces.EdECPrivateKey;
 
 /**
  * This strategy is used for the Securosys HSM. It requires the key to be created together with a self-signed certificate.

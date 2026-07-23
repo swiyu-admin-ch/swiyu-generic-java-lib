@@ -1,5 +1,6 @@
 package ch.admin.bj.swiyu.jwssignatureservice.factory.strategy;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -44,6 +45,15 @@ public class KeyStrategyTest {
         })
     void testCreateSigner(String pemKey) {
         when(conf.getPrivateKey()).thenReturn(pemKey);
-        assertDoesNotThrow(() -> strategy.createSigner(conf));
+        var signer = assertDoesNotThrow(() -> strategy.createSigner(conf));
+        var supportedJWSAlgorithms = signer.supportedJWSAlgorithms();
+        
+        
+        assertThat(supportedJWSAlgorithms).isNotEmpty();
+        if (supportedJWSAlgorithms.contains(JWSAlgorithm.ES256)) {
+            assertThat(supportedJWSAlgorithms).doesNotContain(JWSAlgorithm.Ed25519);
+        } else if (supportedJWSAlgorithms.contains(JWSAlgorithm.Ed25519)) {
+            assertThat(supportedJWSAlgorithms).doesNotContain(JWSAlgorithm.ES256);
+        }
     }
 }
