@@ -10,6 +10,17 @@ A utility library for reading and setting states in Token Status Lists.
 
 Note: For verifying the Token Status List Token in JWT format, use the JWT Utility Library. 
 
+## Installation
+
+Add the dependency to your `pom.xml`:
+
+```xml
+<dependency>
+    <groupId>ch.admin.swiyu</groupId>
+    <artifactId>swiyu-token-status-list</artifactId>
+    <version>1.9.0-SNAPSHOT</version>
+</dependency>
+```
 
 ## Usage
 

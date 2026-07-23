@@ -14,13 +14,13 @@ It provides a type-safe, fluent builder API for all Trust Statement types define
 
 ## Installation
 
-### Maven
+Add the dependency to your `pom.xml`:
 
 ```xml
 <dependency>
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-ts-builder</artifactId>
-    <version>1.8.3</version>
+    <version>1.9.0-SNAPSHOT</version>
 </dependency>
 ```
 
