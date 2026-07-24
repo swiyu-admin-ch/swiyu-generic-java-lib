@@ -134,6 +134,96 @@ class DidJwtValidatorTest {
     }
 
     // -------------------------------------------------------------------------
+    // validateJwt(String, JWK) – Flow A
+    // -------------------------------------------------------------------------
+
+    @Test
+    void validateJwt_withJwk_validSignature_returnsTrue() throws Exception {
+        String jwt = buildSignedJwt(ABSOLUTE_KID);
+
+        when(mockDidKidParser.extractKidFromHeader(jwt)).thenReturn(ABSOLUTE_KID);
+
+        assertDoesNotThrow(() -> validator.validateJwt(jwt, ecKey.toPublicJWK()));
+        verify(mockDidKidParser).extractKidFromHeader(jwt);
+    }
+
+    @Test
+    void validateJwt_withJwk_wrongKey_throwsJwtValidatorException() throws Exception {
+        String jwt = buildSignedJwt(ABSOLUTE_KID);
+        // Use a different key for verification – signature will not match
+        ECKey otherKey = new ECKeyGenerator(Curve.P_256).keyID(ABSOLUTE_KID).generate();
+
+        when(mockDidKidParser.extractKidFromHeader(jwt)).thenReturn(ABSOLUTE_KID);
+
+        assertThrows(JwtValidatorException.class,
+                () -> validator.validateJwt(jwt, otherKey.toPublicJWK()));
+    }
+
+    @Test
+    void validateJwt_withJwk_noMatchingKeyId_throwsJwtValidatorException() throws Exception {
+        String jwt = buildSignedJwt(ABSOLUTE_KID);
+        // Build a JWKSet whose key has a different kid
+        ECKey differentKidKey = new ECKeyGenerator(Curve.P_256).keyID("other-kid#key-02").generate();
+        JWKSet mismatchedSet = new JWKSet(differentKidKey.toPublicJWK());
+
+        when(mockDidKidParser.extractKidFromHeader(jwt)).thenReturn(ABSOLUTE_KID);
+
+        assertThrows(JwtValidatorException.class,
+                () -> validator.validateJwt(jwt, mismatchedSet));
+    }
+
+    @Test
+    void validateJwt_withJwk_missingKid_throwsJwtValidatorException() throws Exception {
+        String jwt = buildSignedJwt(ABSOLUTE_KID);
+        when(mockDidKidParser.extractKidFromHeader(jwt))
+                .thenThrow(new JwtValidatorException("kid missing"));
+
+        assertThrows(JwtValidatorException.class,
+                () -> validator.validateJwt(jwt, new JWKSet(ecKey.toPublicJWK())));
+    }
+
+    @Test
+    void validateJwt_withJwk_issClaimIsIgnored() throws Exception {
+        // Build JWT with an iss claim – it must not cause a failure
+        String jwt = buildSignedJwtWithIss(ABSOLUTE_KID, "https://issuer.example.com");
+
+        when(mockDidKidParser.extractKidFromHeader(jwt)).thenReturn(ABSOLUTE_KID);
+
+        // Should succeed despite iss being present – iss is actively ignored
+        assertDoesNotThrow(() -> validator.validateJwt(jwt, ecKey.toPublicJWK()));
+    }
+
+    @Test
+    void validateJwt_withJwk_expiredJwt_throwsJwtValidatorException() throws Exception {
+        // Build JWT with an exp in the past
+        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.ES256).keyID(ABSOLUTE_KID).build();
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .subject("test")
+                .expirationTime(Date.from(Instant.now().minusSeconds(3600)))
+                .build();
+        String jwt = sign(header, claims);
+
+        when(mockDidKidParser.extractKidFromHeader(jwt)).thenReturn(ABSOLUTE_KID);
+
+        assertThrows(JwtValidatorException.class, () -> validator.validateJwt(jwt, ecKey.toPublicJWK()));
+    }
+
+    @Test
+    void validateJwt_withJwk_notYetValidJwt_throwsJwtValidatorException() throws Exception {
+        // Build JWT with nbf in the future (beyond clock skew)
+        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.ES256).keyID(ABSOLUTE_KID).build();
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .subject("test")
+                .notBeforeTime(Date.from(Instant.now().plusSeconds(3600)))
+                .build();
+        String jwt = sign(header, claims);
+
+        when(mockDidKidParser.extractKidFromHeader(jwt)).thenReturn(ABSOLUTE_KID);
+
+        assertThrows(JwtValidatorException.class, () -> validator.validateJwt(jwt, ecKey.toPublicJWK()));
+    }
+
+    // -------------------------------------------------------------------------
     // validateJwt(String, JWKSet) – Flow A
     // -------------------------------------------------------------------------
 

@@ -2,7 +2,7 @@ package ch.admin.bj.swiyu.statuslist.dto;
 
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import com.nimbusds.jose.JWSHeader;
 import lombok.experimental.UtilityClass;

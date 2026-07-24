@@ -5,7 +5,7 @@ import ch.admin.bj.swiyu.jwssignatureservice.dto.SignatureConfigurationDto;
 import ch.admin.bj.swiyu.jwssignatureservice.factory.KeyManagementStrategyFactory;
 import ch.admin.bj.swiyu.jwssignatureservice.factory.strategy.IKeyManagementStrategy;
 import ch.admin.bj.swiyu.jwssignatureservice.factory.strategy.KeyStrategyException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JWSSigner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

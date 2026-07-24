@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Date;
+
 /**
  * A trust protocol 2.0 statement with the fields required in the jwt format
  */
@@ -21,15 +23,22 @@ public class Statement {
     /**
      * Issuance time of the trust statement
      */
-    private long iat;
+    private Date iat;
     /**
      * Expiration time of the trust statement
      */
-    private long exp;
+    private Date exp;
     /**
      * Full Serialized JWT
      */
     @JsonIgnore
     private String serializedJwt;
 
+    public long getExp() {
+        return exp.getTime();
+    }
+
+    public long getIat() {
+        return iat.getTime();
+    }
 }

@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListTokenDto;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -151,9 +151,7 @@ class TokenStatusListTest {
         for (byte statusByte : loadedStatusList.getStatusList()) {
             assertEquals(0, statusByte);
         }
-        assertThrows(IndexOutOfBoundsException.class, () -> {
-            statusList.setStatus(4, 1);
-        });
+        assertThrows(IndexOutOfBoundsException.class, () -> statusList.setStatus(4, 1));
     }
     
     @Test
@@ -163,9 +161,7 @@ class TokenStatusListTest {
         // Encode in Base64
         var base64CompressionBomb = Base64.getUrlEncoder().withoutPadding().encodeToString(compressionBomb);
         // Expect an IOException while decompressing
-        var exception = assertThrows(IOException.class, () -> {
-            TokenStatusList.decodeStatusList(base64CompressionBomb, 204800);
-        });
+        var exception = assertThrows(IOException.class, () -> TokenStatusList.decodeStatusList(base64CompressionBomb, 204800));
         assertThat(exception.getMessage()).startsWith("Decompressed data exceeds safe limit! Possible compression bomb attack.");
     }
 

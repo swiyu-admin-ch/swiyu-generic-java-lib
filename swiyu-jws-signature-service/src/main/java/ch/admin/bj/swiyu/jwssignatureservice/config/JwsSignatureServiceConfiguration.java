@@ -2,7 +2,7 @@ package ch.admin.bj.swiyu.jwssignatureservice.config;
 
 import ch.admin.bj.swiyu.jwssignatureservice.JwsSignatureService;
 import ch.admin.bj.swiyu.jwssignatureservice.factory.KeyManagementStrategyFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
 

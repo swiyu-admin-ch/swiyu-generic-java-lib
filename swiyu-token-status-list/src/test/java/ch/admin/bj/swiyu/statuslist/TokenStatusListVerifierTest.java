@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -29,7 +29,7 @@ class TokenStatusListVerifierTest {
     TokenStatusListTokenDto defaultStatusListToken;
 
     @BeforeEach
-    void setup() throws JsonProcessingException {
+    void setup() throws JacksonException {
         verifier = new TokenStatusListVerifier(TokenStatusListVerifierConfig.builder().issuerMustMatch(true).build());
         defaultReference = TokenStatusListMapper.toTokenStatusListReference(
             mapper.readValue("""
@@ -114,7 +114,7 @@ class TokenStatusListVerifierTest {
     @ValueSource(strings={"statuslist+jwt", "STATUSLIST+JWT", "statuslist+JWT"})
     void testJWSHeaderValidation_whenStatusList_success(String type) {
         var header = new JWSHeader.Builder(JWSAlgorithm.ES256).type(new JOSEObjectType(type)).build();
-        assertThat(assertDoesNotThrow(() -> verifier.hasValidTokenStatusListTokenHeader(header)))
+        assertThat(assertDoesNotThrow(() -> TokenStatusListVerifier.hasValidTokenStatusListTokenHeader(header)))
             .as("typ must be statuslist+jwt annd typ is not case sensitive")
             .isTrue();
     }
@@ -122,7 +122,7 @@ class TokenStatusListVerifierTest {
     @Test
     void testJWSHeaderValidation_whenOther_failed() {
         var header = new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build();
-        assertThat(assertDoesNotThrow(() -> verifier.hasValidTokenStatusListTokenHeader(header)))
+        assertThat(assertDoesNotThrow(() -> TokenStatusListVerifier.hasValidTokenStatusListTokenHeader(header)))
             .as("typ must be statuslist+jwt")
             .isFalse();
     }
