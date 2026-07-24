@@ -11,5 +11,10 @@ public class TokenStatusListVerifierConfig {
      */
     @Builder.Default
     private boolean issuerMustMatch = false;
-    
+
+    /**
+     * Flag controlling if the expiry of the Status List Token MUST be present (which is required by Swiss Profile)
+     */
+    @Builder.Default
+    private boolean expiryMustBePresent = true;
 }
