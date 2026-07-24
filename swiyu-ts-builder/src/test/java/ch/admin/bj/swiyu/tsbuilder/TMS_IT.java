@@ -6,11 +6,9 @@ import ch.admin.bj.swiyu.jwssignatureservice.factory.KeyManagementStrategyFactor
 import ch.admin.bj.swiyu.jwssignatureservice.factory.strategy.KeyStrategy;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jose.jwk.ECKey;
-import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

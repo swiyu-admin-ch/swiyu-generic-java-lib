@@ -6,17 +6,21 @@ import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
+import com.nimbusds.jose.crypto.Ed25519Signer;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jose.jwk.*;
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
+import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.Test;
 
+
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -183,14 +187,29 @@ class JwtUtilTest {
      * Tests verifySignedJwt directly.
      */
     @Test
-    void verifySignedJwt_direct_success() throws Exception {
-        ECKey ecKey = new ECKeyGenerator(Curve.P_256).keyID("ec4").generate();
+    void verifySignedJwt_ECDSA_success() throws Exception {
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256).algorithm(JWSAlgorithm.ES256).keyUse(KeyUse.SIGNATURE).keyID("ec4").generate();
         JWKSet jwkSet = new JWKSet(ecKey.toPublicJWK());
         SignedJWT jwt = JwtUtil.signJwt(
             new JWTClaimsSet.Builder().claim("foo", "baz").build(),
             JwtUtil.buildHeader(JWSAlgorithm.ES256, "ec4", "JWT"),
             new ECDSASigner(ecKey)
         );
+        assertDoesNotThrow(() -> JwtUtil.verifySignedJwt(jwt, ecKey));
+        Map<String, Object> claims = assertDoesNotThrow(() -> JwtUtil.verifySignedJwt(jwt, jwkSet));
+        assertEquals("baz", claims.get("foo"));
+    }
+
+    @Test
+    void verifySignedJwt_EdDSA_success() throws Exception {
+        OctetKeyPair edKey = new OctetKeyPairGenerator(Curve.Ed25519).algorithm(JWSAlgorithm.Ed25519).keyUse(KeyUse.SIGNATURE).keyID("ed4").generate();
+        JWKSet jwkSet = new JWKSet(edKey.toPublicJWK());
+        SignedJWT jwt = JwtUtil.signJwt(
+            new JWTClaimsSet.Builder().claim("foo", "baz").build(),
+            JwtUtil.buildHeader(JWSAlgorithm.Ed25519, "ed4", "JWT"),
+            new Ed25519Signer(edKey)
+        );
+        assertDoesNotThrow(() -> JwtUtil.verifySignedJwt(jwt, edKey.toPublicJWK()));
         Map<String, Object> claims = JwtUtil.verifySignedJwt(jwt, jwkSet);
         assertEquals("baz", claims.get("foo"));
     }
@@ -235,5 +254,20 @@ class JwtUtilTest {
 
         assertThrows(JwtUtilException.class, () -> JwtUtil.verifyJwt("not-a-jwt", ecKey.toPublicJWK()));
     }
+
+    @Test
+    void prepareHeaderBuilder_whenEd25519() throws JOSEException {
+        OctetKeyPair edKey = new OctetKeyPairGenerator(Curve.Ed25519).keyID("ed4").generate();
+        var builder = JwtUtil.prepareHeaderBuilder(new Ed25519Signer(edKey));
+        assertEquals(builder.build().getAlgorithm(), JWSAlgorithm.Ed25519);
+    }
+
+    @Test
+    void prepareHeaderBuilder_whenP256() throws JOSEException {
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256).keyID("ec4").generate();
+        var builder = JwtUtil.prepareHeaderBuilder(new ECDSASigner(ecKey));
+        assertEquals(builder.build().getAlgorithm(), JWSAlgorithm.ES256);
+    }
+
 
 }

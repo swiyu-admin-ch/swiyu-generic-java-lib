@@ -2,6 +2,7 @@ package ch.admin.bj.swiyu.jwtutil;
 
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
+import com.nimbusds.jose.crypto.Ed25519Verifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -38,11 +39,18 @@ public final class JwtUtil {
     private static final Map<KeyType, Function<JWK, JWSVerifier>> VERIFIER_FACTORIES = new HashMap<>();
 
     static {
+        VERIFIER_FACTORIES.put(KeyType.OKP, key -> {
+            try {
+                return new Ed25519Verifier(key.toOctetKeyPair());
+            } catch (JOSEException e) {
+                throw new JwtUtilException("Failed to create EdDSA verifier", e);
+            }
+        });
         VERIFIER_FACTORIES.put(KeyType.EC, key -> {
             try {
                 return new ECDSAVerifier(key.toECKey().toPublicJWK());
             } catch (JOSEException e) {
-                throw new JwtUtilException("Failed to create EC verifier", e);
+                throw new JwtUtilException("Failed to create ECDSA verifier", e);
             }
         });
         VERIFIER_FACTORIES.put(KeyType.RSA, key -> {
@@ -190,6 +198,19 @@ public final class JwtUtil {
             throw new JwtUtilException("Unsupported Key Type " + kty);
         }
         return factory.apply(key);
+    }
+
+    /**
+     * Prepares a Header builder with the algorithm according to swiss profile matching the signer
+     * @param signer the signer used to establish the algorithm to be used in the header
+     * @return a JWSHeader.Builder initialized 
+     */
+    public static JWSHeader.Builder prepareHeaderBuilder(JWSSigner signer) {
+        JWSAlgorithm algorithm = JWSAlgorithm.ES256;
+            if (signer.supportedJWSAlgorithms().contains(JWSAlgorithm.Ed25519)) {
+                algorithm = JWSAlgorithm.Ed25519;
+            }
+        return new JWSHeader.Builder(algorithm);
     }
 
 }

@@ -33,8 +33,6 @@ class DidJwtValidatorTest {
             "did:tdw:Qma6mc1qZw3NqxwX6SB5GPQYzP4pHN1f7iLTaU6p7SBms:identifier.admin.ch#key-01";
     private static final String DID_STRING =
             "did:tdw:Qma6mc1qZw3NqxwX6SB5GPQYzP4pHN1f7iLTaU6p7SBms:identifier.admin.ch";
-    private static final String DID_URL =
-            "https://identifier.admin.ch/Qma6mc1qZw3NqxwX6SB5GPQYzP4pHN1f7iLTaU6p7SBms/did.jsonl";
 
     private DidKidParser mockDidKidParser;
     private UrlRestriction mockUrlRestriction;
