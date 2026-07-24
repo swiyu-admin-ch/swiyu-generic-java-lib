@@ -18,7 +18,7 @@ Add the dependency to your `pom.xml`:
 <dependency>
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-token-status-list</artifactId>
-    <version>1.9.0-SNAPSHOT</version>
+    <version>1.8.4</version>
 </dependency>
 ```
 
