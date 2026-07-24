@@ -200,4 +200,17 @@ public final class JwtUtil {
         return factory.apply(key);
     }
 
+    /**
+     * Prepares a Header builder with the algorithm according to swiss profile matching the signer
+     * @param signer the signer used to establish the algorithm to be used in the header
+     * @return a JWSHeader.Builder initialized 
+     */
+    public static JWSHeader.Builder prepareHeaderBuilder(JWSSigner signer) {
+        JWSAlgorithm algorithm = JWSAlgorithm.ES256;
+            if (signer.supportedJWSAlgorithms().contains(JWSAlgorithm.Ed25519)) {
+                algorithm = JWSAlgorithm.Ed25519;
+            }
+        return new JWSHeader.Builder(algorithm);
+    }
+
 }

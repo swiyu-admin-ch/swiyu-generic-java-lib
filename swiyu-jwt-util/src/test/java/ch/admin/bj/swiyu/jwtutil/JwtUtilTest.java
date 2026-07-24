@@ -255,4 +255,19 @@ class JwtUtilTest {
         assertThrows(JwtUtilException.class, () -> JwtUtil.verifyJwt("not-a-jwt", ecKey.toPublicJWK()));
     }
 
+    @Test
+    void prepareHeaderBuilder_whenEd25519() throws JOSEException {
+        OctetKeyPair edKey = new OctetKeyPairGenerator(Curve.Ed25519).keyID("ed4").generate();
+        var builder = JwtUtil.prepareHeaderBuilder(new Ed25519Signer(edKey));
+        assertEquals(builder.build().getAlgorithm(), JWSAlgorithm.Ed25519);
+    }
+
+    @Test
+    void prepareHeaderBuilder_whenP256() throws JOSEException {
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256).keyID("ec4").generate();
+        var builder = JwtUtil.prepareHeaderBuilder(new ECDSASigner(ecKey));
+        assertEquals(builder.build().getAlgorithm(), JWSAlgorithm.ES256);
+    }
+
+
 }
