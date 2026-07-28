@@ -67,7 +67,7 @@ public class TokenStatusListVerifier {
     private boolean isValidStateTokens(TokenStatusListReferenceDto referenceDto,
             TokenStatusListTokenDto statusListTokenDto) {
         // Validate presence of claims
-        if (!referenceDto.hasRequiredClaims() || !statusListTokenDto.hasRequiredClaims()) {
+        if (!referenceDto.hasRequiredClaims() || !statusListTokenDto.hasRequiredClaims(config.isExpiryMustBePresent())) {
             return false;
         }
         // 4.a The subject claim (sub) of the Status List Token MUST be equal to the uri

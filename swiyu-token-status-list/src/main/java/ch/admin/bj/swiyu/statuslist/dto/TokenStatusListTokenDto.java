@@ -110,11 +110,15 @@ public class TokenStatusListTokenDto {
      * @return {@code true} if all required fields are present and satisfy the
      *         constraints; {@code false} otherwise.
      */
-    public boolean hasRequiredClaims() {
+    public boolean hasRequiredClaims(boolean expiryMustBePresent) {
         if (sub == null || sub.isBlank()) {
             return false;
         }
-        if (iat == null || exp == null) {
+        if (iat == null) {
+            return false;
+        }
+
+        if (expiryMustBePresent && exp == null) {
             return false;
         }
 
