@@ -76,6 +76,10 @@ public interface IKeyManagementStrategy {
     }
 
     default JWSSigner fromEd(OctetKeyPair privateKey, Provider provider) throws JOSEException {
+        if (!Curve.Ed25519.equals(privateKey.getCurve())) {
+            throw new IllegalArgumentException("Expected an Ed25519 key");
+        }
+     
         var signer = new Ed25519Signer(privateKey);
         signer.getJCAContext().setProvider(provider);
         return signer;
