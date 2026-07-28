@@ -8,6 +8,7 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.crypto.Ed25519Signer;
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton;
+import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.OctetKeyPair;
 
@@ -41,6 +42,9 @@ public interface IKeyManagementStrategy {
      * @throws JOSEException if the Signer could not be created with the provided key &amp; provider
      */
     default JWSSigner fromEC(ECKey privateKey, Provider provider) throws JOSEException {
+        if (!Curve.P_256.equals(privateKey.getCurve())) {
+            throw new IllegalArgumentException("Expected an EC P256 key");
+        }
         var signer = new ECDSASigner(privateKey);
         signer.getJCAContext().setProvider(provider);
         return signer;
