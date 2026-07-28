@@ -207,8 +207,8 @@ public final class JwtUtil {
      */
     public static JWSHeader.Builder prepareHeaderBuilder(JWSSigner signer) {
         JWSAlgorithm algorithm = JWSAlgorithm.ES256;
-            if (signer.supportedJWSAlgorithms().contains(JWSAlgorithm.Ed25519)) {
-                algorithm = JWSAlgorithm.Ed25519;
+            if (signer.supportedJWSAlgorithms().contains(JWSAlgorithm.Ed25519) || signer.supportedJWSAlgorithms().contains(JWSAlgorithm.EdDSA)) {
+                algorithm = JWSAlgorithm.EdDSA;
             }
         return new JWSHeader.Builder(algorithm);
     }

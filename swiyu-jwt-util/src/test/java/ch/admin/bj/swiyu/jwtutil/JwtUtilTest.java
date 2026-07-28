@@ -259,7 +259,7 @@ class JwtUtilTest {
     void prepareHeaderBuilder_whenEd25519() throws JOSEException {
         OctetKeyPair edKey = new OctetKeyPairGenerator(Curve.Ed25519).keyID("ed4").generate();
         var builder = JwtUtil.prepareHeaderBuilder(new Ed25519Signer(edKey));
-        assertEquals(builder.build().getAlgorithm(), JWSAlgorithm.Ed25519);
+        assertEquals(builder.build().getAlgorithm(), JWSAlgorithm.EdDSA);
     }
 
     @Test
