@@ -40,6 +40,9 @@ public class KeyStrategy implements IKeyManagementStrategy {
         try {
             PEMParser parser = new PEMParser(new StringReader(signatureConfigurationDto.getPrivateKey()));
             Object pemObj = parser.readObject();
+            if(pemObj == null) {
+                throw new KeyStrategyException("No PEM key found");
+            }
             PrivateKey key = switch (pemObj) {
                 case PrivateKeyInfo pemKey -> new JcaPEMKeyConverter().getPrivateKey(pemKey);
                 case PEMKeyPair pemKey -> new JcaPEMKeyConverter().getKeyPair(pemKey).getPrivate();
