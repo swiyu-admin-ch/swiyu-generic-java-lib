@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `swiyu-dpop-util`: fixed htu validation to fail on partial path segment match (#971).
 
 ### Changed
-- Updated to Jackson 3 instead of Jackson 2
+- Updated Jackson from version 2 to 3 (#944)
 
 ## [1.8.3] – 2026-07-22
 - StatusListValidator checks now kid and not iss as required by Swiss Profile
