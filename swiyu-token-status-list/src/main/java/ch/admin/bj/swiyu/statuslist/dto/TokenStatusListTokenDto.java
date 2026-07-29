@@ -57,10 +57,10 @@ public class TokenStatusListTokenDto {
     private String sub;
 
     @JsonProperty(value = "iat", required = true)
-    private Date iat;
+    private Long iat;
 
     @JsonProperty(value = "exp", required = true)
-    private Date exp;
+    private Long exp;
     /**
      * The ttl (time to live) claim, if present, MUST specify the maximum amount of time, in seconds,
      * that the Status List Token can be cached by a consumer before a fresh copy SHOULD be retrieved.
@@ -132,11 +132,11 @@ public class TokenStatusListTokenDto {
         return statusList != null && statusList.hasRequiredClaims();
     }
 
-    public Long getIat() {
-        return iat == null ? null : iat.getTime();
+    public void setIat(Date iat) {
+        this.iat = iat.getTime();
     }
 
-    public Long getExp() {
-        return exp == null ? null : exp.getTime();
+    public void setExp(Date exp) {
+        this.exp = exp.getTime();
     }
 }

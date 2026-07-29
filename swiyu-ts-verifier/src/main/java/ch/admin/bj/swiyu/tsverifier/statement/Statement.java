@@ -23,22 +23,22 @@ public class Statement {
     /**
      * Issuance time of the trust statement
      */
-    private Date iat;
+    private long iat;
     /**
      * Expiration time of the trust statement
      */
-    private Date exp;
+    private long exp;
     /**
      * Full Serialized JWT
      */
     @JsonIgnore
     private String serializedJwt;
 
-    public long getExp() {
-        return exp.getTime();
+    public void setExp(Date date) {
+        this.exp = date.getTime();
     }
 
-    public long getIat() {
-        return iat.getTime();
+    public void setIat(Date date) {
+        this.iat = date.getTime();
     }
 }
