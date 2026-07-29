@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.util.Date;
 
 /**
@@ -132,11 +133,11 @@ public class TokenStatusListTokenDto {
         return statusList != null && statusList.hasRequiredClaims();
     }
 
-    public void setIat(Date iat) {
-        this.iat = iat.getTime();
+    public void setExp(Instant date) {
+        this.exp = date.getEpochSecond();
     }
 
-    public void setExp(Date exp) {
-        this.exp = exp.getTime();
+    public void setIat(Instant date) {
+        this.iat = date.getEpochSecond();
     }
 }

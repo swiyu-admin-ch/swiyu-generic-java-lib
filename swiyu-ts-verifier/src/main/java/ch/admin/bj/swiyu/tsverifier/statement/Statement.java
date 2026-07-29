@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.util.Date;
 
 /**
@@ -34,11 +35,11 @@ public class Statement {
     @JsonIgnore
     private String serializedJwt;
 
-    public void setExp(Date date) {
-        this.exp = date.getTime();
+    public void setExp(Instant date) {
+        this.exp = date.getEpochSecond();
     }
 
-    public void setIat(Date date) {
-        this.iat = date.getTime();
+    public void setIat(Instant date) {
+        this.iat = date.getEpochSecond();
     }
 }
