@@ -22,7 +22,7 @@ Add the dependency to your `pom.xml`:
 <dependency>
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-jwt-validator</artifactId>
-    <version>1.9.0-SNAPSHOT</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
