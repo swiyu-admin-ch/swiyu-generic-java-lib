@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [NEXT]
 - ...
 
+## [2.0.0] - 2026-08-30
+- Uses Jackson 3 instead of 2 (#944)
+- Add Support for EdDSA (#1050)
+
 ## [1.8.4] – 2026-07-24
 - Add config to disable `exp` check for testing purposes.
 
