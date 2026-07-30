@@ -1,7 +1,7 @@
 package ch.admin.bj.swiyu.tsverifier.statement;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.extern.slf4j.Slf4j;
 
@@ -70,10 +70,9 @@ public class StatementParser {
         if (node.isNull()) {
             return true;
         }
-        if (node.isContainerNode()) {
-            var it = node.values();
-            while(it.hasNext()) {
-                if (hasNullClaimRec(it.next())) {
+        if (node.isContainer()) {
+            for (JsonNode jsonNode : node) {
+                if (hasNullClaimRec(jsonNode)) {
                     return true;
                 }
             }

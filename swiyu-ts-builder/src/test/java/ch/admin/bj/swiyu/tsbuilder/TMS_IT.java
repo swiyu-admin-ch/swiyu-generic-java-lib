@@ -4,7 +4,7 @@ import ch.admin.bj.swiyu.jwssignatureservice.JwsSignatureService;
 import ch.admin.bj.swiyu.jwssignatureservice.dto.SignatureConfigurationDto;
 import ch.admin.bj.swiyu.jwssignatureservice.factory.KeyManagementStrategyFactory;
 import ch.admin.bj.swiyu.jwssignatureservice.factory.strategy.KeyStrategy;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.ECDSAVerifier;

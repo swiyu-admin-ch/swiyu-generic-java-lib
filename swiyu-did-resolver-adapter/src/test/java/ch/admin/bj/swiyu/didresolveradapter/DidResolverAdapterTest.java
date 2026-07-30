@@ -1,6 +1,6 @@
 package ch.admin.bj.swiyu.didresolveradapter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatusCode;
@@ -18,7 +18,6 @@ import static org.mockito.Mockito.when;
 class DidResolverAdapterTest {
     private DidResolverWebClient didResolverWebClient;
     private DidResolverAdapter didResolverAdapter;
-    private ObjectMapper objectMapper;
 
     // Example DID and DID log from integration environment (valid format)
     private static final String DID = "did:tdw:QmWrXWFEDenvoYWFXxSQGFCa6Pi22Cdsg2r6weGhY2ChiQ:identifier-reg.trust-infra.swiyu-int.admin.ch:api:v1:did:2e246676-209a-4c21-aceb-721f8a90b212";
@@ -26,7 +25,7 @@ class DidResolverAdapterTest {
 
     @BeforeEach
     void setUp() {
-        objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = new ObjectMapper();
         didResolverWebClient = mock(DidResolverWebClient.class);
         didResolverAdapter = new DidResolverAdapter(didResolverWebClient, objectMapper);
     }

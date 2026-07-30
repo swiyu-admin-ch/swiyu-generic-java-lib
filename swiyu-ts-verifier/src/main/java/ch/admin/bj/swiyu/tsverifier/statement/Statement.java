@@ -8,6 +8,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
+import java.util.Date;
+
 /**
  * A trust protocol 2.0 statement with the fields required in the jwt format
  */
@@ -32,4 +35,11 @@ public class Statement {
     @JsonIgnore
     private String serializedJwt;
 
+    public void setExp(Instant date) {
+        this.exp = date.getEpochSecond();
+    }
+
+    public void setIat(Instant date) {
+        this.iat = date.getEpochSecond();
+    }
 }

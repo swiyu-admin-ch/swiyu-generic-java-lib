@@ -7,6 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
+import java.util.Date;
+
 /**
  * Reduced DTO for token status list - The JWT should already have been verified before!
  * Example:
@@ -128,5 +131,13 @@ public class TokenStatusListTokenDto {
         }
 
         return statusList != null && statusList.hasRequiredClaims();
+    }
+
+    public void setExp(Instant date) {
+        this.exp = date.getEpochSecond();
+    }
+
+    public void setIat(Instant date) {
+        this.iat = date.getEpochSecond();
     }
 }

@@ -5,8 +5,8 @@ import ch.admin.eid.did_sidekicks.Jwk;
 import ch.admin.eid.didresolver.Did;
 import ch.admin.eid.did_sidekicks.DidDoc;
 import ch.admin.eid.didresolver.DidResolveException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.jwk.JWK;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -116,7 +116,7 @@ public class DidResolverAdapter {
             return didResolverJwkToNimbusJwk(jwk);
         } catch (DidSidekicksException e) {
             throw new DidResolverException(String.format("Key %s not found in DID Document", keyId), e);
-        } catch (JsonProcessingException | ParseException e) {
+        } catch (JacksonException | ParseException e) {
             throw new DidResolverException(String.format("Verification Method %s is malformed", keyId), e);
         }
     }
@@ -162,10 +162,10 @@ public class DidResolverAdapter {
      *
      * @param resolverJwk the JWK from the resolver
      * @return the parsed {@link JWK}
-     * @throws JsonProcessingException if the JWK cannot be serialized
+     * @throws JacksonException if the JWK cannot be serialized
      * @throws ParseException if the JWK string cannot be parsed
      */
-    private JWK didResolverJwkToNimbusJwk(Jwk resolverJwk) throws JsonProcessingException, ParseException {
+    private JWK didResolverJwkToNimbusJwk(Jwk resolverJwk) throws JacksonException, ParseException {
         var jwkString = objectMapper.writeValueAsString(resolverJwk);
         return JWK.parse(jwkString);
     }

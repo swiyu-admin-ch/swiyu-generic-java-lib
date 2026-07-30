@@ -2,7 +2,7 @@ package ch.admin.bj.swiyu.didresolveradapter.config;
 
 import ch.admin.bj.swiyu.didresolveradapter.DidResolverAdapter;
 import ch.admin.bj.swiyu.didresolveradapter.DidResolverWebClient;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

@@ -4,8 +4,8 @@ package ch.admin.bj.swiyu.jwssignatureservice;
 import ch.admin.bj.swiyu.jwssignatureservice.dto.SignatureConfigurationDto;
 import ch.admin.bj.swiyu.jwssignatureservice.factory.KeyManagementStrategyFactory;
 import ch.admin.bj.swiyu.jwssignatureservice.factory.strategy.KeyStrategyException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JWSSigner;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
@@ -61,7 +61,7 @@ public class JwsSignatureService {
                 config.getHsm().setKeyPin(keyPin);
             }
             return buildSigner(config);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new KeyStrategyException(FAILED_TO_COPY_SIGNATURE_CONFIGURATION, e);
         }
     }
@@ -81,7 +81,7 @@ public class JwsSignatureService {
             // Deep copy of Signature Configuration, so that we do not override the defaults
             var config = objectMapper.readValue(objectMapper.writeValueAsString(signatureConfigurationDto), SignatureConfigurationDto.class);
             return buildSigner(config);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new KeyStrategyException(FAILED_TO_COPY_SIGNATURE_CONFIGURATION, e);
         }
     }

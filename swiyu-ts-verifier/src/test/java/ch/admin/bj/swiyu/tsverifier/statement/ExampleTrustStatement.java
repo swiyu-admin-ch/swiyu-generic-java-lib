@@ -1,7 +1,7 @@
 package ch.admin.bj.swiyu.tsverifier.statement;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.jwk.ECKey;
@@ -315,7 +315,7 @@ public enum ExampleTrustStatement {
         var mapper = new ObjectMapper();
         try {
             return mapper.readValue(this.getHeader(), StatementHeader.class);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new RuntimeException(e);
         }
     }
