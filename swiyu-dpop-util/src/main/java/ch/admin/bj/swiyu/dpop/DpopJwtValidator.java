@@ -2,10 +2,12 @@ package ch.admin.bj.swiyu.dpop;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+
+import ch.admin.bj.swiyu.jwtutil.JwtUtil;
+import ch.admin.bj.swiyu.jwtutil.JwtUtilException;
 import lombok.experimental.UtilityClass;
 
 import java.net.URI;
@@ -87,7 +89,9 @@ public final class DpopJwtValidator {
      * @throws DpopValidationException if the signature is invalid
      */
     public static void validateSignature(SignedJWT dpopJwt, JWK key) throws JOSEException {
-        if (!dpopJwt.verify(new ECDSAVerifier(key.toECKey()))) {
+        try {
+            JwtUtil.verifySignedJwt(dpopJwt, key);
+        } catch (JwtUtilException e) {
             throw new DpopValidationException("DPoP signature is invalid");
         }
     }

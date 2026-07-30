@@ -1,14 +1,21 @@
 package ch.admin.bj.swiyu.jwssignatureservice.factory.strategy;
 
 import ch.admin.bj.swiyu.jwssignatureservice.dto.SignatureConfigurationDto;
+import ch.admin.bj.swiyu.jwssignatureservice.signer.HSMEd25519Signer;
+
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.ECDSASigner;
+import com.nimbusds.jose.crypto.Ed25519Signer;
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton;
+import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
+import com.nimbusds.jose.jwk.OctetKeyPair;
 
+import java.security.Key;
 import java.security.Provider;
 import java.security.interfaces.ECPrivateKey;
+import java.security.interfaces.EdECPrivateKey;
 
 /**
  * Interface for key management strategies used to create JWS signers.
@@ -25,6 +32,7 @@ public interface IKeyManagementStrategy {
      */
     JWSSigner createSigner(SignatureConfigurationDto signatureConfigurationDto) throws KeyStrategyException;
 
+
     /**
      * Creates a signer from an ECKey and a security provider.
      *
@@ -34,6 +42,9 @@ public interface IKeyManagementStrategy {
      * @throws JOSEException if the Signer could not be created with the provided key &amp; provider
      */
     default JWSSigner fromEC(ECKey privateKey, Provider provider) throws JOSEException {
+        if (!Curve.P_256.equals(privateKey.getCurve())) {
+            throw new IllegalArgumentException("Expected an EC P256 key");
+        }
         var signer = new ECDSASigner(privateKey);
         signer.getJCAContext().setProvider(provider);
         return signer;
@@ -62,5 +73,35 @@ public interface IKeyManagementStrategy {
      */
     default JWSSigner fromEC(ECKey privateKey) throws JOSEException {
         return fromEC(privateKey, BouncyCastleProviderSingleton.getInstance());
+    }
+
+    default JWSSigner fromEd(OctetKeyPair privateKey) throws JOSEException {
+        return fromEd(privateKey, BouncyCastleProviderSingleton.getInstance());
+    }
+
+    default JWSSigner fromEd(OctetKeyPair privateKey, Provider provider) throws JOSEException {
+        if (!Curve.Ed25519.equals(privateKey.getCurve())) {
+            throw new IllegalArgumentException("Expected an Ed25519 key");
+        }
+     
+        var signer = new Ed25519Signer(privateKey);
+        signer.getJCAContext().setProvider(provider);
+        return signer;
+    }
+
+    default JWSSigner fromEd(EdECPrivateKey privateKey, Provider provider) {
+        var signer = new HSMEd25519Signer(privateKey, provider);
+        signer.getJCAContext().setProvider(provider);
+        return signer;
+    }
+
+
+    default JWSSigner fromKeyReference(Key privateKey, Provider provider) throws KeyStrategyException, JOSEException {
+        return switch (privateKey) {
+                case null -> throw new KeyStrategyException("No key could be loaded from Securosys HSM.");
+                case ECPrivateKey ecKey -> fromEC(ecKey, provider);
+                case EdECPrivateKey edKey -> fromEd(edKey, provider);
+                default -> throw new KeyStrategyException("Unsupported key type - not supporting type " + privateKey.getClass().getName());
+            };
     }
 }

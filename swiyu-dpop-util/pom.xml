@@ -53,6 +53,12 @@
     </properties>
 
     <dependencies>
+        <!-- JWT utility library -->
+        <dependency>
+            <groupId>ch.admin.swiyu</groupId>
+            <artifactId>swiyu-jwt-util</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- JWT signing and cryptographic operations -->
         <dependency>
             <groupId>com.nimbusds</groupId>
