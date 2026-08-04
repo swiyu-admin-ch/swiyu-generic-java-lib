@@ -8,7 +8,6 @@ import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
 import lombok.experimental.UtilityClass;
 
-import java.text.ParseException;
 import java.util.Set;
 
 /**
@@ -110,7 +109,9 @@ public class JweUtil {
             }
             return payload;
 
-        } catch (ParseException | JOSEException e) {
+        } catch (JweUtilException e) {
+            throw e;
+        } catch (Exception e) {
             throw new JweUtilException("Error during JWE decryption", e);
         }
     }

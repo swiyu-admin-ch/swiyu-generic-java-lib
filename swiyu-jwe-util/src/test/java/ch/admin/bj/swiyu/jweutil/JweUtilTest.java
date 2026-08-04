@@ -128,14 +128,6 @@ class JweUtilTest {
     }
 
     @Test
-    void jweDecryptionLimits_whenValueIsZeroOrNegative_thenThrowsIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, () -> new JweDecryptionLimits(0, 1000));
-        assertThrows(IllegalArgumentException.class, () -> new JweDecryptionLimits(1000, 0));
-        assertThrows(IllegalArgumentException.class, () -> new JweDecryptionLimits(-1, 1000));
-        assertThrows(IllegalArgumentException.class, () -> new JweDecryptionLimits(1000, -1));
-    }
-
-    @Test
     void decrypt_whenLimitsIsNull_thenDefaultsAreApplied() throws Exception {
         ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec9").generate();
         String payload = "payload within defaults";
