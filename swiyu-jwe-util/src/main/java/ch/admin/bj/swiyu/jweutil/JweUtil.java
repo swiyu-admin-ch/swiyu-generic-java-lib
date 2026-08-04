@@ -8,13 +8,17 @@ import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
 import lombok.experimental.UtilityClass;
 
-import java.util.HashSet;
+import java.text.ParseException;
 import java.util.Set;
 
 /**
  * Utility for JSON Web Encryption (JWE) operations in the Swiyu ecosystem.
  * <p>
- * Provides static methods to encrypt and decrypt payloads using ECDH-ES with AES-GCM.
+ * This class provides a placeholder for future JWE encryption and decryption functionality.
+ * It is intended to offer methods for encrypting and decrypting payloads using JWE standards.
+ * </p>
+ * <p>
+ * Note: This is a stub and does not contain any real implementation yet.
  * </p>
  */
 @UtilityClass
@@ -77,31 +81,36 @@ public class JweUtil {
      * compressed ciphertext size before decompression, so this method additionally checks the length of the
      * already decompressed payload before returning it (post-hoc check, not a streaming limit).
      *
+     * @param jweString           JWE as a String
+     * @param recipientPrivateKey private key (ECKey) of the recipient
      * @param limits the size limits to enforce; if {@code null}, {@link JweDecryptionLimits#defaults()} is used
      * @throws JweUtilException if decryption fails, e.g. because a limit is exceeded
      */
     public static String decrypt(String jweString, JWK recipientPrivateKey, JweDecryptionLimits limits) {
-
         JweDecryptionLimits effectiveLimits = limits != null ? limits : JweDecryptionLimits.defaults();
 
-        Set<JWEDecrypterOption> jweDecrypterOptions = new HashSet<>();
-        jweDecrypterOptions.add(new MaxCompressedCipherTextLength(effectiveLimits.maxCompressedCipherTextLength()));
+        Set<JWEDecrypterOption> options = Set.of(
+                new MaxCompressedCipherTextLength(effectiveLimits.maxCompressedCipherTextLength())
+        );
 
         try {
             if (!(recipientPrivateKey instanceof ECKey ecKey)) {
                 throw new JweUtilException("Only EC keys are supported.");
             }
+
             JWEObject jweObject = JWEObject.parse(jweString);
-            jweObject.decrypt(new ECDHDecrypter(ecKey), jweDecrypterOptions);
+            jweObject.decrypt(new ECDHDecrypter(ecKey), options);
+
             String payload = jweObject.getPayload().toString();
             if (payload.length() > effectiveLimits.maxDecompressedPayloadLength()) {
-                throw new JweUtilException("Decrypted payload exceeds the maximum allowed decompressed size of "
-                        + effectiveLimits.maxDecompressedPayloadLength() + " characters");
+                throw new JweUtilException(String.format(
+                        "Decrypted payload exceeds the maximum allowed decompressed size of %d characters",
+                        effectiveLimits.maxDecompressedPayloadLength()
+                ));
             }
             return payload;
-        } catch (JweUtilException e) {
-            throw e;
-        } catch (Exception e) {
+
+        } catch (ParseException | JOSEException e) {
             throw new JweUtilException("Error during JWE decryption", e);
         }
     }
