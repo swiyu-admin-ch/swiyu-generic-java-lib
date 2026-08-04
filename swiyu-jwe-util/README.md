@@ -28,7 +28,6 @@ import com.nimbusds.jose.jwk.JWK;
 
 String encrypted = JweUtil.encrypt("my payload", recipientPublicKey);
 
-// Recommended: explicit limits (protects against the "JWE Decompression Bomb", see below)
 String decrypted = JweUtil.decrypt(encrypted, recipientPrivateKey, JweDecryptionLimits.defaults());
 ```
 
@@ -46,9 +45,9 @@ String decrypted = JweUtil.decrypt(encrypted, recipientPrivateKey, JweDecryption
 String decrypted = JweUtil.decrypt(encrypted, recipientPrivateKey, JweDecryptionLimits.defaults());
 ```
 
-Defaults: 2 MiB compressed / 10 MiB decompressed. Absolute maximums (5 MiB / 50 MiB) cause `JweDecryptionLimits` to throw `IllegalArgumentException` if exceeded.
+Defaults: 20 MiB decompressed.
 
-**Migration:** Update to `swiyu-jwe-util` 1.8.0+. Old overloads `decrypt(String, JWK)` / `decrypt(String, JWK, Integer)` are `@Deprecated` but still work. Consumers (`swiyu-issuer-service`, `swiyu-verifier-service`) should switch to passing an explicit `JweDecryptionLimits`.
+**Migration:** Update to `swiyu-jwe-util` 2.1.0+. Old overloads `decrypt(String, JWK)` / `decrypt(String, JWK, Integer)` are `@Deprecated` but still work. Consumers (`swiyu-issuer-service`, `swiyu-verifier-service`) should switch to passing an explicit `JweDecryptionLimits`.
 
 ## License
 

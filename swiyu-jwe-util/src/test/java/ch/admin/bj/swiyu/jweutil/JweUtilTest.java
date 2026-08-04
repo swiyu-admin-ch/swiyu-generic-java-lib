@@ -128,16 +128,6 @@ class JweUtilTest {
     }
 
     @Test
-    void jweDecryptionLimits_whenExceedsAbsoluteMaximum_thenThrowsIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, () -> new JweDecryptionLimits(
-                JweDecryptionLimits.ABSOLUTE_MAX_COMPRESSED_CIPHER_TEXT_LENGTH + 1,
-                JweDecryptionLimits.DEFAULT_MAX_DECOMPRESSED_PAYLOAD_LENGTH));
-        assertThrows(IllegalArgumentException.class, () -> new JweDecryptionLimits(
-                JweDecryptionLimits.DEFAULT_MAX_COMPRESSED_CIPHER_TEXT_LENGTH,
-                JweDecryptionLimits.ABSOLUTE_MAX_DECOMPRESSED_PAYLOAD_LENGTH + 1));
-    }
-
-    @Test
     void jweDecryptionLimits_whenValueIsZeroOrNegative_thenThrowsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, () -> new JweDecryptionLimits(0, 1000));
         assertThrows(IllegalArgumentException.class, () -> new JweDecryptionLimits(1000, 0));
