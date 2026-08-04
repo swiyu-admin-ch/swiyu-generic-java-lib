@@ -23,15 +23,32 @@ Add the dependency to your `pom.xml`:
 
 ```java
 import ch.admin.bj.swiyu.jweutil.JweUtil;
+import ch.admin.bj.swiyu.jweutil.JweDecryptionLimits;
 import com.nimbusds.jose.jwk.JWK;
 
 String encrypted = JweUtil.encrypt("my payload", recipientPublicKey);
-String decrypted = JweUtil.decrypt(encrypted, recipientPrivateKey);
+
+// Recommended: explicit limits (protects against the "JWE Decompression Bomb", see below)
+String decrypted = JweUtil.decrypt(encrypted, recipientPrivateKey, JweDecryptionLimits.defaults());
 ```
 
 ## Supported Algorithms
 - ECDH-ES with AES-GCM
 - EC keys (P-256, P-384, P-521)
+
+## Security: JWE Decompression Bomb Protection (EIDOMNI-1117 / EIDSEC-843)
+
+`JweUtil.decrypt(...)` enforces two independent size limits via `JweDecryptionLimits`:
+- `maxCompressedCipherTextLength` – limit on the compressed ciphertext (primary defense, checked by Nimbus before decompression).
+- `maxDecompressedPayloadLength` – limit on the decompressed payload, checked right after decryption (defense-in-depth).
+
+```java
+String decrypted = JweUtil.decrypt(encrypted, recipientPrivateKey, JweDecryptionLimits.defaults());
+```
+
+Defaults: 2 MiB compressed / 10 MiB decompressed. Absolute maximums (5 MiB / 50 MiB) cause `JweDecryptionLimits` to throw `IllegalArgumentException` if exceeded.
+
+**Migration:** Update to `swiyu-jwe-util` 1.8.0+. Old overloads `decrypt(String, JWK)` / `decrypt(String, JWK, Integer)` are `@Deprecated` but still work. Consumers (`swiyu-issuer-service`, `swiyu-verifier-service`) should switch to passing an explicit `JweDecryptionLimits`.
 
 ## License
 
