@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 /**
@@ -44,8 +45,11 @@ class DidJwtValidatorTest {
     void setUp() throws Exception {
         mockDidKidParser = mock(DidKidParser.class);
         mockUrlRestriction = mock(UrlRestriction.class);
+        when(mockDidKidParser.extractKidFromHeader(anyString())).thenReturn(ABSOLUTE_KID);
+        when(mockDidKidParser.extractKidFromJWSHeader(any())).thenReturn(ABSOLUTE_KID);
+        when(mockDidKidParser.getDidFromAbsoluteKid(ABSOLUTE_KID)).thenReturn(ABSOLUTE_KID);
+        when(mockUrlRestriction.validateUrl(anyString())).thenReturn(true);
         validator = new DidJwtValidator(mockDidKidParser, mockUrlRestriction, DidJwtValidator.DEFAULT_CLOCK_SKEW_SECONDS);
-
         ecKey = new ECKeyGenerator(Curve.P_256).keyID(ABSOLUTE_KID).generate();
     }
 
@@ -140,6 +144,7 @@ class DidJwtValidatorTest {
         String jwt = buildSignedJwt(ABSOLUTE_KID);
 
         when(mockDidKidParser.extractKidFromHeader(jwt)).thenReturn(ABSOLUTE_KID);
+        when(mockDidKidParser.getDidFromAbsoluteKid(ABSOLUTE_KID)).thenReturn(DID_STRING);
 
         assertDoesNotThrow(() -> validator.validateJwt(jwt, ecKey.toPublicJWK()));
         verify(mockDidKidParser).extractKidFromHeader(jwt);

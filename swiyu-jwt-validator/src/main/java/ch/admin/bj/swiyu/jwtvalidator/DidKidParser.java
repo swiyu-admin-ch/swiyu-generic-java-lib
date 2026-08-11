@@ -3,6 +3,8 @@ package ch.admin.bj.swiyu.jwtvalidator;
 import ch.admin.eid.didresolver.Did;
 import ch.admin.eid.didresolver.DidKt;
 import ch.admin.eid.didresolver.DidResolveException;
+
+import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,11 +48,23 @@ public class DidKidParser {
             throw new JwtValidatorException("Failed to parse JWT", e);
         }
 
-        String kid = signedJwt.getHeader().getKeyID();
+        String kid = extractKidFromJWSHeader(signedJwt.getHeader());
+        log.debug("Extracted kid from JWT header: {}", kid);
+        return kid;
+    }
+
+    /**
+     * Extracts the {@code kid} from the JWT JOSE header.
+     *
+     * @param jwtHeader Header of the JWT; must not be {@code null}
+     * @return the {@code kid} value from the header
+     * @throws JwtValidatorException if the {@code kid} header is absent or blank
+     */
+    public String extractKidFromJWSHeader(JWSHeader jwtHeader) {
+        String kid = jwtHeader.getKeyID();
         if (kid == null || kid.isBlank()) {
             throw new JwtValidatorException("JWT is missing the 'kid' header – validation rejected");
         }
-        log.debug("Extracted kid from JWT header: {}", kid);
         return kid;
     }
 
