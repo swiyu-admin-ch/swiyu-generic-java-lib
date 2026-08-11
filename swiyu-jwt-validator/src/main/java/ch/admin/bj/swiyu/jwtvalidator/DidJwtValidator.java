@@ -106,8 +106,7 @@ public class DidJwtValidator {
      * {@link #getAndValidateResolutionUrl(String)}, avoiding a redundant manual extraction
      * from the {@code kid}.</p>
      *
-     * @param jwtString the compact seriali        didKidParser.extractKidFromHeader(jwtString);
-        validateTimeClaims(jwtString);zed JWT
+     * @param jwtString the compact serialized JWT
      * @return the DID string (e.g. {@code did:tdw:Qm...:identifier.admin.ch})
      * @throws JwtValidatorException if the JWT is malformed or the {@code kid} is missing /
      *                               not absolute
@@ -160,6 +159,7 @@ public class DidJwtValidator {
     public void validateJwt(String jwtString, DidDoc didDocument) {
         // Validate that DID is of a trusted URI
         getAndValidateResolutionUrl(jwtString);
+
         String kid = didKidParser.extractKidFromHeader(jwtString);
 
         Jwk jwk;
