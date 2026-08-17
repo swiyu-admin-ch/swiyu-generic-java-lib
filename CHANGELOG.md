@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [NEXT]
 - `swiyu-jwe-util`: Fixed **JWE Decompression Bomb** vulnerability in `JweUtil#decrypt` (#1117). Added new `JweDecryptionLimits` type and `decrypt(String, JWK, JweDecryptionLimits)` overload enforcing both a compressed-ciphertext limit and a new decompressed-payload limit (defaults: 20 MiB). Old overloads are deprecated but remain functional.
+- `swiyu-sdjwt-validator`: Complete rework for creating and verifying sd-jwt in a relatively easy fashion.
 
 ## [2.0.0] - 2026-08-30
 - Uses Jackson 3 instead of 2 (#944)
