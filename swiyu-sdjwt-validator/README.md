@@ -27,36 +27,35 @@ Delegates DID-based signature verification to [`swiyu-jwt-validator`](../swiyu-j
 
 ## Usage
 
-### Flow B – Two-Step (recommended)
-
+### Creation
 ```java
-// Initialise once
-DidJwtValidator didJwtValidator = new DidJwtValidator(
-    new UrlRestriction(Set.of("identifier.admin.ch"))
-);
-SdJwtVcValidator validator = new SdJwtVcValidator(didJwtValidator);
-
-// Step 1 – pre-flight: validate typ and get DID resolution URL
-String didUrl    = validator.getAndValidateResolutionUrl(sdJwt);
-String didString = didJwtValidator.getDidString(sdJwt);
-
-// Step 2 – caller fetches the DID Document (HTTP GET to didUrl), then:
-String didLog = httpClient.fetch(didUrl);
-DidDoc didDoc = did.resolveAll(didString, didLog).getDidDoc();
-validator.validateSdJwtVc(sdJwt, didDoc);
+    TimeConfiguration timeConfig = TimeConfiguration.Builder().expiry(Instant.now().plus(1, ChronoUnit.DAYS)).build();
+    SdJwtVcBuilder builder = SdJwtVcBuilder.createBuilder("did:webvh:scid:example.com#key-1", vcClaims, credentialSubjectClaims, timeConfig, myNimbusJWSSigner);
+    CreatedSdJwtVc signed builder.createSignedSdJwtVc(Optional.of(new TokenStatusListReferenceData(1, "https://www.example.com/status/1")), Optional.of(signatureData.holderKey));
+    signed.serializedSdJwt();
 ```
 
-### Migration Phase (accepting both `vc+sd-jwt` and `dc+sd-jwt`)
+### Verification
 
 ```java
-SdJwtVcValidator validator = new SdJwtVcValidator(didJwtValidator,
-    Set.of(SdJwtVcValidator.TYP_DC_SD_JWT, SdJwtVcValidator.TYP_VC_SD_JWT));
-```
+private Map<String, Object> verifySdJwt(String serializedSdJwt) {
+    SdJwtValidator sdJwtValidator = new SdJwtValidator(didJwtValidator); // Must have a did jwt validator configured with accepted URLs
+    SdJwt sdJwt = SdJwtParser.parseSdJwt(serializedSdJwt);
+    // Required for header to be present in sdJwt
+    sdJwtValidator.validateHeader(sdJwt);
+    String kid = sdJwt.getHeader().getKeyId();
+    JWK issuerJwk = didKeyResolver.resolve(kid); // DID Resolver not part of library
+    sdJwtValidator.validateJwt(sdJwt, issuerJwk);
+    JWTClaimsSet claims = sdJwt.getClaims();
+    if (sdJwt.hasKeyBinding) {
+        SdJwtValidator.validateKeyBinding(sdJwt, audience, nonce, acceptableProofTimeWindow);
+    }
+    // If necessary valdiate Token Status List or Trust here
 
-### Flow A – Direct JWK Set validation
-
-```java
-validator.validateSdJwtVc(sdJwt, jwkSet);
+    Map<String, Object> verifiedClaims = sdJwtValidator.processDisclosures(sdJwt);
+    return verifiedVlaims
+    
+}
 ```
 
 ## Dependency Graph

@@ -50,9 +50,18 @@
         <slf4j.version>2.0.9</slf4j.version>
         <nimbus-jose-jwt.version>10.8</nimbus-jose-jwt.version>
         <jackson.version>3.2.1</jackson.version>
+        <sd-jwt.version>1.9</sd-jwt.version>
     </properties>
 
     <dependencies>
+        <!-- SD-JWT -->
+        <!-- https://mvnrepository.com/artifact/com.authlete/sd-jwt -->
+        <dependency>
+            <groupId>com.authlete</groupId>
+            <artifactId>sd-jwt</artifactId>
+            <version>${sd-jwt.version}</version>
+        </dependency>
+        <!-- End SD-JWT -->
         <!-- DID-based JWT signature validation -->
         <dependency>
             <groupId>ch.admin.swiyu</groupId>
@@ -94,6 +103,12 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.27.7</version>
             <scope>test</scope>
         </dependency>
         <dependency>
