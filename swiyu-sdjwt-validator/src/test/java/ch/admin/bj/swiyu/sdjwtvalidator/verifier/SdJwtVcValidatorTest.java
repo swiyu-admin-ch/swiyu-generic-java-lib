@@ -21,7 +21,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
@@ -152,7 +151,7 @@ class SdJwtVcValidatorTest {
      * @param key 
      */
     private void prepareSdJwtForKeyBindingTest(SdJwt sdJwt, JWK key) {
-        when(sdJwt.getClaims()).thenReturn(new JWTClaimsSet.Builder().claim("cnf", Map.of("jwk", ecKey.toPublicJWK().toJSONObject())).build());
+        when(sdJwt.getClaims()).thenReturn(new JWTClaimsSet.Builder().claim("cnf", Map.of("jwk", key.toPublicJWK().toJSONObject())).build());
         when(sdJwt.getPresentationHash()).thenReturn(SD_HASH);
     }
 }

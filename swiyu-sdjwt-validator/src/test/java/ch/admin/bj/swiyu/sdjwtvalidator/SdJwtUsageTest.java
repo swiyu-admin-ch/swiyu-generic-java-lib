@@ -86,7 +86,7 @@ public class SdJwtUsageTest {
 
     /**
      * A Test for the compatability of SD-JWT Builder and SD-JWT Verifier
-     * @param key Signing key for the SD-JWT
+     * @param signatureData Signing data for the SD-JWT & Key Binidng JWT
      * @throws ParseException 
      */
     @MethodSource("signatureKey")

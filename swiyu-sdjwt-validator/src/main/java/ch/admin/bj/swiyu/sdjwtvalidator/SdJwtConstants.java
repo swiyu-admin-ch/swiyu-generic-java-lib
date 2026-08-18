@@ -4,10 +4,22 @@ import java.util.Set;
 
 import com.nimbusds.jose.JOSEObjectType;
 
-public class SdJwtConstants {
+public final class SdJwtConstants {
 
 
+    /**
+     * Digests of Disclosures for object properties
+     */
+    public static final String SD_CLAIM = "_sd";
+    /**
+     * Hash algorithm used to generate Disclosure digests and digest over presentation
+     */
     public static final String SD_ALG_CLAIM = "_sd_alg";
+
+    /**
+     * Digest of the Disclosure for an array element
+     */
+    public static final String SD_ARRAY_CLAIM = "...";
     /** {@code typ} value required by SD-JWT VC spec (post-migration). */
     public static final String TYP_DC_SD_JWT = "dc+sd-jwt";
     /** {@code typ} value accepted during the migration phase alongside {@link TYP_DC_SD_JWT}. */
@@ -29,8 +41,9 @@ public class SdJwtConstants {
             "status",
             "vct_metadata_uri", 
             "vct_metadata_uri#integrity",
-            "_sd",
-            SD_ALG_CLAIM
+            SD_CLAIM,
+            SD_ALG_CLAIM,
+            SD_ARRAY_CLAIM
     );
     /**
      * The compact serialized format for the SD-JWT is the concatenation of each part delineated with a single tilde ('~') character.

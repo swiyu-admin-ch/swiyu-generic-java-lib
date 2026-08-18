@@ -301,7 +301,7 @@ public class SdJwtVcValidator {
     }
 
     /**
-     * Processes an object node, handling selective disclosures if the "_sd" key is present.
+     * Processes an object node, handling selective disclosures if the SdJwtConstants.SD_CLAIM key is present.
      *
      * @param object The object node to process.
      * @param digestMap A map of digests to their corresponding disclosures.
@@ -313,7 +313,7 @@ public class SdJwtVcValidator {
                                        Map<String, Disclosure> digestMap,
                                        List<String> usedDigests) throws SdJwtVerificationException {
         // if no _sd key present, just recurse into fields
-        if (!object.has("_sd")) {
+        if (!object.has(SdJwtConstants.SD_CLAIM)) {
             Iterator<String> fields = object.propertyNames().iterator();
             List<String> names = new ArrayList<>();
             fields.forEachRemaining(names::add);
@@ -324,7 +324,7 @@ public class SdJwtVcValidator {
         }
 
         // object has _sd -> process disclosures first
-        JsonNode sdNode = object.get("_sd");
+        JsonNode sdNode = object.get(SdJwtConstants.SD_CLAIM);
         if (!(sdNode instanceof ArrayNode sdArray)) {
             throw new SdJwtVerificationException("'_sd' claim must be a JSON array");
         }
@@ -337,7 +337,7 @@ public class SdJwtVcValidator {
 
         // iterate only the original fields (skip _sd) and recurse
         for (String field : originalFields) {
-            if ("_sd".equals(field)) continue;
+            if (SdJwtConstants.SD_CLAIM.equals(field)) continue;
             object.set(field, processNode(object.get(field), digestMap, usedDigests));
         }
 
@@ -345,7 +345,7 @@ public class SdJwtVcValidator {
     }
 
     /**
-     * Handles the array of digests in the "_sd" key, applying disclosures to the object node.
+     * Handles the array of digests in the SdJwtConstants.SD_CLAIM key, applying disclosures to the object node.
      *
      * @param object The object node to update with disclosures.
      * @param sdArray The array node containing digests.
@@ -372,7 +372,7 @@ public class SdJwtVcValidator {
             }
 
             // 3.2. If the claim name is _sd or ..., the SD-JWT MUST be rejected.
-            if (claimName.equals("_sd") || claimName.equals("...")) {
+            if (claimName.equals(SdJwtConstants.SD_CLAIM) || claimName.equals(SdJwtConstants.SD_ARRAY_CLAIM)) {
                 throw new SdJwtVerificationException("Illegal disclosure found with name _sd or ...");
             }
 
@@ -387,7 +387,7 @@ public class SdJwtVcValidator {
     }
 
     /**
-     * Processes an array node, handling selective disclosures for elements marked with "...".
+     * Processes an array node, handling selective disclosures for elements marked with SdJwtConstants.SD_ARRAY_CLAIM.
      *
      * @param array The array node to process.
      * @param digestMap A map of digests to their corresponding disclosures.
@@ -401,8 +401,8 @@ public class SdJwtVcValidator {
         ArrayNode newArray = OBJECT_MAPPER.createArrayNode();
 
         for (JsonNode element : array) {
-            if (element.isObject() && element.has("...")) {
-                String digest = element.get("...").asString();
+            if (element.isObject() && element.has(SdJwtConstants.SD_ARRAY_CLAIM)) {
+                String digest = element.get(SdJwtConstants.SD_ARRAY_CLAIM).asString();
 
                 JsonNode value;
 
@@ -431,14 +431,14 @@ public class SdJwtVcValidator {
     }
 
     /**
-     * Recursively removes all "_sd" keys from the JSON node.
+     * Recursively removes all SdJwtConstants.SD_CLAIM keys from the JSON node.
      *
      * @param node The JSON node to process.
      */
     private void removeSdKeys(JsonNode node) {
         if (node.isObject()) {
             ObjectNode obj = (ObjectNode) node;
-            obj.remove("_sd");
+            obj.remove(SdJwtConstants.SD_CLAIM);
 
             for (String string : obj.propertyNames()) {
                 removeSdKeys(obj.get(string));
