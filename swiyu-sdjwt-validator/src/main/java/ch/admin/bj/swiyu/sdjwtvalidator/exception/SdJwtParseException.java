@@ -1,6 +1,7 @@
 package ch.admin.bj.swiyu.sdjwtvalidator.exception;
 
 public class SdJwtParseException extends Exception {
+    private static final long serialVersionUID = 1l;
 
     public SdJwtParseException(String message) {
         super(message);
