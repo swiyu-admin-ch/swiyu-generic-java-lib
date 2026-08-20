@@ -5,10 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [NEXT]
-- `swiyu-jwe-util`: Fixed **JWE Decompression Bomb** vulnerability in `JweUtil#decrypt` (#1117). Added new `JweDecryptionLimits` type and `decrypt(String, JWK, JweDecryptionLimits)` overload enforcing both a compressed-ciphertext limit and a new decompressed-payload limit (defaults: 20 MiB). Old overloads are deprecated but remain functional.
+## [2.2.0] - 2026-08-20
+- Validate DID location URL in every case, remove unused functions (#1225)
 
-## [2.0.0] - 2026-08-30
+## [2.1.0] - 2026-08-04
+- `swiyu-jwe-util`: Fixed **JWE Decompression Bomb** vulnerability in `JweUtil#decrypt`. Added new `JweDecryptionLimits` type and `decrypt(String, JWK, JweDecryptionLimits)` overload enforcing both a compressed-ciphertext limit and a new decompressed-payload limit (defaults: 20 MiB). Old overloads are deprecated but remain functional. (#1117)
+
+## [2.0.0] - 2026-07-30
 - Uses Jackson 3 instead of 2 (#944)
 - Add Support for EdDSA (#1050)
 
