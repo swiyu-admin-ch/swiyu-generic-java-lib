@@ -1,8 +1,9 @@
 package ch.admin.bj.swiyu.sdjwtutil;
 
+import com.nimbusds.jose.JOSEObjectType;
+
 import java.util.Set;
 
-import com.nimbusds.jose.JOSEObjectType;
 
 public final class SdJwtConstants {
 
