@@ -80,7 +80,9 @@
         <module>swiyu-dpop-util</module>
         <module>swiyu-ts-builder</module>
         <module>swiyu-jwt-validator</module>
-        <module>swiyu-sdjwt-validator</module>
+        <module>swiyu-sdjwt-util</module>
+        <module>swiyu-sdjwt-builder</module>
+        <module>swiyu-sdjwt-verifier</module>
         <module>swiyu-token-status-list</module>
         <module>swiyu-ts-verifier</module>
     </modules>

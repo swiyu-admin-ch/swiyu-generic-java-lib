@@ -1,0 +1,402 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 4c9c577..51d5884 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,19 +1,19 @@
+ # Changelog
+ 
+ All notable changes to this project will be documented in this file.
+ 
+ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+ 
+ ## [NEXT]
+-- ...
++- `swiyu-jwe-util`: Fixed **JWE Decompression Bomb** vulnerability in `JweUtil#decrypt` (#1117, EIDSEC-843). Added new `JweDecryptionLimits` type and `decrypt(String, JWK, JweDecryptionLimits)` overload enforcing both a compressed-ciphertext limit and a new decompressed-payload limit (defaults: 2 MiB / 10 MiB, absolute max: 5 MiB / 50 MiB). Old overloads are deprecated but remain functional.
+ 
+ ## [2.0.0] - 2026-08-30
+ - Uses Jackson 3 instead of 2 (#944)
+ - Add Support for EdDSA (#1050)
+ 
+ ## [1.8.4] – 2026-07-24
+ - Add config to disable `exp` check for testing purposes.
+ 
+ ### Fixed
+ - `swiyu-dpop-util`: fixed htu validation to fail on partial path segment match (#971).
+diff --git a/swiyu-jwe-util/README.md b/swiyu-jwe-util/README.md
+index c4e2dd5..0ffb9a8 100644
+--- a/swiyu-jwe-util/README.md
++++ b/swiyu-jwe-util/README.md
+@@ -16,26 +16,43 @@ Add the dependency to your `pom.xml`:
+     <groupId>ch.admin.swiyu</groupId>
+     <artifactId>swiyu-jwe-util</artifactId>
+     <version>2.1.0</version>
+ </dependency>
+ ```
+ 
+ ## Usage Example
+ 
+ ```java
+ import ch.admin.bj.swiyu.jweutil.JweUtil;
++import ch.admin.bj.swiyu.jweutil.JweDecryptionLimits;
+ import com.nimbusds.jose.jwk.JWK;
+ 
+ String encrypted = JweUtil.encrypt("my payload", recipientPublicKey);
+-String decrypted = JweUtil.decrypt(encrypted, recipientPrivateKey);
++
++// Recommended: explicit limits (protects against the "JWE Decompression Bomb", see below)
++String decrypted = JweUtil.decrypt(encrypted, recipientPrivateKey, JweDecryptionLimits.defaults());
+ ```
+ 
+ ## Supported Algorithms
+ - ECDH-ES with AES-GCM
+ - EC keys (P-256, P-384, P-521)
+ 
++## Security: JWE Decompression Bomb Protection (EIDOMNI-1117 / EIDSEC-843)
++
++`JweUtil.decrypt(...)` enforces two independent size limits via `JweDecryptionLimits`:
++- `maxCompressedCipherTextLength` – limit on the compressed ciphertext (primary defense, checked by Nimbus before decompression).
++- `maxDecompressedPayloadLength` – limit on the decompressed payload, checked right after decryption (defense-in-depth).
++
++```java
++String decrypted = JweUtil.decrypt(encrypted, recipientPrivateKey, JweDecryptionLimits.defaults());
++```
++
++Defaults: 2 MiB compressed / 10 MiB decompressed. Absolute maximums (5 MiB / 50 MiB) cause `JweDecryptionLimits` to throw `IllegalArgumentException` if exceeded.
++
++**Migration:** Update to `swiyu-jwe-util` 1.8.0+. Old overloads `decrypt(String, JWK)` / `decrypt(String, JWK, Integer)` are `@Deprecated` but still work. Consumers (`swiyu-issuer-service`, `swiyu-verifier-service`) should switch to passing an explicit `JweDecryptionLimits`.
++
+ ## License
+ 
+ This project is licensed under the terms of the MIT license. See the [LICENSE](/LICENSE) file for details.
+ 
+ ---
+ For feedback and contributions, see [CONTRIBUTING.md](/CONTRIBUTING.md).
+diff --git a/swiyu-jwe-util/src/main/java/ch/admin/bj/swiyu/jweutil/JweDecryptionLimits.java b/swiyu-jwe-util/src/main/java/ch/admin/bj/swiyu/jweutil/JweDecryptionLimits.java
+new file mode 100644
+index 0000000..6e46e6b
+--- /dev/null
++++ b/swiyu-jwe-util/src/main/java/ch/admin/bj/swiyu/jweutil/JweDecryptionLimits.java
+@@ -0,0 +1,66 @@
++package ch.admin.bj.swiyu.jweutil;
++
++/**
++ * Immutable size limits for {@link JweUtil#decrypt(String, com.nimbusds.jose.jwk.JWK, JweDecryptionLimits)}.
++ * <p>
++ * Fixes the "JWE Decompression Bomb" vulnerability (EIDOMNI-1117 / EIDSEC-843): Nimbus only limits
++ * the <em>compressed</em> ciphertext size before decompression, so a generous
++ * {@code maxCompressedCipherTextLength} alone does not bound the decompressed size (DEFLATE allows
++ * ratios up to ~1032:1). This type adds a second, independent limit on the decompressed payload,
++ * checked right after decryption (not a streaming limit, since Nimbus offers no such hook).
++ * <p>
++ * Both values are validated fail-fast against a library-enforced absolute maximum in the
++ * constructor, throwing {@link IllegalArgumentException} on misconfiguration.
++ *
++ * @param maxCompressedCipherTextLength max length (bytes) of the compressed ciphertext
++ * @param maxDecompressedPayloadLength  max length (chars) of the decompressed payload
++ */
++public record JweDecryptionLimits(int maxCompressedCipherTextLength, int maxDecompressedPayloadLength) {
++
++    /** Default compressed-ciphertext limit: 2 MiB (DCET recommendation). */
++    public static final int DEFAULT_MAX_COMPRESSED_CIPHER_TEXT_LENGTH = 2_097_152;
++
++    /** Default decompressed-payload limit: 10 MiB (max VC size per ADR-038). */
++    public static final int DEFAULT_MAX_DECOMPRESSED_PAYLOAD_LENGTH = 10_485_760;
++
++    /** Absolute maximum for {@link #maxCompressedCipherTextLength()}: 5 MiB. */
++    public static final int ABSOLUTE_MAX_COMPRESSED_CIPHER_TEXT_LENGTH = 5_242_880;
++
++    /** Absolute maximum for {@link #maxDecompressedPayloadLength()}: 50 MiB. */
++    public static final int ABSOLUTE_MAX_DECOMPRESSED_PAYLOAD_LENGTH = 52_428_800;
++
++    /**
++     * Validates the supplied limits, failing fast at construction time instead of at request time.
++     *
++     * @throws IllegalArgumentException if any value is {@code <= 0} or exceeds its absolute maximum
++     */
++    public JweDecryptionLimits {
++        if (maxCompressedCipherTextLength <= 0) {
++            throw new IllegalArgumentException(
++                    "maxCompressedCipherTextLength must be > 0 but was " + maxCompressedCipherTextLength);
++        }
++        if (maxCompressedCipherTextLength > ABSOLUTE_MAX_COMPRESSED_CIPHER_TEXT_LENGTH) {
++            throw new IllegalArgumentException(
++                    "maxCompressedCipherTextLength must not exceed the absolute maximum of "
++                            + ABSOLUTE_MAX_COMPRESSED_CIPHER_TEXT_LENGTH + " bytes but was "
++                            + maxCompressedCipherTextLength);
++        }
++        if (maxDecompressedPayloadLength <= 0) {
++            throw new IllegalArgumentException(
++                    "maxDecompressedPayloadLength must be > 0 but was " + maxDecompressedPayloadLength);
++        }
++        if (maxDecompressedPayloadLength > ABSOLUTE_MAX_DECOMPRESSED_PAYLOAD_LENGTH) {
++            throw new IllegalArgumentException(
++                    "maxDecompressedPayloadLength must not exceed the absolute maximum of "
++                            + ABSOLUTE_MAX_DECOMPRESSED_PAYLOAD_LENGTH + " characters but was "
++                            + maxDecompressedPayloadLength);
++        }
++    }
++
++    /**
++     * @return a {@code JweDecryptionLimits} instance using the recommended default values.
++     */
++    public static JweDecryptionLimits defaults() {
++        return new JweDecryptionLimits(DEFAULT_MAX_COMPRESSED_CIPHER_TEXT_LENGTH, DEFAULT_MAX_DECOMPRESSED_PAYLOAD_LENGTH);
++    }
++}
+diff --git a/swiyu-jwe-util/src/main/java/ch/admin/bj/swiyu/jweutil/JweUtil.java b/swiyu-jwe-util/src/main/java/ch/admin/bj/swiyu/jweutil/JweUtil.java
+index 90fdbe4..2bd3c14 100644
+--- a/swiyu-jwe-util/src/main/java/ch/admin/bj/swiyu/jweutil/JweUtil.java
++++ b/swiyu-jwe-util/src/main/java/ch/admin/bj/swiyu/jweutil/JweUtil.java
+@@ -5,27 +5,23 @@ import com.nimbusds.jose.crypto.ECDHDecrypter;
+ import com.nimbusds.jose.crypto.ECDHEncrypter;
+ import com.nimbusds.jose.crypto.opts.MaxCompressedCipherTextLength;
+ import com.nimbusds.jose.jwk.ECKey;
+ import com.nimbusds.jose.jwk.JWK;
+ import lombok.experimental.UtilityClass;
+ 
+ import java.util.HashSet;
+ import java.util.Set;
+ 
+ /**
+- * Service for JSON Web Encryption (JWE) operations in the Swiyu ecosystem.
++ * Utility for JSON Web Encryption (JWE) operations in the Swiyu ecosystem.
+  * <p>
+- * This class provides a placeholder for future JWE encryption and decryption functionality.
+- * It is intended to offer methods for encrypting and decrypting payloads using JWE standards.
+- * </p>
+- * <p>
+- * Note: This is a stub and does not contain any real implementation yet.
++ * Provides static methods to encrypt and decrypt payloads using ECDH-ES with AES-GCM.
+  * </p>
+  */
+ @UtilityClass
+ public class JweUtil {
+ 
+     /**
+      * Encrypts the given payload using JWE.
+      *
+      * @param payload The data to encrypt (as a String).
+      * @return The encrypted JWE string, or null if not implemented.
+@@ -41,48 +37,72 @@ public class JweUtil {
+                     .build();
+             JWEObject jweObject = new JWEObject(header, new Payload(payload));
+             jweObject.encrypt(new ECDHEncrypter(ecKey));
+             return jweObject.serialize();
+         } catch (Exception e) {
+             throw new JweUtilException("Error during JWE encryption", e);
+         }
+     }
+ 
+     /**
+-     * Decrypts the given JWE string.
++     * Decrypts the given JWE string using {@link JweDecryptionLimits#defaults()}.
+      *
+-     * @param jweString           JWE as a String
+-     * @param recipientPrivateKey Empfänger-Privater Schlüssel (ECKey)
+-     * @return plaintext payload
++     * @deprecated Use {@link #decrypt(String, JWK, JweDecryptionLimits)} instead (EIDOMNI-1117 / EIDSEC-843).
+      */
++    @Deprecated(since = "2.1.0")
+     public static String decrypt(String jweString, JWK recipientPrivateKey) {
+-        return decrypt(jweString, recipientPrivateKey, null);
++        return decrypt(jweString, recipientPrivateKey, JweDecryptionLimits.defaults());
+     }
+ 
+     /**
+      * Decrypts the given JWE string.
+      *
+-     * @param jweString           JWE as a String
+-     * @param recipientPrivateKey private key (ECKey) of the recipient
+-     * @param maxCompressedCipherTextLength Maximum length for compressed ciphertexts Default value (if null or 0) is 100000
+-     * @return plaintext payload
++     * @param maxCompressedCipherTextLength max length for compressed ciphertexts; default (if null or {@code <= 0})
++     *                                      is {@link JweDecryptionLimits#DEFAULT_MAX_COMPRESSED_CIPHER_TEXT_LENGTH}.
++     * @deprecated Use {@link #decrypt(String, JWK, JweDecryptionLimits)} instead. This overload does not enforce
++     *             a decompressed-payload limit, part of the fix for EIDOMNI-1117 / EIDSEC-843.
+      */
++    @Deprecated(since = "2.1.0")
+     public static String decrypt(String jweString, JWK recipientPrivateKey, Integer maxCompressedCipherTextLength) {
++        int compressedLimit = (maxCompressedCipherTextLength != null && maxCompressedCipherTextLength > 0)
++                ? maxCompressedCipherTextLength
++                : JweDecryptionLimits.DEFAULT_MAX_COMPRESSED_CIPHER_TEXT_LENGTH;
++        return decrypt(jweString, recipientPrivateKey,
++                new JweDecryptionLimits(compressedLimit, JweDecryptionLimits.DEFAULT_MAX_DECOMPRESSED_PAYLOAD_LENGTH));
++    }
+ 
+-        Set<JWEDecrypterOption> jweDecrypterOptions = new HashSet<>();
++    /**
++     * Decrypts the given JWE string, enforcing the supplied size limits.
++     * <p>
++     * Fixes the JWE "Decompression Bomb" vulnerability (EIDOMNI-1117 / EIDSEC-843): Nimbus only checks the
++     * compressed ciphertext size before decompression, so this method additionally checks the length of the
++     * already decompressed payload before returning it (post-hoc check, not a streaming limit).
++     *
++     * @param limits the size limits to enforce; if {@code null}, {@link JweDecryptionLimits#defaults()} is used
++     * @throws JweUtilException if decryption fails, e.g. because a limit is exceeded
++     */
++    public static String decrypt(String jweString, JWK recipientPrivateKey, JweDecryptionLimits limits) {
+ 
+-        if (maxCompressedCipherTextLength != null && maxCompressedCipherTextLength > 0) {
+-            jweDecrypterOptions.add(new MaxCompressedCipherTextLength(maxCompressedCipherTextLength));
+-        }
++        JweDecryptionLimits effectiveLimits = limits != null ? limits : JweDecryptionLimits.defaults();
++
++        Set<JWEDecrypterOption> jweDecrypterOptions = new HashSet<>();
++        jweDecrypterOptions.add(new MaxCompressedCipherTextLength(effectiveLimits.maxCompressedCipherTextLength()));
+ 
+         try {
+             if (!(recipientPrivateKey instanceof ECKey ecKey)) {
+                 throw new JweUtilException("Only EC keys are supported.");
+             }
+             JWEObject jweObject = JWEObject.parse(jweString);
+             jweObject.decrypt(new ECDHDecrypter(ecKey), jweDecrypterOptions);
+-            return jweObject.getPayload().toString();
++            String payload = jweObject.getPayload().toString();
++            if (payload.length() > effectiveLimits.maxDecompressedPayloadLength()) {
++                throw new JweUtilException("Decrypted payload exceeds the maximum allowed decompressed size of "
++                        + effectiveLimits.maxDecompressedPayloadLength() + " characters");
++            }
++            return payload;
++        } catch (JweUtilException e) {
++            throw e;
+         } catch (Exception e) {
+             throw new JweUtilException("Error during JWE decryption", e);
+         }
+     }
+ }
+diff --git a/swiyu-jwe-util/src/test/java/ch/admin/bj/swiyu/jweutil/JweUtilTest.java b/swiyu-jwe-util/src/test/java/ch/admin/bj/swiyu/jweutil/JweUtilTest.java
+index 3321f83..cfcee1e 100644
+--- a/swiyu-jwe-util/src/test/java/ch/admin/bj/swiyu/jweutil/JweUtilTest.java
++++ b/swiyu-jwe-util/src/test/java/ch/admin/bj/swiyu/jweutil/JweUtilTest.java
+@@ -77,11 +77,110 @@ class JweUtilTest {
+     void encrypt_unsupportedKeyType_throws() {
+         JWK octKey = new com.nimbusds.jose.jwk.OctetSequenceKey.Builder(new byte[]{1,2,3}).keyID("oct1").build();
+         assertThrows(JweUtilException.class, () -> JweUtil.encrypt("payload", octKey));
+     }
+ 
+     @Test
+     void decrypt_unsupportedKeyType_throws() {
+         JWK octKey = new com.nimbusds.jose.jwk.OctetSequenceKey.Builder(new byte[]{1,2,3}).keyID("oct2").build();
+         assertThrows(JweUtilException.class, () -> JweUtil.decrypt("jwe", octKey));
+     }
++
++    // ---------------------------------------------------------------------
++    // Tests for EIDOMNI-1117 / EIDSEC-843 "JWE Decompression Bomb" fix
++    // ---------------------------------------------------------------------
++
++    @Test
++    void decrypt_whenDecompressedPayloadWithinDefaultLimits_thenSucceeds() throws Exception {
++        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec6").generate();
++        String payload = "a small, well within default limits, payload";
++        String encrypted = JweUtil.encrypt(payload, ecKey.toPublicJWK());
++        String decrypted = JweUtil.decrypt(encrypted, ecKey, JweDecryptionLimits.defaults());
++        assertEquals(payload, decrypted);
++    }
++
++    @Test
++    void decrypt_whenCompressedCipherTextExceedsConfiguredLimit_thenThrowsJweUtilException() throws Exception {
++        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec7").generate();
++        // random (high-entropy) data does not compress well, so the compressed ciphertext
++        // will exceed a very small configured limit
++        String payload = new java.security.SecureRandom().ints(50000, 0, 52)
++                .mapToObj(i -> String.valueOf((char) (i < 26 ? 'A' + i : 'a' + (i - 26))))
++                .collect(java.util.stream.Collectors.joining());
++        String encrypted = JweUtil.encrypt(payload, ecKey.toPublicJWK());
++        JweDecryptionLimits limits = new JweDecryptionLimits(100, JweDecryptionLimits.DEFAULT_MAX_DECOMPRESSED_PAYLOAD_LENGTH);
++        assertThrows(JweUtilException.class, () -> JweUtil.decrypt(encrypted, ecKey, limits));
++    }
++
++    @Test
++    void decrypt_whenDecompressedPayloadExceedsConfiguredLimit_thenThrowsJweUtilException() throws Exception {
++        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec8").generate();
++        // Highly repetitive (and therefore highly compressible) plaintext: this simulates a
++        // "zip bomb" - its compressed size stays small, but its decompressed size is huge.
++        String payload = "A".repeat(2_000_000); // ~2,000,000 chars decompressed
++        String encrypted = JweUtil.encrypt(payload, ecKey.toPublicJWK());
++        // Compressed ciphertext limit is generous enough to let the highly compressible
++        // payload through, but the decompressed payload limit is deliberately small.
++        JweDecryptionLimits limits = new JweDecryptionLimits(
++                JweDecryptionLimits.DEFAULT_MAX_COMPRESSED_CIPHER_TEXT_LENGTH, 1000);
++        JweUtilException exception = assertThrows(JweUtilException.class,
++                () -> JweUtil.decrypt(encrypted, ecKey, limits));
++        assertTrue(exception.getMessage().contains("exceeds the maximum allowed decompressed size"));
++    }
++
++    @Test
++    void jweDecryptionLimits_whenExceedsAbsoluteMaximum_thenThrowsIllegalArgumentException() {
++        assertThrows(IllegalArgumentException.class, () -> new JweDecryptionLimits(
++                JweDecryptionLimits.ABSOLUTE_MAX_COMPRESSED_CIPHER_TEXT_LENGTH + 1,
++                JweDecryptionLimits.DEFAULT_MAX_DECOMPRESSED_PAYLOAD_LENGTH));
++        assertThrows(IllegalArgumentException.class, () -> new JweDecryptionLimits(
++                JweDecryptionLimits.DEFAULT_MAX_COMPRESSED_CIPHER_TEXT_LENGTH,
++                JweDecryptionLimits.ABSOLUTE_MAX_DECOMPRESSED_PAYLOAD_LENGTH + 1));
++    }
++
++    @Test
++    void jweDecryptionLimits_whenValueIsZeroOrNegative_thenThrowsIllegalArgumentException() {
++        assertThrows(IllegalArgumentException.class, () -> new JweDecryptionLimits(0, 1000));
++        assertThrows(IllegalArgumentException.class, () -> new JweDecryptionLimits(1000, 0));
++        assertThrows(IllegalArgumentException.class, () -> new JweDecryptionLimits(-1, 1000));
++        assertThrows(IllegalArgumentException.class, () -> new JweDecryptionLimits(1000, -1));
++    }
++
++    @Test
++    void decrypt_whenLimitsIsNull_thenDefaultsAreApplied() throws Exception {
++        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec9").generate();
++        String payload = "payload within defaults";
++        String encrypted = JweUtil.encrypt(payload, ecKey.toPublicJWK());
++        String decrypted = JweUtil.decrypt(encrypted, ecKey, (JweDecryptionLimits) null);
++        assertEquals(payload, decrypted);
++    }
++
++    @Test
++    void decrypt_deprecatedNoArgOverload_stillWorks() throws Exception {
++        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec10").generate();
++        String payload = "backward compatible payload";
++        String encrypted = JweUtil.encrypt(payload, ecKey.toPublicJWK());
++        String decrypted = JweUtil.decrypt(encrypted, ecKey);
++        assertEquals(payload, decrypted);
++    }
++
++    @Test
++    void decrypt_deprecatedIntegerOverload_stillWorks() throws Exception {
++        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec11").generate();
++        String payload = new java.security.SecureRandom().ints(230000, 0, 52)
++                .mapToObj(i -> String.valueOf((char) (i < 26 ? 'A' + i : 'a' + (i - 26))))
++                .collect(java.util.stream.Collectors.joining());
++        String encrypted = JweUtil.encrypt(payload, ecKey.toPublicJWK());
++        String decrypted = JweUtil.decrypt(encrypted, ecKey, 230000);
++        assertEquals(payload, decrypted);
++    }
++
++    @Test
++    void decrypt_deprecatedIntegerOverload_exceedsLimit_throws() throws Exception {
++        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec12").generate();
++        String payload = new java.security.SecureRandom().ints(200000, 0, 52)
++                .mapToObj(i -> String.valueOf((char) (i < 26 ? 'A' + i : 'a' + (i - 26))))
++                .collect(java.util.stream.Collectors.joining());
++        String encrypted = JweUtil.encrypt(payload, ecKey.toPublicJWK());
++        assertThrows(JweUtilException.class, () -> JweUtil.decrypt(encrypted, ecKey, 30000));
++    }
+ }
+diff --git a/swiyu-sdjwt-validator/README.md b/swiyu-sdjwt-validator/README.md
+index e941d93..86c7ec7 100644
+--- a/swiyu-sdjwt-validator/README.md
++++ b/swiyu-sdjwt-validator/README.md
+@@ -1,14 +1,15 @@
+ # swiyu-sdjwt-validator (draft)
+ 
+ **This library is not yet production-ready and is still under development. Therefore, this library should not be used anywhere yet.**
+ 
++
+ Validates SD-JWT VC tokens according to the **Swiss Profile VC specification** (RFC 9901).
+ 
+ Delegates DID-based signature verification to [`swiyu-jwt-validator`](../swiyu-jwt-validator).
+ 
+ ## Features
+ 
+ | Rule | Enforced by |
+ |---|---|
+ | `typ` header = `dc+sd-jwt` (configurable for migration) | `SdJwtVcValidator` |
+ | `_sd_alg` = `sha-256` | `SdJwtVcValidator` |
