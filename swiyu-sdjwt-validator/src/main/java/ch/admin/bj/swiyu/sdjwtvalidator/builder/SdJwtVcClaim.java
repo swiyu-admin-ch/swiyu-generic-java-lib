@@ -14,7 +14,7 @@ public enum SdJwtVcClaim {
     ISSUER("iss", false, true),
     VCT("vct", true, true),
     VCT_METADATA_URI("vct_metadata_uri", false, true),
-    VCT_METADATA_URI_INTEGRITY("vct_metadata_uri3integrity", false, true),
+    VCT_METADATA_URI_INTEGRITY("vct_metadata_uri#integrity", false, true),
     VCT_VERSION("vct_version", false, false),
     VCT_SUBTYPE("vct_subtype", false, false),
     VCT_SUBTYPE_VERSION("vct_subtype_version", false, false),

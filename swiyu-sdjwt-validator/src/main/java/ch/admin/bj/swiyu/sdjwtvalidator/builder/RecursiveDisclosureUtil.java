@@ -22,7 +22,7 @@ public class RecursiveDisclosureUtil {
      * @return list of the disclosures
      * @throws SdJwtBuilderException if the building of the disclosures fail due to faulty input data - for example a guarded claim is voilated
      */
-    protected static List<Disclosure> putSelectivelyDiscloseableData(SDObjectBuilder builder, Map<String, Object> selectivelyDiscloseableData) throws SdJwtBuilderException {
+    static List<Disclosure> putSelectivelyDiscloseableData(SDObjectBuilder builder, Map<String, Object> selectivelyDiscloseableData) throws SdJwtBuilderException {
         // Optional claims as disclosures
         // Code below follows example from
         // https://github.com/authlete/sd-jwt?tab=readme-ov-file#credential-jwt

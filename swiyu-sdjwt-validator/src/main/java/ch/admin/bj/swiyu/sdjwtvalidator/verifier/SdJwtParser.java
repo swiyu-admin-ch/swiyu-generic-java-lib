@@ -1,5 +1,5 @@
 package ch.admin.bj.swiyu.sdjwtvalidator.verifier;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -10,7 +10,6 @@ import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jwt.SignedJWT;
 
-import ch.admin.bj.swiyu.jwtvalidator.JwtValidatorException;
 import ch.admin.bj.swiyu.sdjwtvalidator.SdJwtConstants;
 import ch.admin.bj.swiyu.sdjwtvalidator.exception.SdJwtParseException;
 import lombok.AccessLevel;
@@ -29,14 +28,14 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SdJwtParser {
 
-    private static final String JWT_PART_DELINEATION_CHARACTER = "~";
+    private static final String JWT_PART_DELINEATION_CHARACTER = SdJwtConstants.JWT_PART_DELINEATION_CHARACTER;
 
 
     public static SdJwt parseSdJwt(String serializedSdJwt) throws SdJwtParseException {
         if (!serializedSdJwt.contains(JWT_PART_DELINEATION_CHARACTER)
                 || serializedSdJwt.contains(JWT_PART_DELINEATION_CHARACTER + JWT_PART_DELINEATION_CHARACTER) // denotes multiple tilde ('~') characters
         ) {
-            throw new SdJwtParseException("");
+            throw new SdJwtParseException("SD-JWT is malformed: expected at least one non-empty part delineated by '~'");
         }
         // According to https://www.rfc-editor.org/rfc/rfc9901.html#section-4:
         // "The compact serialized format for the SD-JWT is the concatenation of each part delineated with a single tilde ('~') character"
@@ -44,6 +43,10 @@ public final class SdJwtParser {
         // CAUTION The String#split method ignores trailing delimiters unless a limit of -1 is explicitly specified:
         //         "If the limit is negative then the pattern will be applied as many times as possible and the array can have any length."
         String[] parts = serializedSdJwt.split(JWT_PART_DELINEATION_CHARACTER);
+        if (parts.length == 0 || parts[0].isEmpty()) {
+            // e.g. input consisting only of "~" splits into an empty array
+            throw new SdJwtParseException("SD-JWT is malformed: missing Issuer-signed JWT part");
+        }
         Optional<String> holderBindingProof = extractHolderBindingProof(serializedSdJwt, parts);
         String presentationHash = computeKeyBindingSdHash(serializedSdJwt);
         try {
@@ -85,7 +88,7 @@ public final class SdJwtParser {
         var presentation = rawSdJwt.substring(0, rawSdJwt.lastIndexOf(JWT_PART_DELINEATION_CHARACTER) + 1);
         try {
             byte[] hashDigest = MessageDigest.getInstance("sha-256") // getInstance may throw NoSuchAlgorithmException
-                            .digest(presentation.getBytes(Charset.defaultCharset()));
+                            .digest(presentation.getBytes(StandardCharsets.UTF_8));
             var presentationHash = new String(Base64.getUrlEncoder().withoutPadding().encode(hashDigest));
             return presentationHash;
         } catch (NoSuchAlgorithmException exc) {
@@ -98,11 +101,9 @@ public final class SdJwtParser {
 
 
     /**
-     * Runs all structural SD-JWT VC checks ({@code typ}, {@code _sd_alg}, protected claims)
-     * and returns the extracted Issuer-Signed JWT for subsequent signature verification.
+     * Runs all structural SD-JWT VC checks ({@code typ}, {@code _sd_alg}, protected claims).
      *
      * @param sdJwt the full SD-JWT string
-     * @return the Issuer-Signed JWT portion
      * @throws SdJwtParseException if any structural check fails
      */
     private static void validateStructure(SdJwt sdJwt) throws SdJwtParseException {
@@ -115,7 +116,7 @@ public final class SdJwtParser {
     /**
      * Validates the {@code typ} JOSE header against the configured accepted values.
      *
-     * @param signedJwt the parsed Issuer-Signed JWT
+     * @param header the JOSE header of the parsed Issuer-Signed JWT
      * @throws SdJwtParseException if the {@code typ} is absent or not accepted
      */
     private static void validateTypHeader(JWSHeader header) throws SdJwtParseException {
@@ -136,7 +137,7 @@ public final class SdJwtParser {
      * (index 1) in any Disclosure array {@code [salt, claim_name, claim_value]}.
      *
      * @param sdJwt the full SD-JWT string including all Disclosures
-     * @throws JwtValidatorException if any Disclosure contains a protected claim name
+     * @throws SdJwtParseException if any Disclosure contains a protected claim name
      */
     private static void validateNoProtectedClaimsInDisclosures(SdJwt sdJwt) throws SdJwtParseException {
         if (sdJwt.getDisclosures().stream().filter(d -> d.getClaimName() != null).anyMatch(d -> SdJwtConstants.PROTECTED_CLAIMS.contains(d.getClaimName()))) {

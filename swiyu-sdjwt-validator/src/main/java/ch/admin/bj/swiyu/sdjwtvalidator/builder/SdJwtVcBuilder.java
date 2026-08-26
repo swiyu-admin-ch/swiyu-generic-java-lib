@@ -78,7 +78,7 @@ public class SdJwtVcBuilder {
         }
         for (Entry<SdJwtVcClaim, Object> e : vcClaims.entrySet()) {
             if (SdJwtVcClaim.timeClaims.contains(e.getKey())) {
-                throw new IllegalArgumentException(String.format("%s must not be set through vcClaims", e.getKey().getClaimName()));
+                throw new SdJwtBuilderException(String.format("%s must not be set through vcClaims", e.getKey().getClaimName()));
             }
             if(e.getKey().isAlwaysDisclosed()) {
                 alwaysDisclosedClaims.put(e.getKey().getClaimName(), e.getValue());

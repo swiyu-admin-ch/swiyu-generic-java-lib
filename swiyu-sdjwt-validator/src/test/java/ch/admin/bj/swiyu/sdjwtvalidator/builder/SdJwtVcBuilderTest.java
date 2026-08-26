@@ -115,7 +115,7 @@ class SdJwtVcBuilderTest {
         Map<SdJwtVcClaim, Object> vcClaims = Map.of(SdJwtVcClaim.VCT, "VerifiableCredential", claim, Instant.now().toEpochMilli());
         assertThatThrownBy(() -> SdJwtVcBuilder.createBuilder(
             VERIFICATION_METHOD, vcClaims, Map.of(), TimeConfiguration.builder().build(), mock(JWSSigner.class)))
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(SdJwtBuilderException.class)
             .hasMessageContaining(claim.getClaimName());
     }
 
