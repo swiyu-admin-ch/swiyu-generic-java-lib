@@ -2,7 +2,7 @@
 
 **This library is not yet production-ready and is still under development. Therefore, this library should not be used anywhere yet.**
 
-Creates SD-JWT VC tokens according to the **Swiss Profile VC specification** (RFC 9901).
+Creates SD-JWT VC tokens according to the **Swiss Profile VC specification** and RFC 9901.
 
 Companion library to [`swiyu-sdjwt-verifier`](../swiyu-sdjwt-verifier), which validates the
 tokens created here. Shared constants live in [`swiyu-sdjwt-util`](../swiyu-sdjwt-util).

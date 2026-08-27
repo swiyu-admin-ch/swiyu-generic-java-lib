@@ -23,7 +23,8 @@ class SdJwtTimeClaimsValidator {
     private static final int MAX_CLOCK_SKEW_SECONDS = 60;
 
     /**
-     * Validates the time-based JWT claims ({@code exp} and {@code nbf}) using Nimbus
+     * Validates exclusivelsy the time-based JWT claims ({@code exp} and {@code nbf}) using Nimbus
+     * Other validations will take part in different validators
      * {@link DefaultJWTClaimsVerifier} with the configured clock skew tolerance.
      *
      * <p>The {@code iss} claim is intentionally <em>ignored</em> (not verified, not forbidden)
