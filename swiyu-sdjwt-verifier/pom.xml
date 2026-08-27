@@ -11,7 +11,7 @@
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>
-        Validates SD-JWT VC tokens according to the Swiss Profile VC specification (RFC 9901).
+        Validates SD-JWT VC tokens according to the Swiss Profile VC specification and RFC 9901.
         Enforces typ header, _sd_alg hash algorithm, protected claim rules and Key Binding freshness.
         Delegates DID-based signature verification to swiyu-jwt-validator.
     </description>
@@ -68,7 +68,6 @@
             <artifactId>sd-jwt</artifactId>
             <version>${sd-jwt.version}</version>
         </dependency>
-        <!-- End SD-JWT -->
         <!-- DID-based JWT signature validation -->
         <dependency>
             <groupId>ch.admin.swiyu</groupId>
