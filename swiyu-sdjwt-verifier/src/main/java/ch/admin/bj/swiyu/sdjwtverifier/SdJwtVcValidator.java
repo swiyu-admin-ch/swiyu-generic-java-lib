@@ -87,7 +87,7 @@ public class SdJwtVcValidator {
      * @param sdJwt The sdJwt which will be verified and altered
      * @throws SdJwtVerificationException if the verification failed
      */
-    public void validateHeader(SdJwt sdJwt) throws SdJwtVerificationException {
+    public void validateAndSetHeader(SdJwt sdJwt) throws SdJwtVerificationException {
         headerValidator.validateandSetHeader(sdJwt);
     }
 
@@ -97,7 +97,7 @@ public class SdJwtVcValidator {
      * @param issuerJWK the issuer's key resolved from the DID Document
      * @throws SdJwtVerificationException if the signature or claims are invalid
      */
-    public void validateJwt(SdJwt sdJwt, JWK issuerJWK) throws SdJwtVerificationException {
+    public void validateAndSetJwt(SdJwt sdJwt, JWK issuerJWK) throws SdJwtVerificationException {
         signatureValidator.validateAndSetClaims(sdJwt, issuerJWK);
     }
 
@@ -120,7 +120,7 @@ public class SdJwtVcValidator {
      * with a fixed clock skew tolerance.
      *
      * <p>The {@code iss} claim is intentionally <em>ignored</em> (not verified, not forbidden)
-     * per PARENT-ADR-027. {@code exp} and {@code nbf} are checked when present.</p>
+     * per swiss-profile-vc 1.0. {@code exp} and {@code nbf} are checked when present.</p>
      *
      * @param jwtString the compact serialized JWT
      * @throws ch.admin.bj.swiyu.jwtvalidator.JwtValidatorException if {@code exp} or {@code nbf} are violated

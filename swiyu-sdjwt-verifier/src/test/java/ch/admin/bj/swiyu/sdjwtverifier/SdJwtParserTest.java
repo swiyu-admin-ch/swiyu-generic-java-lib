@@ -8,25 +8,16 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
 
 import ch.admin.bj.swiyu.sdjwtbuilder.SdJwtVcBuilder;
 import ch.admin.bj.swiyu.sdjwtbuilder.SdJwtVcClaim;
 import ch.admin.bj.swiyu.sdjwtbuilder.TimeConfiguration;
-import ch.admin.bj.swiyu.sdjwtutil.SdJwtConstants;
 import ch.admin.bj.swiyu.sdjwtverifier.exception.SdJwtParseException;
 
 class SdJwtParserTest {
@@ -56,6 +47,7 @@ class SdJwtParserTest {
      */
     @Test
     void parseSdJwt_whenPlausibleHolderBinding_thenSuccess() {
+        // Create a plausible looking SD-JWT with (faulty) Key Binidng JWT
         var presentation = testVc.serializedSdJwt()+testVc.jwt().serialize();
         assertDoesNotThrow(() -> SdJwtParser.parseSdJwt(presentation));
     }

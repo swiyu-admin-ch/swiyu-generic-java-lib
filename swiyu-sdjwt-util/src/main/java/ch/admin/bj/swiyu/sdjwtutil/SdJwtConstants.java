@@ -24,6 +24,7 @@ public final class SdJwtConstants {
     /** {@code typ} value required by SD-JWT VC spec (post-migration). */
     public static final String TYP_DC_SD_JWT = "dc+sd-jwt";
     /** {@code typ} value accepted during the migration phase alongside {@link TYP_DC_SD_JWT}. */
+    @Deprecated(since="OID4VCI 1.0")
     public static final String TYP_VC_SD_JWT = "vc+sd-jwt";
     
     public static final Set<String> ACCEPTED_TYP_VALUES = Set.of(SdJwtConstants.TYP_VC_SD_JWT, SdJwtConstants.TYP_DC_SD_JWT);

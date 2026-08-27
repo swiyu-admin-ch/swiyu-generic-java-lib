@@ -134,14 +134,14 @@ public class SdJwtUsageTest {
         SdJwt sdJwt = assertDoesNotThrow(() -> SdJwtParser.parseSdJwt(presentation));
         
         assertThrows(IllegalStateException.class, () -> sdJwt.getHeader()); // Should fail as verification was not done yet
-        assertDoesNotThrow(() -> validator.validateHeader(sdJwt));
+        assertDoesNotThrow(() -> validator.validateAndSetHeader(sdJwt));
 
         assertThat(sdJwt.getHeader().getKeyID()).as("KID must be verification method").isEqualTo(verificationMethod);
         
         assertThrows(IllegalStateException.class, () -> sdJwt.getClaims()); // Should fail as verification was not done yet
         
         // Validate Issued JWT
-        assertDoesNotThrow(() -> validator.validateJwt(sdJwt, signatureData.jwk));
+        assertDoesNotThrow(() -> validator.validateAndSetJwt(sdJwt, signatureData.jwk));
         // Validate Key Binding (Is the JWT really presented to us or was it presented to someone else?)
         assertDoesNotThrow(() -> validator.validateKeyBinding(sdJwt, AUDIENCE, NONCE, 120));
         // Resolve the claims so we will now have all regular claims again

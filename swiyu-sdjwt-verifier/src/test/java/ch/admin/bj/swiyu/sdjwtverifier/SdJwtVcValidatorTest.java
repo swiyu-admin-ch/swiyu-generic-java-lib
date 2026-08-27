@@ -68,7 +68,7 @@ class SdJwtVcValidatorTest {
     void validateHeader_whenKIDmissing_thenThrows() {
         SignedJWT testJwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.ES256).build(), new JWTClaimsSet.Builder().build());
         when(sdJwt.getJwt()).thenReturn(testJwt);
-        assertThatThrownBy(() -> validator.validateHeader(sdJwt)).isInstanceOf(SdJwtVerificationException.class).hasMessageContaining("kid");
+        assertThatThrownBy(() -> validator.validateAndSetHeader(sdJwt)).isInstanceOf(SdJwtVerificationException.class).hasMessageContaining("kid");
     }
 
 

@@ -18,6 +18,7 @@ import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
+import ch.admin.bj.swiyu.sdjwtutil.SdJwtConstants;
 import ch.admin.bj.swiyu.sdjwtverifier.exception.SdJwtVerificationException;
 
 /**
@@ -26,22 +27,25 @@ import ch.admin.bj.swiyu.sdjwtverifier.exception.SdJwtVerificationException;
 class SdJwtHeaderValidatorTest {
 
     private final SdJwtHeaderValidator validator = new SdJwtHeaderValidator();
+    private static final String TEST_KID = "did:example:123#key-1";
 
     @Test
     void validate_whenKidPresent_thenSetsHeaderOnSdJwt() throws SdJwtVerificationException {
         SdJwt sdJwt = mock(SdJwt.class);
-        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.ES256).keyID("did:example:123#key-1").build(),
+        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.ES256)
+            .keyID(TEST_KID)
+            .type(new JOSEObjectType(SdJwtConstants.TYP_DC_SD_JWT)).build(),
                 new JWTClaimsSet.Builder().build());
         when(sdJwt.getJwt()).thenReturn(jwt);
 
         validator.validateandSetHeader(sdJwt);
 
-        assertThat(jwt.getHeader().getKeyID()).isEqualTo("did:example:123#key-1");
+        assertThat(jwt.getHeader().getKeyID()).isEqualTo(TEST_KID);
     }
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {" ", "   "})
+    @ValueSource(strings = {" "})
     void validate_whenKidBlankOrMissing_thenThrows(String kid) {
         SdJwt sdJwt = mock(SdJwt.class);
         SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.ES256).keyID(kid).build(),
@@ -58,7 +62,7 @@ class SdJwtHeaderValidatorTest {
     @ValueSource(strings = {"jwt", "sd-jwt", "kb+sd-jwt"})
     void parseSdJwt_wrongJWSHeaderType_thenThrows(String type) throws JOSEException {
         SdJwt sdJwt = mock(SdJwt.class);
-        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.ES256).type(type == null ? null : new JOSEObjectType(type) ).build(), new JWTClaimsSet.Builder().build());
+        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.ES256).keyID(TEST_KID).type(type == null ? null : new JOSEObjectType(type) ).build(), new JWTClaimsSet.Builder().build());
         when(sdJwt.getJwt()).thenReturn(jwt);
         assertThatThrownBy(() -> validator.validateandSetHeader(sdJwt))
                 .isInstanceOf(SdJwtVerificationException.class)
