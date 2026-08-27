@@ -79,18 +79,5 @@ class SdJwtParserTest {
         .isInstanceOf(SdJwtParseException.class);
     }
 
-    @ParameterizedTest
-    @NullSource
-    @ValueSource(strings = {"jwt", "sd-jwt", "kb+sd-jwt"})
-    void parseSdJwt_wrongJWSHeaderType_thenThrows(String type) throws JOSEException {
-        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.ES256).type(type == null ? null : new JOSEObjectType(type) ).build(), new JWTClaimsSet.Builder().build());
-        jwt.sign(new ECDSASigner(key));
-        var presentation = jwt.serialize()+SdJwtConstants.JWT_PART_DELINEATION_CHARACTER;
-        assertThatThrownBy(() -> SdJwtParser.parseSdJwt(presentation))
-            .isInstanceOf(SdJwtParseException.class)
-            .hasMessageContaining(SdJwtConstants.TYP_DC_SD_JWT);
-    }
-    
-
 }
 

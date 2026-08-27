@@ -88,7 +88,7 @@ public class SdJwtVcValidator {
      * @throws SdJwtVerificationException if the verification failed
      */
     public void validateHeader(SdJwt sdJwt) throws SdJwtVerificationException {
-        headerValidator.validate(sdJwt);
+        headerValidator.validateandSetHeader(sdJwt);
     }
 
     /**
@@ -98,7 +98,7 @@ public class SdJwtVcValidator {
      * @throws SdJwtVerificationException if the signature or claims are invalid
      */
     public void validateJwt(SdJwt sdJwt, JWK issuerJWK) throws SdJwtVerificationException {
-        signatureValidator.validate(sdJwt, issuerJWK);
+        signatureValidator.validateAndSetClaims(sdJwt, issuerJWK);
     }
 
     /**

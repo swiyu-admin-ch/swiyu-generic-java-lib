@@ -7,6 +7,9 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.Mockito.mock;
 
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -75,10 +78,16 @@ class SdJwtVcBuilderTest {
             SdJwtVcClaim.VCT_SUBTYPE, "VerifiableCredential.subtype",
             SdJwtVcClaim.VCT, "VerifiableCredential"
         );
-        Map<String, Object> credentialSubjectClaims = Map.of(
-            "given_name", "Max",
-            "family_name", "Mustermann"
-        );
+        Map<String, Object> credentialSubjectClaims = new HashMap<>();
+        
+        credentialSubjectClaims.put("given_name", "Max");
+        credentialSubjectClaims.put("family_name", "Mustermann");
+        credentialSubjectClaims.put("second_name", null);
+        List<Object> listDisclosure = new LinkedList<>();
+        listDisclosure.add("Foobar");
+        listDisclosure.add(null);
+        listDisclosure.add(1);
+        credentialSubjectClaims.put("list_disclosure", listDisclosure);
 
         SdJwtVcBuilder builder = SdJwtVcBuilder.createBuilder(
             VERIFICATION_METHOD, vcClaims, credentialSubjectClaims, TimeConfiguration.builder().build(), signer);
@@ -89,13 +98,13 @@ class SdJwtVcBuilderTest {
         assertThat(result.jwt()).isNotNull();
         assertThat(result.serializedSdJwt()).isNotBlank();
         assertThat(result.vcHash()).isNotBlank();
-        assertThat(result.serializedSdJwt()).contains("~");
+        assertThat(result.serializedSdJwt()).as("No key binding proof should be attached yet").endsWith("~");
         assertThat(result.jwt().getHeader().getKeyID()).isEqualTo(VERIFICATION_METHOD);
         assertThat(result.jwt().getHeader().getType()).isEqualTo(new JOSEObjectType(SdJwtConstants.TYP_DC_SD_JWT));
         assertThat(result.jwt().getJWTClaimsSet().getIssuer()).isEqualTo("https://issuer.example.com");
         assertThat(result.jwt().getJWTClaimsSet().getClaims()).as("Neither status nor holder binding is set").doesNotContainKeys("status", "cnf");
         assertThat(result.jwt().getJWTClaimsSet().getClaim("vct")).as("vct must be handled as normal claim").isEqualTo("VerifiableCredential");
-        assertThat(result.jwt().getJWTClaimsSet().getClaims()).as("subject data must be selective disclosable").doesNotContainKeys("given_name", "family_name");
+        assertThat(result.jwt().getJWTClaimsSet().getClaims()).as("subject data must be selective disclosable").doesNotContainKeys("given_name", "family_name", "second_name", "list_disclosure");
     }
 
 

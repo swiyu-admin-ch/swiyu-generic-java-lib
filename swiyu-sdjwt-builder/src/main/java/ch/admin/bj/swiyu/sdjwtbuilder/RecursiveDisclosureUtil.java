@@ -85,6 +85,7 @@ public class RecursiveDisclosureUtil {
         SDObjectBuilder nestedBuilder = new SDObjectBuilder();
 
         var listDisclosures = collectionValue.stream()
+                .filter(Objects::nonNull)
                 .map(item -> handleClaimRecursive(null, item, disclosures, nestedBuilder))
                 .toList();
 

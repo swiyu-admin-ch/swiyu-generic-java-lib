@@ -20,26 +20,22 @@ import lombok.Setter;
  * <a href="https://www.rfc-editor.org/rfc/rfc9901.html#section-4">RFC 9901 ("Selective Disclosure for JSON Web Tokens")</a>
  */
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+@Getter
 public class SdJwt {
-    @Getter
     private final SignedJWT jwt;
-    @Getter
     private final String[] parts;
     @Setter(value = AccessLevel.PACKAGE)
     private JWSHeader header;
     @Setter(value = AccessLevel.PACKAGE)
     private JWTClaimsSet claims;
-    @Getter
     @Setter(value = AccessLevel.PACKAGE)
     private Map<String, Object> resolvedClaims;
 
     /**
      * <a href="https://www.rfc-editor.org/rfc/rfc9901.html#section-4.3">Key Binding JWT</a>
      */
-    @Getter
     private final Optional<String> keyBinding;
 
-    @Getter
     private final String presentationHash;
 
     public boolean hasKeyBinding() {

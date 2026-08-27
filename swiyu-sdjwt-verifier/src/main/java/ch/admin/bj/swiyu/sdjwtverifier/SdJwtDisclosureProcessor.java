@@ -40,7 +40,7 @@ class SdJwtDisclosureProcessor {
     Map<String, Object> process(SdJwt sdJwt) throws SdJwtVerificationException {
         try {
             JsonNode claims = SdJwtObjectMapper.INSTANCE.convertValue(sdJwt.getClaims().toJSONObject(), JsonNode.class);
-            // 3.1 - For each Disclosure provided Calculate the digest over the base64url-encoded string
+            // 3.a - For each Disclosure provided Calculate the digest over the base64url-encoded string
             // Reject immediately if the same disclosure appears more than once (identical digest)
             Map<String, Disclosure> digestToDisclosure = sdJwt.getDisclosures().stream().collect(
                 Collectors.toMap(

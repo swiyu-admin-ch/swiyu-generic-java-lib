@@ -42,8 +42,8 @@ import ch.admin.bj.swiyu.sdjwtbuilder.SdJwtVcBuilder;
 import ch.admin.bj.swiyu.sdjwtbuilder.SdJwtVcBuilder.CreatedSdJwtVc;
 import ch.admin.bj.swiyu.sdjwtbuilder.SdJwtVcClaim;
 import ch.admin.bj.swiyu.sdjwtbuilder.TimeConfiguration;
-import ch.admin.bj.swiyu.sdjwtbuilder.TokenStatusListReferenceData;
 import ch.admin.bj.swiyu.sdjwtutil.SdJwtConstants;
+import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListReferenceDto;
 
 /**
  * Test containing a similarity of outside usage, from both creating and verifying of SD-JWT VCs.
@@ -103,7 +103,7 @@ public class SdJwtUsageTest {
                 List.of("Yes", "Duplicate", "Duplicate", "Duplicate", 1l, 1l, 1.0, //  Note: Numbers are after processing all longs
                     List.of("List in List", Map.of("Subobject in list", "In List"))),  // Nested List and Nested Object in List
             "canWeNested", Map.of("nested", "Yes",  // Complex nested Object
-                "canWeRecursiveNested", Map.of("canWe", "Yes"), 
+                "canWeRecursiveNested", Map.of("canWe", "Yes"),
                     "canWeRecursiveArray", List.of("Yes", Map.of("listObject", List.of("Yes", "Yes"))))); // Deep Recusive data
 
         TimeConfiguration timeConfig = TimeConfiguration.builder()
@@ -112,7 +112,10 @@ public class SdJwtUsageTest {
             .issuedAt(Optional.of(Instant.now()))
             .build();
         var builder = assertDoesNotThrow(() -> SdJwtVcBuilder.createBuilder(verificationMethod, vcClaims, credentialSubjectClaims, timeConfig, signatureData.signer));
-        var signed = assertDoesNotThrow(() -> builder.createSignedSdJwtVc(Optional.of(new TokenStatusListReferenceData(1, "https://www.example.com/status/1")), Optional.of(signatureData.holderKey.toPublicJWK())));
+        var tokenStatusListReferenceData = new TokenStatusListReferenceDto.TokenStatusListStatusListReference();
+        tokenStatusListReferenceData.setUri("https://www.example.com/status/1");
+        tokenStatusListReferenceData.setIndex(1);
+        var signed = assertDoesNotThrow(() -> builder.createSignedSdJwtVc(Optional.of(tokenStatusListReferenceData), Optional.of(signatureData.holderKey.toPublicJWK())));
         assertThat(signed.jwt().getJWTClaimsSet().toString())
             .as("Subject data should be discloseable").doesNotContain(credentialSubjectClaims.keySet())
             .as("Disclosable fixed data should be discloseable").doesNotContain(vcClaims.keySet().stream().filter(k -> !k.isAlwaysDisclosed()).map(SdJwtVcClaim::getClaimName).toList())

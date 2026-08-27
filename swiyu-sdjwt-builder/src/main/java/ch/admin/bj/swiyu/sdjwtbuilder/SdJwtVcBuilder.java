@@ -22,10 +22,13 @@ import com.nimbusds.jwt.SignedJWT;
 
 import ch.admin.bj.swiyu.jwtutil.JwtUtil;
 import ch.admin.bj.swiyu.sdjwtutil.SdJwtConstants;
+import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListReferenceDto;
 import ch.admin.bj.swiyu.sdjwtbuilder.exception.SdJwtBuilderException;
 import lombok.AccessLevel;
 
 import lombok.RequiredArgsConstructor;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class SdJwtVcBuilder {
@@ -38,6 +41,7 @@ public class SdJwtVcBuilder {
     private final Map<String, Object> selectiveDisclosableClaims;
     private final TimeConfiguration timeConfiguration;
     private final JWSSigner signer;
+    private final ObjectMapper mapper = new ObjectMapper();
 
 
     /**
@@ -97,7 +101,7 @@ public class SdJwtVcBuilder {
      * @return the signed SD-JWT VC together with its compact serialization
      * @throws SdJwtBuilderException if a protected claim is violated or signing fails
      */
-    public CreatedSdJwtVc createSignedSdJwtVc(Optional<TokenStatusListReferenceData> statusListReference, Optional<JWK> holderPublicKey) throws SdJwtBuilderException {
+    public CreatedSdJwtVc createSignedSdJwtVc(Optional<TokenStatusListReferenceDto.TokenStatusListStatusListReference> statusListReference, Optional<JWK> holderPublicKey) throws SdJwtBuilderException {
         // Prepare Claims & Disclosures
         SDObjectBuilder sdBuilder = new SDObjectBuilder();
         putAllClaims(sdBuilder, alwaysDisclosedClaims);
@@ -142,8 +146,9 @@ public class SdJwtVcBuilder {
         sdBuilder.putClaim("cnf", Map.of("jwk", jwk.toJSONObject()));
     }
 
-    private void setStatusListReference(SDObjectBuilder sdBuilder, TokenStatusListReferenceData statusListReference) {
-        putAllClaims(sdBuilder, statusListReference.toJSONObject());
+    private void setStatusListReference(SDObjectBuilder sdBuilder, TokenStatusListReferenceDto.TokenStatusListStatusListReference statusListReference) {
+        var jsonData = mapper.convertValue(statusListReference, new TypeReference<Map<String, Object>>() {});
+        putAllClaims(sdBuilder, jsonData);
     }
 
     /**

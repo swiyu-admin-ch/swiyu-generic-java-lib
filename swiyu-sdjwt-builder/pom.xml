@@ -66,6 +66,13 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Token Status List Reference -->
+        <dependency>
+            <groupId>ch.admin.swiyu</groupId>
+            <artifactId>swiyu-token-status-list</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- SD-JWT -->
         <!-- https://mvnrepository.com/artifact/com.authlete/sd-jwt -->
         <dependency>

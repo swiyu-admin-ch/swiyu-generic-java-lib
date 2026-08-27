@@ -6,8 +6,6 @@ import java.text.ParseException;
 import java.util.Base64;
 import java.util.Optional;
 
-import com.nimbusds.jose.JOSEObjectType;
-import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jwt.SignedJWT;
 
 import ch.admin.bj.swiyu.sdjwtutil.SdJwtConstants;
@@ -51,7 +49,7 @@ public final class SdJwtParser {
         String presentationHash = computeKeyBindingSdHash(serializedSdJwt);
         try {
             SdJwt sdJwt = new SdJwt(SignedJWT.parse(parts[0]), parts, holderBindingProof, presentationHash);
-            validateStructure(sdJwt);
+            validateNoProtectedClaimsInDisclosures(sdJwt);
             return sdJwt;
              
         } catch (ParseException e) {
@@ -99,38 +97,6 @@ public final class SdJwtParser {
         }
     }
 
-
-    /**
-     * Runs all structural SD-JWT VC checks ({@code typ}, {@code _sd_alg}, protected claims).
-     *
-     * @param sdJwt the full SD-JWT string
-     * @throws SdJwtParseException if any structural check fails
-     */
-    private static void validateStructure(SdJwt sdJwt) throws SdJwtParseException {
-        SignedJWT jwt = sdJwt.getJwt();
-        validateTypHeader(jwt.getHeader());
-        validateNoProtectedClaimsInDisclosures(sdJwt);
-        
-    }
-
-    /**
-     * Validates the {@code typ} JOSE header against the configured accepted values.
-     *
-     * @param header the JOSE header of the parsed Issuer-Signed JWT
-     * @throws SdJwtParseException if the {@code typ} is absent or not accepted
-     */
-    private static void validateTypHeader(JWSHeader header) throws SdJwtParseException {
-        JOSEObjectType type = header.getType();
-        if (type == null) {
-            throw new SdJwtParseException(
-                    "SD-JWT VC is missing the 'typ' JOSE header (must be '" + SdJwtConstants.TYP_DC_SD_JWT + "')");
-        }
-        if (!SdJwtConstants.ACCEPTED_TYP_VALUES.contains(type.getType())) {
-            throw new SdJwtParseException(
-                    "SD-JWT VC 'typ' is '" + type.getType() + "', expected one of: " + SdJwtConstants.ACCEPTED_TYP_VALUES);
-        }
-        log.debug("SD-JWT VC typ '{}' accepted", type.getType());
-    }
 
     /**
      * Validates that none of the {@link SdJwtConstants#PROTECTED_CLAIMS} appear as the claim name

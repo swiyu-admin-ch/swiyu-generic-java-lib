@@ -1,6 +1,5 @@
 package ch.admin.bj.swiyu.sdjwtverifier;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -48,7 +47,7 @@ class SdJwtSignatureValidatorTest {
 
     @Test
     void validate_whenDidJwtValidatorAccepts_thenClaimsAreSetOnSdJwt() throws Exception {
-        validator.validate(sdJwt, issuerJwk);
+        validator.validateAndSetClaims(sdJwt, issuerJwk);
 
         verify(didJwtValidator).validateJwt("dummy.jwt.string", issuerJwk);
         verify(sdJwt).setClaims(jwt.getJWTClaimsSet());
@@ -58,7 +57,7 @@ class SdJwtSignatureValidatorTest {
     void validate_whenDidJwtValidatorRejects_thenThrowsSdJwtVerificationException() {
         doThrow(new JwtValidatorException("signature invalid")).when(didJwtValidator).validateJwt("dummy.jwt.string", issuerJwk);
 
-        assertThatThrownBy(() -> validator.validate(sdJwt, issuerJwk))
+        assertThatThrownBy(() -> validator.validateAndSetClaims(sdJwt, issuerJwk))
                 .isInstanceOf(SdJwtVerificationException.class)
                 .hasMessageContaining("SD-JWT claims are not valid")
                 .hasCauseInstanceOf(JwtValidatorException.class);

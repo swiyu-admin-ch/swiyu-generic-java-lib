@@ -136,11 +136,6 @@ class SdJwtVcValidatorTest {
         return jwt.serialize();
     }
 
-    @Test
-    void validateKeyBinding_whenMismatchingAudience_thenThrows() {
-        // validator.validateKeyBinding(sdJwt, KID, KID, 0);
-    }
-
     // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------

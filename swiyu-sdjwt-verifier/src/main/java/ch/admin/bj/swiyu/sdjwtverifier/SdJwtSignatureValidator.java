@@ -23,13 +23,14 @@ class SdJwtSignatureValidator {
     }
 
     /**
-     * Validates the signature of the JWT, ensuring the key is hosted on an acceptable registry.
+     * Validates the signature of the JWT, ensuring the key is hosted on an acceptable registry. 
+     * Updates the given {@link SdJwt} with the signature validated claims.
      *
      * @param sdJwt the sd-jwt to be verified
      * @param issuerJWK the issuer's key resolved from the DID Document
      * @throws SdJwtVerificationException if the signature or claims are invalid
      */
-    void validate(SdJwt sdJwt, JWK issuerJWK) throws SdJwtVerificationException {
+    void validateAndSetClaims(SdJwt sdJwt, JWK issuerJWK) throws SdJwtVerificationException {
         try {
             didJwtValidator.validateJwt(sdJwt.getSerializedJWT(), issuerJWK);
             sdJwt.setClaims(sdJwt.getJwt().getJWTClaimsSet());
