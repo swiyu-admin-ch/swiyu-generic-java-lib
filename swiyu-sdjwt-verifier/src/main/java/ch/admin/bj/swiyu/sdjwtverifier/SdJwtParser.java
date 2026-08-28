@@ -26,12 +26,14 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SdJwtParser {
 
-    private static final String JWT_PART_DELINEATION_CHARACTER = SdJwtConstants.JWT_PART_DELINEATION_CHARACTER;
+    private static final String SD_JWT_PART_DELINEATION_CHARACTER = SdJwtConstants.SD_JWT_PART_DELINEATION_CHARACTER;
 
 
     public static SdJwt parseSdJwt(String serializedSdJwt) throws SdJwtParseException {
-        if (!serializedSdJwt.contains(JWT_PART_DELINEATION_CHARACTER)
-                || serializedSdJwt.contains(JWT_PART_DELINEATION_CHARACTER + JWT_PART_DELINEATION_CHARACTER) // denotes multiple tilde ('~') characters
+        // Check if there are SD-JWT Delineation. If not, it cannot be an SD-JWT
+        // Even when no Disclosures and no Key Binding is present it should end with a delineation character
+        if (!serializedSdJwt.contains(SD_JWT_PART_DELINEATION_CHARACTER)
+                || serializedSdJwt.contains(SD_JWT_PART_DELINEATION_CHARACTER + SD_JWT_PART_DELINEATION_CHARACTER) // denotes multiple tilde ('~') characters
         ) {
             throw new SdJwtParseException("SD-JWT is malformed: expected at least one non-empty part delineated by '~'");
         }
@@ -40,7 +42,7 @@ public final class SdJwtParser {
 
         // CAUTION The String#split method ignores trailing delimiters unless a limit of -1 is explicitly specified:
         //         "If the limit is negative then the pattern will be applied as many times as possible and the array can have any length."
-        String[] parts = serializedSdJwt.split(JWT_PART_DELINEATION_CHARACTER);
+        String[] parts = serializedSdJwt.split(SD_JWT_PART_DELINEATION_CHARACTER);
         if (parts.length == 0 || parts[0].isEmpty()) {
             // e.g. input consisting only of "~" splits into an empty array
             throw new SdJwtParseException("SD-JWT is malformed: missing Issuer-signed JWT part");
@@ -68,7 +70,7 @@ public final class SdJwtParser {
      * @return Optional containing the serialized holder binding proof, if available. Empty if not present
      */
     private static Optional<String> extractHolderBindingProof(String serializedSdJwt, String[] parts) {
-        if (!serializedSdJwt.endsWith(JWT_PART_DELINEATION_CHARACTER)) {
+        if (!serializedSdJwt.endsWith(SD_JWT_PART_DELINEATION_CHARACTER)) {
             return Optional.of(parts[parts.length - 1]);
         } else {
             return Optional.empty();
@@ -83,7 +85,7 @@ public final class SdJwtParser {
      */
     private static String computeKeyBindingSdHash(String rawSdJwt) {
         // The jwt and disclosures without the key binding jwt
-        var presentation = rawSdJwt.substring(0, rawSdJwt.lastIndexOf(JWT_PART_DELINEATION_CHARACTER) + 1);
+        var presentation = rawSdJwt.substring(0, rawSdJwt.lastIndexOf(SD_JWT_PART_DELINEATION_CHARACTER) + 1);
         try {
             byte[] hashDigest = MessageDigest.getInstance("sha-256") // getInstance may throw NoSuchAlgorithmException
                             .digest(presentation.getBytes(StandardCharsets.UTF_8));

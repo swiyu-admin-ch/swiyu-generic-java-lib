@@ -50,7 +50,7 @@ public final class SdJwtConstants {
     /**
      * The compact serialized format for the SD-JWT is the concatenation of each part delineated with a single tilde ('~') character.
      */
-    public static final String JWT_PART_DELINEATION_CHARACTER = "~";
+    public static final String SD_JWT_PART_DELINEATION_CHARACTER = "~";
 
 
     /**

@@ -139,7 +139,7 @@ public class SdJwtVcBuilder {
         return Stream.concat(
             Stream.of(jwt.serialize()), 
             Stream.concat(disclosures.stream().map(Disclosure::getDisclosure), Stream.of("")))
-            .collect(Collectors.joining(SdJwtConstants.JWT_PART_DELINEATION_CHARACTER));
+            .collect(Collectors.joining(SdJwtConstants.SD_JWT_PART_DELINEATION_CHARACTER));
     }
 
     private void setConfirmationKey(SDObjectBuilder sdBuilder, JWK jwk) {
