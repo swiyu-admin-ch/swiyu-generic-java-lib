@@ -159,7 +159,6 @@ public class DidJwtValidator {
     public void validateJwt(String jwtString, DidDoc didDocument) {
         // Validate that DID is of a trusted URI
         getAndValidateResolutionUrl(jwtString);
-
         String kid = didKidParser.extractKidFromHeader(jwtString);
 
         Jwk jwk;
