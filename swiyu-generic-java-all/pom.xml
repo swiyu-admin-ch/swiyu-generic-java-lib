@@ -76,7 +76,17 @@
         </dependency>
         <dependency>
             <groupId>ch.admin.swiyu</groupId>
-            <artifactId>swiyu-sdjwt-validator</artifactId>
+            <artifactId>swiyu-sdjwt-util</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.admin.swiyu</groupId>
+            <artifactId>swiyu-sdjwt-builder</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.admin.swiyu</groupId>
+            <artifactId>swiyu-sdjwt-verifier</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

@@ -5,15 +5,18 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ch.admin.swiyu</groupId>
-    <artifactId>swiyu-jwe-util</artifactId>
+    <artifactId>swiyu-sdjwt-verifier</artifactId>
     <version>2.1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <!-- required by https://central.sonatype.org/publish/requirements/ -->
+
     <name>${project.groupId}:${project.artifactId}</name>
-    <description>Utility library for JSON Web Encryption (JWE) in the Swiyu ecosystem. Provides static methods for secure payload encryption and decryption.</description>
+    <description>
+        Validates SD-JWT VC tokens according to the Swiss Profile VC specification and RFC 9901.
+        Enforces typ header, _sd_alg hash algorithm, protected claim rules and Key Binding freshness.
+        Delegates DID-based signature verification to swiyu-jwt-validator.
+    </description>
     <url>https://github.com/swiyu-admin-ch/swiyu-generic-java-lib</url>
 
-    <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <licenses>
         <license>
             <name>MIT License</name>
@@ -21,7 +24,6 @@
         </license>
     </licenses>
 
-    <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <developers>
         <developer>
             <name>Swiyu Omni Developers</name>
@@ -30,7 +32,6 @@
         </developer>
     </developers>
 
-    <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <scm>
         <connection>scm:git:git://github.com/swiyu-admin-ch/swiyu-generic-java-lib.git</connection>
         <developerConnection>scm:git:ssh://github.com:swiyu-admin-ch/swiyu-generic-java-lib.git</developerConnection>
@@ -43,17 +44,51 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <!-- Dependency versions -->
-        <spring.boot.version>4.1.1</spring.boot.version>
         <junit.version>5.10.1</junit.version>
         <mockito.version>5.8.0</mockito.version>
-        <slf4j.version>2.0.9</slf4j.version>
         <lombok.version>1.18.30</lombok.version>
+        <slf4j.version>2.0.9</slf4j.version>
         <nimbus-jose-jwt.version>10.8</nimbus-jose-jwt.version>
         <jackson.version>3.2.1</jackson.version>
+        <sd-jwt.version>1.9</sd-jwt.version>
     </properties>
 
     <dependencies>
+        <!-- Shared SD-JWT VC constants -->
+        <dependency>
+            <groupId>ch.admin.swiyu</groupId>
+            <artifactId>swiyu-sdjwt-util</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- SD-JWT -->
+        <!-- https://mvnrepository.com/artifact/com.authlete/sd-jwt -->
+        <dependency>
+            <groupId>com.authlete</groupId>
+            <artifactId>sd-jwt</artifactId>
+            <version>${sd-jwt.version}</version>
+        </dependency>
+        <!-- DID-based JWT signature validation -->
+        <dependency>
+            <groupId>ch.admin.swiyu</groupId>
+            <artifactId>swiyu-jwt-validator</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- JWT header/payload parsing -->
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+            <version>${nimbus-jose-jwt.version}</version>
+        </dependency>
+
+        <!-- Disclosure JSON parsing -->
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
         <!-- Logging -->
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -66,12 +101,7 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
-            <version>${spring.boot.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Testing -->
@@ -82,60 +112,28 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.27.7</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
-
-        <!-- JWS/JWT signing and cryptographic operations -->
+        <!-- Used in tests to create SD-JWT VC fixtures for round-trip parsing/verification -->
         <dependency>
-            <groupId>com.nimbusds</groupId>
-            <artifactId>nimbus-jose-jwt</artifactId>
-            <version>${nimbus-jose-jwt.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>tools.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.20.0</version>
-        </dependency>
-
-        <!-- Jakarta @NotNull -->
-        <dependency>
-            <groupId>jakarta.validation</groupId>
-            <artifactId>jakarta.validation-api</artifactId>
-            <version>3.1.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <version>${spring.boot.version}</version>
+            <groupId>ch.admin.swiyu</groupId>
+            <artifactId>swiyu-sdjwt-builder</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
-    <dependencyManagement>
-        <dependencies>
-
-            <!-- Fixes CVE-2026-13006 -->
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>1.5.37</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <build>
         <plugins>
-            <!-- Compiler plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -145,7 +143,6 @@
                     <target>21</target>
                 </configuration>
             </plugin>
-            <!-- Add manifest information to the packages -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -159,8 +156,6 @@
                     </archive>
                 </configuration>
             </plugin>
-
-            <!-- required by https://central.sonatype.org/publish/requirements/ -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
@@ -174,8 +169,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <!-- required by https://central.sonatype.org/publish/requirements/ -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -189,8 +182,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- required by https://central.sonatype.org/publish/requirements/ -->
-            <!-- Verhindert, dass Maven das alte deploy-Plugin nutzt -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
@@ -199,7 +190,6 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
-            <!-- required by https://central.sonatype.org/publish/requirements/ -->
             <plugin>
                 <groupId>org.sonatype.central</groupId>
                 <artifactId>central-publishing-maven-plugin</artifactId>

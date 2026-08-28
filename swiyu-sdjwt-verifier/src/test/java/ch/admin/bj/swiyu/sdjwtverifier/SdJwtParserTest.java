@@ -1,0 +1,75 @@
+package ch.admin.bj.swiyu.sdjwtverifier;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
+import java.util.Map;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.crypto.ECDSASigner;
+import com.nimbusds.jose.jwk.Curve;
+import com.nimbusds.jose.jwk.ECKey;
+import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
+
+import ch.admin.bj.swiyu.sdjwtbuilder.SdJwtVcBuilder;
+import ch.admin.bj.swiyu.sdjwtbuilder.SdJwtVcClaim;
+import ch.admin.bj.swiyu.sdjwtbuilder.TimeConfiguration;
+import ch.admin.bj.swiyu.sdjwtverifier.exception.SdJwtParseException;
+
+class SdJwtParserTest {
+
+    static ECKey key;
+    static SdJwtVcBuilder.CreatedSdJwtVc testVc;
+
+    @BeforeAll
+    static void setup() throws Exception {
+        key = new ECKeyGenerator(Curve.P_256).keyID("key1").algorithm(JWSAlgorithm.ES256).generate();
+        var builder = SdJwtVcBuilder.createBuilder("did:webvh:scid:example.com#-key1", Map.of(SdJwtVcClaim.VCT, "test"), Map.of("a", "1", "b", "2"), TimeConfiguration.builder().build(), new ECDSASigner(key));
+        testVc = builder.createSignedSdJwtVc(Optional.empty(), Optional.empty());
+    }
+
+    /**
+     * Test basic sd-jwt
+     * JWT ~ Disclosure 1 ~ ... ~ Disclosure n ~
+     */
+    @Test
+    void parseSdJwt_whenPlausible_thenSuccess() {
+        assertDoesNotThrow(() -> SdJwtParser.parseSdJwt(testVc.serializedSdJwt()));
+    }
+
+    /**
+     * Test with Holder Binding;
+     * JWT ~ Disclosure 1 ~ ... ~ Disclosure n ~ HolderBinding
+     */
+    @Test
+    void parseSdJwt_whenPlausibleHolderBinding_thenSuccess() {
+        // Create a plausible looking SD-JWT with (faulty) Key Binidng JWT
+        var presentation = testVc.serializedSdJwt()+testVc.jwt().serialize();
+        assertDoesNotThrow(() -> SdJwtParser.parseSdJwt(presentation));
+    }
+
+    /**
+     * Test no disclosures
+     * JWT~
+     */
+    @Test
+    void parseSdJwt_whenNoDisclosures_thenSuccess() {
+        var presentation = testVc.jwt().serialize() + "~";
+        assertDoesNotThrow(() -> SdJwtParser.parseSdJwt(presentation));
+    }
+    /**
+     * Test missing disclosures
+     * JWT
+     */
+    @Test
+    void parseSdJwt_whenMissingDisclosures_thenThrows() {
+        assertThatThrownBy(() -> SdJwtParser.parseSdJwt(testVc.jwt().serialize()))
+        .isInstanceOf(SdJwtParseException.class);
+    }
+
+}
+
