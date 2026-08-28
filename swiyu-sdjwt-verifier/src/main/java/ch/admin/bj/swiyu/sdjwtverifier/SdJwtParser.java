@@ -89,7 +89,7 @@ public final class SdJwtParser {
         try {
             byte[] hashDigest = MessageDigest.getInstance("sha-256") // getInstance may throw NoSuchAlgorithmException
                             .digest(presentation.getBytes(StandardCharsets.UTF_8));
-            var presentationHash = new String(Base64.getUrlEncoder().withoutPadding().encode(hashDigest));
+            var presentationHash = new String(Base64.getUrlEncoder().withoutPadding().encode(hashDigest), StandardCharsets.UTF_8);
             return presentationHash;
         } catch (NoSuchAlgorithmException exc) {
             // CAUTION No VerificationException.credentialError(VerificationErrorResponseCode.MALFORMED_CREDENTIAL, ...)
