@@ -24,7 +24,7 @@ validated here. Shared constants live in [`swiyu-sdjwt-util`](../swiyu-sdjwt-uti
 <dependency>
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-sdjwt-verifier</artifactId>
-    <version>2.1.0-SNAPSHOT</version>
+    <version>3.1.0-SNAPSHOT</version>
 </dependency>
 ```
 
