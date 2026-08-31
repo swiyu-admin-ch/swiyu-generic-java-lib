@@ -23,7 +23,7 @@ tokens created here. Shared constants live in [`swiyu-sdjwt-util`](../swiyu-sdjw
 <dependency>
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-sdjwt-builder</artifactId>
-    <version>3.0.0</version>
+    <version>3.1.0-SNAPSHOT</version>
 </dependency>
 ```
 

@@ -13,7 +13,7 @@ protected claims, Key Binding `typ`, profile version markers).
 <dependency>
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-sdjwt-util</artifactId>
-    <version>3.0.0</version>
+    <version>3.1.0-SNAPSHOT</version>
 </dependency>
 ```
 
