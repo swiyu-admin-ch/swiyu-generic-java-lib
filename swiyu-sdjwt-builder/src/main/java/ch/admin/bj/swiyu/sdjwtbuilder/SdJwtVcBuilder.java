@@ -23,6 +23,7 @@ import com.nimbusds.jwt.SignedJWT;
 import ch.admin.bj.swiyu.jwtutil.JwtUtil;
 import ch.admin.bj.swiyu.sdjwtutil.SdJwtConstants;
 import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListReferenceDto;
+import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListReferenceDto.TokenStatusListStatus;
 import ch.admin.bj.swiyu.sdjwtbuilder.exception.SdJwtBuilderException;
 import lombok.AccessLevel;
 
@@ -147,8 +148,10 @@ public class SdJwtVcBuilder {
     }
 
     private void setStatusListReference(SDObjectBuilder sdBuilder, TokenStatusListReferenceDto.TokenStatusListStatusListReference statusListReference) {
-        var jsonData = mapper.convertValue(statusListReference, new TypeReference<Map<String, Object>>() {});
-        putAllClaims(sdBuilder, jsonData);
+        var status = new TokenStatusListStatus();
+        status.setStatusList(statusListReference);
+        var jsonData = mapper.convertValue(status, new TypeReference<Map<String, Object>>() {});
+        sdBuilder.putClaim("status", jsonData);
     }
 
     /**
