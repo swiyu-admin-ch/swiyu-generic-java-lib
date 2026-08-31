@@ -6,10 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [3.0.0] - 2026-08-31
-- `swiyu-jwe-util`: Fixed **JWE Decompression Bomb** vulnerability in `JweUtil#decrypt` (#1117). Added new `JweDecryptionLimits` type and `decrypt(String, JWK, JweDecryptionLimits)` overload enforcing both a compressed-ciphertext limit and a new decompressed-payload limit (defaults: 20 MiB). Old overloads are deprecated but remain functional.
-- `swiyu-sdjwt-builder` / `swiyu-sdjwt-verifier` / `swiyu-sdjwt-util`: New libraries for creating and verifying SD-JWT VCs (RFC 9901, Swiss Profile) in a relatively easy fashion. Replaces the never-released `swiyu-sdjwt-validator` draft, split into separate issuance/verification modules analogous to `swiyu-ts-builder`/`swiyu-ts-verifier`.
 
 ### Changed
+- `swiyu-jwe-util`: Fixed **JWE Decompression Bomb** vulnerability in `JweUtil#decrypt` (#1117). Added new `JweDecryptionLimits` type and `decrypt(String, JWK, JweDecryptionLimits)` overload enforcing both a compressed-ciphertext limit and a new decompressed-payload limit (defaults: 20 MiB). Old overloads are deprecated but remain functional.
+- `swiyu-sdjwt-builder` / `swiyu-sdjwt-verifier` / `swiyu-sdjwt-util`: New libraries for creating and verifying SD-JWT VCs (RFC 9901, Swiss Profile) in a relatively easy fashion. Replaces the never-released `swiyu-sdjwt-validator` draft, split into separate issuance/verification modules analogous to `swiyu-ts-builder`/`swiyu-ts-verifier`.
 - Upgraded all modules (root parent POM and all submodules) from Java 21 to **Java 25**. 
 
 ## [2.0.0] - 2026-08-30
