@@ -31,7 +31,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '25'
           cache: 'maven'
       - name: Build & test with Maven (produce JaCoCo)
         run: mvn --batch-mode clean verify -DskipTests=false
@@ -57,17 +57,18 @@ jobs:
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: pmd-report.sarif
+
+      - name: Install Snyk CLI
+        uses: snyk/actions/setup@12140f4059e244892ae643824a95459a102120dd # latest on master
+
       - name: Run Snyk to check for vulnerabilities 🔍
-        uses: snyk/actions/maven-3-jdk-21@master
+        run: snyk test --maven-aggregate-project --severity-threshold=high --sarif-file-output=snyk.sarif
         continue-on-error: false
         env:
-          JAVA_HOME: '' # Snyk action sets JAVA_HOME to a path that is not compatible with the setup-java action, so we need to reset it here
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
           SNYK_API: https://api.eu.snyk.io
           SNYK_ORG: ${{ secrets.SNYK_ORG }}
-        with:
-          # report only vulnerabilities with level high or critical, as we want to avoid noise in the PR checks
-          args: --maven-aggregate-project --severity-threshold=high --sarif-file-output=snyk.sarif
+
       - name: Upload result as sarif to GitHub Code Scanning 📦
         if: always() # We want to upload the SARIF file even if the Snyk action fails, to have the results in the Code Scanning tab of GitHub
         uses: github/codeql-action/upload-sarif@v4

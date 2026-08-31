@@ -38,14 +38,14 @@
     </scm>
 
     <properties>
-        <java.version>21</java.version>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <java.version>25</java.version>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Dependency versions -->
         <junit.version>5.10.1</junit.version>
-        <mockito.version>5.8.0</mockito.version>
+        <mockito.version>5.23.0</mockito.version>
         <jackson.version>3.2.1</jackson.version>
     </properties>
 
@@ -91,8 +91,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <source>21</source>
-                    <target>21</target>
+                    <release>25</release>
                 </configuration>
             </plugin>
 

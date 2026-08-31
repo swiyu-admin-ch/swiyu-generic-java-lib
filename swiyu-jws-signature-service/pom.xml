@@ -41,17 +41,17 @@
     </scm>
 
     <properties>
-        <java.version>21</java.version>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <java.version>25</java.version>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Dependency versions -->
         <spring.boot.version>4.1.1</spring.boot.version>
         <junit.version>5.10.1</junit.version>
-        <mockito.version>5.8.0</mockito.version>
+        <mockito.version>5.23.0</mockito.version>
         <slf4j.version>2.0.9</slf4j.version>
-        <lombok.version>1.18.30</lombok.version>
+        <lombok.version>1.18.46</lombok.version>
         <nimbus-jose-jwt.version>10.8</nimbus-jose-jwt.version>
         <bouncycastle.version>1.85</bouncycastle.version>
         <jackson.version>3.2.1</jackson.version>
@@ -151,8 +151,14 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <source>21</source>
-                    <target>21</target>
+                    <release>25</release>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <!-- Add manifest information to the packages -->
