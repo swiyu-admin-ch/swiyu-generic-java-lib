@@ -7,7 +7,7 @@
     <!--     For the sake of Maven Central publishing, it must now match the Maven Central namespace. -->
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-generic-java-lib-parent</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1</version>
     <packaging>pom</packaging>
 
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
@@ -120,7 +120,7 @@
                 <plugin>
                     <groupId>org.sonatype.central</groupId>
                     <artifactId>central-publishing-maven-plugin</artifactId>
-                    <version>0.9.0</version>
+                    <version>0.11.0</version>
                     <extensions>true</extensions>
                     <configuration>
                         <publishingServerId>central</publishingServerId>
