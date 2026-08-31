@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.Mockito.mock;
 
+import java.text.ParseException;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListReferenceDto;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -33,6 +35,7 @@ import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator;
 
 import ch.admin.bj.swiyu.sdjwtutil.SdJwtConstants;
 import ch.admin.bj.swiyu.sdjwtbuilder.exception.SdJwtBuilderException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Test functionality for builder. For full happypath see swiyu-sdjwt-verifier's SdJwtUsageTest.
@@ -47,6 +50,7 @@ class SdJwtVcBuilderTest {
     private static final Map<SdJwtVcClaim, Object> minimalVcClaims = Map.of(
             SdJwtVcClaim.VCT, "VerifiableCredential"
         );
+    private static final ObjectMapper mapper = new ObjectMapper();
     
     @BeforeAll
     static void setUp() throws Exception {
@@ -105,6 +109,25 @@ class SdJwtVcBuilderTest {
         assertThat(result.jwt().getJWTClaimsSet().getClaims()).as("Neither status nor holder binding is set").doesNotContainKeys("status", "cnf");
         assertThat(result.jwt().getJWTClaimsSet().getClaim("vct")).as("vct must be handled as normal claim").isEqualTo("VerifiableCredential");
         assertThat(result.jwt().getJWTClaimsSet().getClaims()).as("subject data must be selective disclosable").doesNotContainKeys("given_name", "family_name", "second_name", "list_disclosure");
+    }
+
+    @ParameterizedTest
+    @MethodSource("signerProvider")
+    void createSignedSdJwtVc_status(JWSSigner signer) throws ParseException {
+        var index = 13;
+        var uri = "https://www.example.com/status/1";
+        var builder = assertDoesNotThrow(() -> SdJwtVcBuilder.createBuilder(VERIFICATION_METHOD, minimalVcClaims, Map.of(), TimeConfiguration.builder().build(), signer));
+        var statusRef = new TokenStatusListReferenceDto.TokenStatusListStatusListReference();
+        statusRef.setIndex(index);
+        statusRef.setUri(uri);
+        var result = assertDoesNotThrow(() -> builder.createSignedSdJwtVc(Optional.of(statusRef), Optional.empty()));
+        var claims = result.jwt().getJWTClaimsSet();
+        assertThat(claims.getClaim("status")).isNotNull().isInstanceOf(Map.class);
+
+        var builtStatus = mapper.convertValue(claims.getClaim("status"), TokenStatusListReferenceDto.TokenStatusListStatus.class);
+        var builtStatusRef = builtStatus.getStatusList();
+        assertThat(builtStatusRef.getIndex()).isEqualTo(index);
+        assertThat(builtStatusRef.getUri()).isEqualTo(uri);
     }
 
 
