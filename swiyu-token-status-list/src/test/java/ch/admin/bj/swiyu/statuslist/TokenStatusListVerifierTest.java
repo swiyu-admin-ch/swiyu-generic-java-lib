@@ -109,6 +109,22 @@ class TokenStatusListVerifierTest {
         assertThat(result.status()).as("Status Validation was not completed").isEmpty();
     }
 
+    @Test
+    void hasValidTokenStatusListTokenHeader_withNullHeader_thenFalse() {
+        assertThat(assertDoesNotThrow(() -> TokenStatusListVerifier.hasValidTokenStatusListTokenHeader(null)))
+                .as("header cannot be null")
+                .isFalse();
+    }
+
+    @Test
+    void hasValidTokenStatusListTokenHeader_withoutType_thenFalse() {
+        var header = new JWSHeader.Builder(JWSAlgorithm.ES256).type(null).build();
+        assertThat(assertDoesNotThrow(() -> TokenStatusListVerifier.hasValidTokenStatusListTokenHeader(header)))
+                .as("header typ cannot be null")
+                .isFalse();
+    }
+
+
 
     @ParameterizedTest
     @ValueSource(strings={"statuslist+jwt", "STATUSLIST+JWT", "statuslist+JWT"})

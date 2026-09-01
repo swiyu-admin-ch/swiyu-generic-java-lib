@@ -18,8 +18,7 @@ public class TokenStatusListVerifier {
     private final TokenStatusListVerifierConfig config;
 
     /**
-     * Checks whether the provided {@link JWSHeader} has the type of a token status
-     * list.
+     * Checks whether the provided {@link JWSHeader} is not null and contains "statuslist+jwt" as type.
      * According to Token Status List Spec
      * <a href=
      * "https://www.ietf.org/archive/id/draft-ietf-oauth-status-list-21.html#section-5.1">
@@ -30,7 +29,10 @@ public class TokenStatusListVerifier {
      * @return {@code true} if the header is considered valid
      */
     public static boolean hasValidTokenStatusListTokenHeader(JWSHeader tokenStatusListHeader) {
-        return TOKEN_STATUS_LIST_TOKEN_TYPE.equalsIgnoreCase(tokenStatusListHeader.getType().toString());
+        return tokenStatusListHeader != null
+                && tokenStatusListHeader.getType() != null
+                && TOKEN_STATUS_LIST_TOKEN_TYPE.equalsIgnoreCase(
+                tokenStatusListHeader.getType().toString());
     }
 
     /**
