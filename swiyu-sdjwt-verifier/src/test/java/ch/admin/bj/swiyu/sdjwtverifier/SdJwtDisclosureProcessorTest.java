@@ -65,7 +65,7 @@ class SdJwtDisclosureProcessorTest {
 
         assertThatThrownBy(() -> processor.process(sdJwt))
                 .isInstanceOf(SdJwtVerificationException.class)
-                .hasMessageContaining("non-distinct");
+                .hasMessage("Request contains non-distinct disclosures");
     }
 
     @Test
