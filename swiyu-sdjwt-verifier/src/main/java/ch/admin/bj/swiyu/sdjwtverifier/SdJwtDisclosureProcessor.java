@@ -70,7 +70,7 @@ class SdJwtDisclosureProcessor {
             sdJwt.setResolvedClaims(SdJwtObjectMapper.INSTANCE.convertValue(processed, new TypeReference<Map<String, Object>>(){}));
             return sdJwt.getResolvedClaims();
         } catch (IllegalArgumentException e) {
-            throw new SdJwtVerificationException(e);
+            throw new SdJwtVerificationException(e.getMessage(), e);
         }
     }
 
