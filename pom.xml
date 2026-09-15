@@ -34,13 +34,12 @@
 
     <properties>
         <junit.version>5.10.1</junit.version>
-        <jackson.version>3.2.1</jackson.version>
+        <jackson.version>3.2.2</jackson.version>
         <java.version>25</java.version>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mockito.version>5.23.0</mockito.version>
-        <jackson.version>3.2.1</jackson.version>
     </properties>
 
     <!-- required by https://central.sonatype.org/publish/requirements/ -->

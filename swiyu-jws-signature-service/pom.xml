@@ -54,7 +54,7 @@
         <lombok.version>1.18.46</lombok.version>
         <nimbus-jose-jwt.version>10.8</nimbus-jose-jwt.version>
         <bouncycastle.version>1.85</bouncycastle.version>
-        <jackson.version>3.2.1</jackson.version>
+        <jackson.version>3.2.2</jackson.version>
     </properties>
 
     <dependencies>
