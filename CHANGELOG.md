@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Added
+- Added digest to SdJwt class as they are used in the verifiers verification process (#1258)
 
 ## [3.0.0] - 2026-08-31
 

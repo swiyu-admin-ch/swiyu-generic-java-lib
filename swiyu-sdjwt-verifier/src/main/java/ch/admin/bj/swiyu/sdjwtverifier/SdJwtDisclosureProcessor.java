@@ -51,6 +51,10 @@ class SdJwtDisclosureProcessor {
                         }
                 ));
 
+            var digests = digestToDisclosure.keySet().stream().toList();
+
+            sdJwt.setDigests(digests);
+
             List<String> usedDigests = new LinkedList<>();
 
             JsonNode processed = nodeProcessor.processNode(claims, digestToDisclosure, usedDigests);

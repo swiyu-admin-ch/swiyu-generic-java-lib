@@ -30,6 +30,8 @@ public class SdJwt {
     private JWTClaimsSet claims;
     @Setter(value = AccessLevel.PACKAGE)
     private Map<String, Object> resolvedClaims;
+    @Setter(value = AccessLevel.PACKAGE)
+    private List<String> digests;
 
     /**
      * <a href="https://www.rfc-editor.org/rfc/rfc9901.html#section-4.3">Key Binding JWT</a>
