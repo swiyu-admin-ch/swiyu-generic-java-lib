@@ -55,6 +55,8 @@ class SdJwtHeaderValidator {
             throw new SdJwtVerificationException(
                     "SD-JWT VC is missing the 'typ' JOSE header (must be '" + SdJwtConstants.TYP_DC_SD_JWT + "')");
         }
+
+        // Validate that the 'typ' header is one of the accepted values for SD-JWT VC (Requested DCQL values are ignored at the moment as we also need to support the legacy typ)
         if (!SdJwtConstants.ACCEPTED_TYP_VALUES.contains(type.getType())) {
             throw new SdJwtVerificationException(
                     "SD-JWT VC 'typ' is '" + type.getType() + "', expected one of: " + SdJwtConstants.ACCEPTED_TYP_VALUES);
