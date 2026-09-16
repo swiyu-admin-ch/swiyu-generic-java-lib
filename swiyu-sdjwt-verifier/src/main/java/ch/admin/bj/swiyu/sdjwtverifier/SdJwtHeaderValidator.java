@@ -1,11 +1,10 @@
 package ch.admin.bj.swiyu.sdjwtverifier;
 
-import com.nimbusds.jose.JOSEObjectType;
-import com.nimbusds.jose.JWSHeader;
-
 import ch.admin.bj.swiyu.sdjwtutil.SdJwtConstants;
 import ch.admin.bj.swiyu.sdjwtverifier.exception.SdJwtParseException;
 import ch.admin.bj.swiyu.sdjwtverifier.exception.SdJwtVerificationException;
+import com.nimbusds.jose.JOSEObjectType;
+import com.nimbusds.jose.JWSHeader;
 
 /**
  * Validates the JOSE header of an SD-JWT VC according to the Swiss Profile requirements.
@@ -26,7 +25,9 @@ class SdJwtHeaderValidator {
 
         validateKeyId(header);
         validateTypHeader(header);
-        
+
+        validateAlgorithm(header);
+
         sdJwt.setHeader(header);
     }
 
@@ -60,6 +61,18 @@ class SdJwtHeaderValidator {
         if (!SdJwtConstants.ACCEPTED_TYP_VALUES.contains(type.getType())) {
             throw new SdJwtVerificationException(
                     "SD-JWT VC 'typ' is '" + type.getType() + "', expected one of: " + SdJwtConstants.ACCEPTED_TYP_VALUES);
+        }
+    }
+
+    /**
+     * Validates that the algorithm used in the header is supported.
+     *
+     * @param header the JWS header
+     * @throws SdJwtVerificationException if the algorithm is not supported
+     */
+    private static void validateAlgorithm(JWSHeader header) throws SdJwtVerificationException {
+        if (header.getAlgorithm().getName() == null || !SdJwtConstants.SUPPORTED_ALGORITHMS.contains(header.getAlgorithm().getName())) {
+            throw new SdJwtVerificationException("SD-JWT alg MUST be one of " + String.join(",", SdJwtConstants.SUPPORTED_ALGORITHMS));
         }
     }
 }

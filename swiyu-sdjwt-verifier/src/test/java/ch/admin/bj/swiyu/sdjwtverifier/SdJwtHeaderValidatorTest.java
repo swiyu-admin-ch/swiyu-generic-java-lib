@@ -11,7 +11,6 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -60,12 +59,34 @@ class SdJwtHeaderValidatorTest {
     @ParameterizedTest
     @NullSource
     @ValueSource(strings = {"jwt", "sd-jwt", "kb+sd-jwt"})
-    void parseSdJwt_wrongJWSHeaderType_thenThrows(String type) throws JOSEException {
+    void parseSdJwt_wrongJWSHeaderType_thenThrows(String type) {
         SdJwt sdJwt = mock(SdJwt.class);
         SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.ES256).keyID(TEST_KID).type(type == null ? null : new JOSEObjectType(type) ).build(), new JWTClaimsSet.Builder().build());
         when(sdJwt.getJwt()).thenReturn(jwt);
         assertThatThrownBy(() -> validator.validateandSetHeader(sdJwt))
                 .isInstanceOf(SdJwtVerificationException.class)
                 .hasMessageContaining("typ");
+    }
+
+    @Test
+    void validate_whenAlgNotSupported_thenThrows() {
+        SdJwt sdJwt = mock(SdJwt.class);
+        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.HS256).keyID(TEST_KID).type(new JOSEObjectType(SdJwtConstants.TYP_DC_SD_JWT)).build(), new JWTClaimsSet.Builder().build());
+        when(sdJwt.getJwt()).thenReturn(jwt);
+
+        assertThatThrownBy(() -> validator.validateandSetHeader(sdJwt))
+                .isInstanceOf(SdJwtVerificationException.class)
+                .hasMessageContaining("alg");
+    }
+
+    @Test
+    void validate_whenAlgSupported_thenSetsHeaderOnSdJwt() throws SdJwtVerificationException {
+        SdJwt sdJwt = mock(SdJwt.class);
+        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.ES256).keyID(TEST_KID).type(new JOSEObjectType(SdJwtConstants.TYP_DC_SD_JWT)).build(), new JWTClaimsSet.Builder().build());
+        when(sdJwt.getJwt()).thenReturn(jwt);
+
+        validator.validateandSetHeader(sdJwt);
+
+        org.mockito.Mockito.verify(sdJwt).setHeader(jwt.getHeader());
     }
 }

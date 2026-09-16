@@ -1,6 +1,7 @@
 package ch.admin.bj.swiyu.sdjwtutil;
 
 import com.nimbusds.jose.JOSEObjectType;
+import com.nimbusds.jose.JWSAlgorithm;
 
 import java.util.Set;
 
@@ -16,6 +17,11 @@ public final class SdJwtConstants {
      * Hash algorithm used to generate Disclosure digests and digest over presentation
      */
     public static final String SD_ALG_CLAIM = "_sd_alg";
+
+    /**
+     * Supported algorithms for SD-JWT signatures.
+     */
+    public static final Set<String> SUPPORTED_ALGORITHMS = Set.of(JWSAlgorithm.ES256.getName(), JWSAlgorithm.EdDSA.getName());
 
     /**
      * Digest of the Disclosure for an array element
