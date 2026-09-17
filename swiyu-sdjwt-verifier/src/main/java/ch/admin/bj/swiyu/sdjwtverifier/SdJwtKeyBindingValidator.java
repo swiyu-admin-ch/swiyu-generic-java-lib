@@ -47,12 +47,12 @@ class SdJwtKeyBindingValidator {
             // Validate the JWT before working with the claims
             JwtUtil.verifySignedJwt(keyBindingJWT, keyBindingKeyJwk);
             DefaultJWTClaimsVerifier<SecurityContext> claimsVerifier = new DefaultJWTClaimsVerifier<>(
-                    Set.of(audience), // the key binding must be adressed to us
+                    audience, // the key binding must be adressed to us
                     new JWTClaimsSet.Builder()
+                        .audience(audience) // Audience must be a String and our audience
                         .claim("nonce", nonce) // must be for the noncewe requested
                         .claim("sd_hash", sdJwt.getPresentationHash()).build(), // must match the hash of the sd-jwt the key binding is a proof for
-                    Set.of("iat", "aud", "nonce", "sd_hash"),              // RFC 9901 required claims (exp/nbf checked if present)
-                    Set.of()               // no prohibited claims
+                    Set.of("iat", "aud", "nonce", "sd_hash")              // RFC 9901 required claims (exp/nbf checked if present)
             );
             claimsVerifier.verify(keyBindingJWT.getJWTClaimsSet(), null);
             // Validate freshness of Key Binding Proof
