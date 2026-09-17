@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -67,6 +68,15 @@ class SdJwtKeyBindingValidatorTest {
     }
 
     @Test
+    void validate_withMultipleAudences_thenThrows() {
+        when(sdJwt.getKeyBinding()).thenReturn(Optional.of(createKeyBindingJwt(ecKey, List.of(AUDIENCE, "did:example:someOther"), nonce, 0, SD_HASH)));
+
+        assertThatThrownBy(() -> validator.validate(sdJwt, AUDIENCE, nonce, 30))
+            .isInstanceOf(SdJwtVerificationException.class);
+
+    }
+
+    @Test
     void validate_whenNoKeyBindingPresent_thenThrows() {
         when(sdJwt.getKeyBinding()).thenReturn(Optional.empty());
 
@@ -94,6 +104,18 @@ class SdJwtKeyBindingValidatorTest {
     }
 
     private static String createKeyBindingJwt(ECKey signingKey, String audience, String nonce, int ageSeconds, String sdHash) {
+        var claims = new JWTClaimsSet.Builder()
+                .audience(audience)
+                .claim("nonce", nonce)
+                .issueTime(Date.from(Instant.now().minusSeconds(ageSeconds)))
+                .claim("sd_hash", sdHash)
+                .build();
+        var jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.ES256).type(SdJwtConstants.KEY_BINDING_TYPE).build(), claims);
+        assertDoesNotThrow(() -> jwt.sign(new ECDSASigner(signingKey)));
+        return jwt.serialize();
+    }
+
+    private static String createKeyBindingJwt(ECKey signingKey, List<String> audience, String nonce, int ageSeconds, String sdHash) {
         var claims = new JWTClaimsSet.Builder()
                 .audience(audience)
                 .claim("nonce", nonce)

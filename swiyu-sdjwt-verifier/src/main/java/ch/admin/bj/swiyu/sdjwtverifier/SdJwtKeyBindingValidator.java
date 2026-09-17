@@ -49,6 +49,7 @@ class SdJwtKeyBindingValidator {
             DefaultJWTClaimsVerifier<SecurityContext> claimsVerifier = new DefaultJWTClaimsVerifier<>(
                     audience, // the key binding must be adressed to us
                     new JWTClaimsSet.Builder()
+                        .audience(audience) // Audience must be a String and our audience
                         .claim("nonce", nonce) // must be for the noncewe requested
                         .claim("sd_hash", sdJwt.getPresentationHash()).build(), // must match the hash of the sd-jwt the key binding is a proof for
                     Set.of("iat", "aud", "nonce", "sd_hash")              // RFC 9901 required claims (exp/nbf checked if present)
