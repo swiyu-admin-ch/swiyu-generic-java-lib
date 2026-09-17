@@ -1,19 +1,15 @@
 package ch.admin.bj.swiyu.sdjwtverifier;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
+import ch.admin.bj.swiyu.sdjwtutil.SdJwtConstants;
+import ch.admin.bj.swiyu.sdjwtverifier.exception.SdJwtVerificationException;
 import com.authlete.sd.Disclosure;
-
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ObjectNode;
 
-import ch.admin.bj.swiyu.sdjwtutil.SdJwtConstants;
-import ch.admin.bj.swiyu.sdjwtverifier.exception.SdJwtVerificationException;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Resolves the claims of an SD-JWT by applying its disclosures according to RFC 9901 §7.1.
@@ -40,7 +36,7 @@ class SdJwtDisclosureProcessor {
     Map<String, Object> process(SdJwt sdJwt) throws SdJwtVerificationException {
         try {
             JsonNode claims = SdJwtObjectMapper.INSTANCE.convertValue(sdJwt.getClaims().toJSONObject(), JsonNode.class);
-            // 3.a - For each Disclosure provided Calculate the digest over the base64url-encoded string
+            // 3.1.1 - For each Disclosure provided Calculate the digest over the base64url-encoded string
             // Reject immediately if the same disclosure appears more than once (identical digest)
             Map<String, Disclosure> digestToDisclosure = sdJwt.getDisclosures().stream().collect(
                 Collectors.toMap(
@@ -51,20 +47,24 @@ class SdJwtDisclosureProcessor {
                         }
                 ));
 
+            Set<String> foundDigests = new HashSet<>();
             List<String> usedDigests = new LinkedList<>();
 
-            JsonNode processed = nodeProcessor.processNode(claims, digestToDisclosure, usedDigests);
+            JsonNode processed = nodeProcessor.processNode(claims, digestToDisclosure, usedDigests, foundDigests);
 
-            // 3.e Remove _sd keys
+            // 3.5 Remove _sd keys
             nodeProcessor.removeSdKeys(processed);
 
-            // 3.f Check if correct _sd_alg-value Remove _sd_alg
+            // 3.6 Check if correct _sd_alg-value Remove _sd_alg
             validateAndRemoveSdAlg(processed);
+
+            // 4. If any digest is used more than once, the SD-JWT MUST be rejected -> not necessary anymore, as it was checked during processing
 
             // 5. If any Disclosure was not referenced by digest value in the Issuer-signed JWT (directly or recursively via other Disclosures), the SD-JWT MUST be rejected.
             if (usedDigests.size() != digestToDisclosure.size()) {
                 throw new SdJwtVerificationException("Unused disclosures detected");
             }
+
             // 6. Checking nbf / exp here is not necessary anymore, as it was done before and these claims cannot be overridden.
 
             sdJwt.setResolvedClaims(SdJwtObjectMapper.INSTANCE.convertValue(processed, new TypeReference<Map<String, Object>>(){}));

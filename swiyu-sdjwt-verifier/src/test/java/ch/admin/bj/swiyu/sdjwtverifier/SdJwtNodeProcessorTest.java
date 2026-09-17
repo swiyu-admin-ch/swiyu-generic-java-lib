@@ -1,23 +1,17 @@
 package ch.admin.bj.swiyu.sdjwtverifier;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
+import ch.admin.bj.swiyu.sdjwtverifier.exception.SdJwtVerificationException;
+import com.authlete.sd.Disclosure;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import com.authlete.sd.Disclosure;
-
 import tools.jackson.databind.JsonNode;
 
-import ch.admin.bj.swiyu.sdjwtverifier.exception.SdJwtVerificationException;
+import java.util.*;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 /**
  * Unit tests for {@link SdJwtNodeProcessor}, the recursive tree-walking core of the
@@ -33,8 +27,9 @@ class SdJwtNodeProcessorTest {
         String digest = disclosure.digest();
         JsonNode input = toJson(Map.of("_sd", List.of(digest), "other", "value"));
         List<String> usedDigests = new ArrayList<>();
+        Set<String> foundDigests = new HashSet<>();
 
-        JsonNode result = processor.processNode(input, Map.of(digest, disclosure), usedDigests);
+        JsonNode result = processor.processNode(input, Map.of(digest, disclosure), usedDigests, foundDigests);
 
         assertThat(result.get("name").asString()).isEqualTo("Bob");
         assertThat(result.get("other").asString()).isEqualTo("value");
@@ -47,8 +42,9 @@ class SdJwtNodeProcessorTest {
         String digest = disclosure.digest();
         JsonNode input = toJson(List.of(Map.of("...", digest)));
         List<String> usedDigests = new ArrayList<>();
+        Set<String> foundDigests = new HashSet<>();
 
-        JsonNode result = processor.processNode(input, Map.of(digest, disclosure), usedDigests);
+        JsonNode result = processor.processNode(input, Map.of(digest, disclosure), usedDigests, foundDigests);
 
         assertThat(result.isArray()).isTrue();
         assertThat(result.get(0).asString()).isEqualTo("secret-value");
@@ -61,17 +57,17 @@ class SdJwtNodeProcessorTest {
         String digest = disclosure.digest();
         JsonNode input = toJson(List.of(Map.of("...", digest)));
 
-        JsonNode result = processor.processNode(input, Map.of(), new ArrayList<>());
+        JsonNode result = processor.processNode(input, Map.of(), new ArrayList<>(), new HashSet<>());
 
         // Element must not simply be dropped, otherwise index-based access on the array would shift.
-        assertThat(result.get(0).asString()).isEqualTo(digest);
+        assertThat(result.get(0).get("digest").asString()).isEqualTo(digest);
     }
 
     @Test
     void processNode_whenSdClaimIsNotAnArray_thenThrows() {
         JsonNode input = toJson(Map.of("_sd", "not-an-array"));
 
-        assertThatThrownBy(() -> processor.processNode(input, Map.of(), new ArrayList<>()))
+        assertThatThrownBy(() -> processor.processNode(input, Map.of(), new ArrayList<>(), new HashSet<>()))
                 .isInstanceOf(SdJwtVerificationException.class)
                 .hasMessageContaining("'_sd' claim must be a JSON array");
     }
@@ -85,9 +81,41 @@ class SdJwtNodeProcessorTest {
         claims.put("_sd", List.of(digest));
         JsonNode input = toJson(claims);
 
-        assertThatThrownBy(() -> processor.processNode(input, Map.of(digest, disclosure), new ArrayList<>()))
+        assertThatThrownBy(() -> processor.processNode(input, Map.of(digest, disclosure), new ArrayList<>(), new HashSet<>()))
                 .isInstanceOf(SdJwtVerificationException.class)
                 .hasMessageContaining("already exists");
+    }
+
+    @Test
+    void processNode_whenDigestUsedMoreThanOnce_inArray_thenThrows() {
+        Disclosure disclosure = new Disclosure("name", "Bob");
+        String digest = disclosure.digest();
+        Map<String, Object> claims = new LinkedHashMap<>();
+        claims.put("_sd", List.of(digest, digest)); // same digest used twice
+        JsonNode input = toJson(claims);
+
+        assertThatThrownBy(() -> processor.processNode(input, Map.of(digest, disclosure), new ArrayList<>(), new HashSet<>()))
+                .isInstanceOf(SdJwtVerificationException.class)
+                .hasMessageContaining("Digest used more than once");
+    }
+
+    @Test
+    void processNode_whenDigestUsedMoreThanOnce_thenThrows() {
+        Disclosure disclosure = new Disclosure("name", "Bob");
+        String digest = disclosure.digest();
+
+        Map<String, Object> address1Map = new LinkedHashMap<>();
+        address1Map.put("_sd", List.of(digest));
+        var addressDisc1 = new Disclosure("address", address1Map);
+        var addressDigest1 = addressDisc1.digest();
+
+        Map<String, Object> claims = new LinkedHashMap<>();
+        claims.put("_sd", List.of(digest, addressDigest1));
+        JsonNode input = toJson(claims);
+
+        assertThatThrownBy(() -> processor.processNode(input, Map.of(addressDigest1, addressDisc1, digest, disclosure), new ArrayList<>(), new HashSet<>()))
+                .isInstanceOf(SdJwtVerificationException.class)
+                .hasMessageContaining("Digest used more than once");
     }
 
     @ParameterizedTest
@@ -97,7 +125,7 @@ class SdJwtNodeProcessorTest {
         String digest = disclosure.digest();
         JsonNode input = toJson(Map.of("_sd", List.of(digest)));
 
-        assertThatThrownBy(() -> processor.processNode(input, Map.of(digest, disclosure), new ArrayList<>()))
+        assertThatThrownBy(() -> processor.processNode(input, Map.of(digest, disclosure), new ArrayList<>(), new HashSet<>()))
                 .isInstanceOf(SdJwtVerificationException.class)
                 .hasMessageContaining("_sd or ...");
     }
