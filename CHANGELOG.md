@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.1.0] - 2026-09-18
 
 - Added DisclosureNotProvided class to show if a disclosure was not provided in the verifiers verification process instead of using digests (#1258)
+- Check exact match for audience instead of set comparison (#1258)
 
 ## [3.0.0] - 2026-08-31
 
