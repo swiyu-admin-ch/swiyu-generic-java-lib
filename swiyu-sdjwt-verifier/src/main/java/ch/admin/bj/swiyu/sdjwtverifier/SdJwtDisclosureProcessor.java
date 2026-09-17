@@ -1,17 +1,15 @@
 package ch.admin.bj.swiyu.sdjwtverifier;
 
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
+import ch.admin.bj.swiyu.sdjwtutil.SdJwtConstants;
+import ch.admin.bj.swiyu.sdjwtverifier.exception.SdJwtVerificationException;
 import com.authlete.sd.Disclosure;
-
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ObjectNode;
 
-import ch.admin.bj.swiyu.sdjwtutil.SdJwtConstants;
-import ch.admin.bj.swiyu.sdjwtverifier.exception.SdJwtVerificationException;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Resolves the claims of an SD-JWT by applying its disclosures according to RFC 9901 §7.1.
@@ -48,10 +46,6 @@ class SdJwtDisclosureProcessor {
                             throw new IllegalArgumentException("Request contains non-distinct disclosures");
                         }
                 ));
-
-            var digests = digestToDisclosure.keySet().stream().toList();
-
-            sdJwt.setDigests(digests);
 
             Set<String> foundDigests = new HashSet<>();
             List<String> usedDigests = new LinkedList<>();
