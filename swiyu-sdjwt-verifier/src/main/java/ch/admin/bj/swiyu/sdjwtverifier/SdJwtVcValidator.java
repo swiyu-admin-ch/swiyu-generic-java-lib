@@ -131,6 +131,12 @@ public class SdJwtVcValidator {
 
     /**
      * Processes disclosures for the verification case according to RFC 9901 7.1
+     *
+     * <p>Note: Elements for which no disclosure was provided are represented by
+     * the DisclosureNotProvided record. When serialized to JSON this appears as
+     * an object with the key "digest" containing the digest; consumers may
+     * check for instances of {@code DisclosureNotProvided} to detect non-disclosed values.</p>
+     *
      * @param sdJwt the sd-jwt to be processed
      * @return the claims resolved and processed accordingto RFC 9901 as JSON
      * @throws SdJwtVerificationException if the sd-jwt did not pass verification and MUST be rejected
