@@ -1,16 +1,15 @@
 package ch.admin.bj.swiyu.sdjwtverifier;
 
-import java.util.*;
-
 import com.authlete.sd.Disclosure;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+
+import java.util.*;
 
 /**
  * The class models a selective disclosure JSON Web Token (SD-JWT) w.r.t.

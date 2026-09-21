@@ -47,12 +47,12 @@ class SdJwtDisclosureProcessor {
                         }
                 ));
 
-            sdJwt.setDigests(digestToDisclosure.keySet());
-
             Set<String> foundDigests = new HashSet<>();
             List<String> usedDigests = new LinkedList<>();
 
             JsonNode processed = nodeProcessor.processNode(claims, digestToDisclosure, usedDigests, foundDigests);
+
+            sdJwt.setDigests(foundDigests);
 
             // 3.5 Remove _sd keys
             nodeProcessor.removeSdKeys(processed);
