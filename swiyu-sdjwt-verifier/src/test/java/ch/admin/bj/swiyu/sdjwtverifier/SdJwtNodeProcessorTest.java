@@ -60,7 +60,7 @@ class SdJwtNodeProcessorTest {
         JsonNode result = processor.processNode(input, Map.of(), new ArrayList<>(), new HashSet<>());
 
         // Element must not simply be dropped, otherwise index-based access on the array would shift.
-        assertThat(result.get(0).get("digest").asString()).isEqualTo(digest);
+        assertThat(result.get(0).asString()).isEqualTo(digest);
     }
 
     @Test

@@ -191,8 +191,8 @@ class SdJwtNodeProcessor {
 
                     value = SdJwtObjectMapper.INSTANCE.convertValue(disclosure.getClaimValue(), JsonNode.class);
                 } else {
-                    // if value is not requested, return a public record serialized to JSON so callers can check type
-                    value = SdJwtObjectMapper.INSTANCE.convertValue(new DisclosureNotProvided(digest), JsonNode.class);
+                    // if value is not requested, return the digest so callers can check type -> must be checked in verifier
+                    value = SdJwtObjectMapper.INSTANCE.convertValue(digest, JsonNode.class);
                 }
 
                 newArray.add(processNode(value, digestMap, usedDigests, foundDigests));

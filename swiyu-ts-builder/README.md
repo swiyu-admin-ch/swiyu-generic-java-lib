@@ -20,7 +20,7 @@ Add the dependency to your `pom.xml`:
 <dependency>
     <groupId>ch.admin.swiyu</groupId>
     <artifactId>swiyu-ts-builder</artifactId>
-    <version>3.1.0</version>
+    <version>3.1.1</version>
 </dependency>
 ```
 

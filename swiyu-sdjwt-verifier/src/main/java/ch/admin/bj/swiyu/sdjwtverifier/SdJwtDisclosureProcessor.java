@@ -52,6 +52,8 @@ class SdJwtDisclosureProcessor {
 
             JsonNode processed = nodeProcessor.processNode(claims, digestToDisclosure, usedDigests, foundDigests);
 
+            sdJwt.setDigests(foundDigests);
+
             // 3.5 Remove _sd keys
             nodeProcessor.removeSdKeys(processed);
 

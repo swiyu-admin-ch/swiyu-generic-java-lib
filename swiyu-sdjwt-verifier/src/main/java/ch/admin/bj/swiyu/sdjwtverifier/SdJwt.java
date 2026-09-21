@@ -1,19 +1,15 @@
 package ch.admin.bj.swiyu.sdjwtverifier;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import com.authlete.sd.Disclosure;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+
+import java.util.*;
 
 /**
  * The class models a selective disclosure JSON Web Token (SD-JWT) w.r.t.
@@ -30,6 +26,9 @@ public class SdJwt {
     private JWTClaimsSet claims;
     @Setter(value = AccessLevel.PACKAGE)
     private Map<String, Object> resolvedClaims;
+
+    @Setter(value = AccessLevel.PACKAGE)
+    private Set<String> digests;
 
     /**
      * <a href="https://www.rfc-editor.org/rfc/rfc9901.html#section-4.3">Key Binding JWT</a>
