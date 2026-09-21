@@ -47,6 +47,8 @@ class SdJwtDisclosureProcessor {
                         }
                 ));
 
+            sdJwt.setDigests(digestToDisclosure.keySet());
+
             Set<String> foundDigests = new HashSet<>();
             List<String> usedDigests = new LinkedList<>();
 
