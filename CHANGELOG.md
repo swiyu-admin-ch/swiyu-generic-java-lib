@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Next]
+
+- `swiyu-jwe-util`: Use nimbus to protect against JWE Decompression Bombs allowing catching decompression bombs inside the library during decompression (#1274) 
+
 ## [3.1.1] - 2026-09-21
 
 - Add original digests to sdjwt and re-add digests in resolved claims map to be compared in the verifier (#1258).
