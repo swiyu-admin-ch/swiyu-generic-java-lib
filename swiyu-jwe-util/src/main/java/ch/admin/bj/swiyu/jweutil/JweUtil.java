@@ -109,6 +109,8 @@ public class JweUtil {
 
         } catch (JweUtilException e) {
             throw e;
+        } catch (JOSEException e) {
+            throw new JweUtilException(e.getMessage(), e);
         } catch (Exception e) {
             throw new JweUtilException("Error during JWE decryption", e);
         }
