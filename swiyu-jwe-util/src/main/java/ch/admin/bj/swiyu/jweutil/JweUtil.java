@@ -4,6 +4,7 @@ import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.ECDHDecrypter;
 import com.nimbusds.jose.crypto.ECDHEncrypter;
 import com.nimbusds.jose.crypto.opts.MaxCompressedCipherTextLength;
+import com.nimbusds.jose.crypto.opts.MaxDecompressedPlainTextLength;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
 import lombok.experimental.UtilityClass;
@@ -89,7 +90,8 @@ public class JweUtil {
         JweDecryptionLimits effectiveLimits = limits != null ? limits : JweDecryptionLimits.defaults();
 
         Set<JWEDecrypterOption> options = Set.of(
-                new MaxCompressedCipherTextLength(effectiveLimits.maxCompressedCipherTextLength())
+                new MaxCompressedCipherTextLength(effectiveLimits.maxCompressedCipherTextLength()),
+                new MaxDecompressedPlainTextLength(effectiveLimits.maxDecompressedPayloadLength())
         );
 
         try {
@@ -98,16 +100,12 @@ public class JweUtil {
             }
 
             JWEObject jweObject = JWEObject.parse(jweString);
-            jweObject.decrypt(new ECDHDecrypter(ecKey), options);
+            // Note: in nimbus jose-jwt it seems that the compressed size check is done in
+            // JWEObject while decompressed size check in the decrypter.
+            // --> options must be passed to both
+            jweObject.decrypt(new ECDHDecrypter(ecKey, options), options);
 
-            String payload = jweObject.getPayload().toString();
-            if (payload.length() > effectiveLimits.maxDecompressedPayloadLength()) {
-                throw new JweUtilException(String.format(
-                        "Decrypted payload exceeds the maximum allowed decompressed size of %d characters",
-                        effectiveLimits.maxDecompressedPayloadLength()
-                ));
-            }
-            return payload;
+            return jweObject.getPayload().toString();
 
         } catch (JweUtilException e) {
             throw e;
