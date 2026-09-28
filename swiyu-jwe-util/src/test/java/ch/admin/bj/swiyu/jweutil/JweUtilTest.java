@@ -6,6 +6,7 @@ import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -124,7 +125,7 @@ class JweUtilTest {
                 JweDecryptionLimits.DEFAULT_MAX_COMPRESSED_CIPHER_TEXT_LENGTH, 1000);
         JweUtilException exception = assertThrows(JweUtilException.class,
                 () -> JweUtil.decrypt(encrypted, ecKey, limits));
-        assertTrue(exception.getMessage().contains("exceeds the maximum allowed decompressed size"));
+        assertThat(exception.getMessage()).contains("Couldn't decompress plain text: Decompressed plain text exceeds the maximum allowed length of 1000 bytes");
     }
 
     @Test

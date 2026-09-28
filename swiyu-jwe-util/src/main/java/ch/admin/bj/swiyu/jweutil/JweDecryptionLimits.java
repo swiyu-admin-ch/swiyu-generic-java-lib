@@ -11,7 +11,7 @@ public record JweDecryptionLimits(int maxCompressedCipherTextLength, int maxDeco
      */
     public static final int DEFAULT_MAX_COMPRESSED_CIPHER_TEXT_LENGTH = 20 * 1024 * 1024;
 
-    /** Default decompressed-payload limit: 20 MiB (max batch size per swiss-profile-issuance 1.0). */
+    /** Default decompressed-payload limit in bytes: 20 MiB (max batch size per swiss-profile-issuance 1.0). */
     public static final int DEFAULT_MAX_DECOMPRESSED_PAYLOAD_LENGTH = 20 * 1024 * 1024;
 
     /**
