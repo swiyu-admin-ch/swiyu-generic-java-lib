@@ -35,7 +35,7 @@ public class JweUtil {
             if (!(recipientPublicKey instanceof ECKey ecKey)) {
                 throw new JweUtilException("Only EC keys are supported.");
             }
-            JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.ECDH_ES, EncryptionMethod.A128GCM)
+            JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.ECDH_ES, EncryptionMethod.A256GCM)
                     .compressionAlgorithm(CompressionAlgorithm.DEF)
                     .keyID(ecKey.getKeyID())
                     .build();
