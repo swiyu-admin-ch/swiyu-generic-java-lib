@@ -7,7 +7,7 @@
     <packaging>jar</packaging>
     <artifactId>swiyu-generic-java-all</artifactId>
     <groupId>ch.admin.swiyu</groupId>
-    <version>3.1.1</version>
+    <version>3.2.0</version>
     <!-- required by https://central.sonatype.org/publish/requirements/ -->
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Aggregator module that includes all Swiyu utility libraries</description>
@@ -102,7 +102,7 @@
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-core</artifactId>
-                <version>11.0.23</version>
+                <version>11.0.26</version>
                 <scope>compile</scope>
             </dependency>
 
