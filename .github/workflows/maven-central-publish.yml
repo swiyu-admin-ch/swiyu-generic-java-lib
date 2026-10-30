@@ -3,7 +3,7 @@ permissions:
   contents: read
 on:
   release:
-    types: [created]
+    types: [published] # Published event triggers for for pre-releases and releases. Unlike `created` this works with draft releases.
   workflow_dispatch:
 jobs:
   publish:
