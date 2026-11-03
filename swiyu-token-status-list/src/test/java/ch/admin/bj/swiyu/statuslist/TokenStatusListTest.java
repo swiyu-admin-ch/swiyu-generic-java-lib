@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import ch.admin.bj.swiyu.statuslist.dto.TokenStatusListTokenDto;
+import org.junit.jupiter.params.provider.ValueSource;
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -175,6 +176,23 @@ class TokenStatusListTest {
         assertDoesNotThrow(() -> {
             TokenStatusList.decodeStatusList(base64CompressionBomb, 204800);
         });
+    }
+
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 15})
+    void testTokenStatusListBounds_whenInBounds_thenSuccess(int testIndex) {
+        // Create Status List with 2 Bytes; indexes 0..15
+        var testStatusList = new TokenStatusList(2, 16);
+        assertDoesNotThrow(() -> testStatusList.getStatus(testIndex));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {Integer.MIN_VALUE, Integer.MAX_VALUE, -1, 16})
+    void testTokenStatusListBounds_whenOutOfBounds_thenThrows(int testIndex) {
+        // Create Status List with 2 Bytes; indexes 0..15
+        var testStatusList = new TokenStatusList(2, 16);
+        assertThrows(IndexOutOfBoundsException.class, () -> testStatusList.getStatus(testIndex));
     }
 
     /**
