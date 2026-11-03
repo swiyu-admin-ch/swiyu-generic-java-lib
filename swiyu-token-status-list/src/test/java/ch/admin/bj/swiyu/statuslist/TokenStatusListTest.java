@@ -180,10 +180,18 @@ class TokenStatusListTest {
 
 
     @ParameterizedTest
-    @ValueSource(ints = {Integer.MIN_VALUE, Integer.MAX_VALUE, -1, 8})
-    void testTokenStatusListBounds(int testIndex) {
-        // Create Status List with index 0..7
-        var testStatusList = new TokenStatusList(2, 8);
+    @ValueSource(ints = {0, 15})
+    void testTokenStatusListBounds_whenInBounds_thenSuccess(int testIndex) {
+        // Create Status List with 2 Bytes; indexes 0..15
+        var testStatusList = new TokenStatusList(2, 16);
+        assertDoesNotThrow(() -> testStatusList.getStatus(testIndex));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {Integer.MIN_VALUE, Integer.MAX_VALUE, -1, 16})
+    void testTokenStatusListBounds_whenOutOfBounds_thenThrows(int testIndex) {
+        // Create Status List with 2 Bytes; indexes 0..15
+        var testStatusList = new TokenStatusList(2, 16);
         assertThrows(IndexOutOfBoundsException.class, () -> testStatusList.getStatus(testIndex));
     }
 
