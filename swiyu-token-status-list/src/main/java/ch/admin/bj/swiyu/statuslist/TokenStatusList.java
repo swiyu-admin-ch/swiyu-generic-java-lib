@@ -227,7 +227,7 @@ public class TokenStatusList {
     private void verifyIndexArgument(int idx) {
         int statusListBits = this.statusList.length * 8;
         int maximumIndex = statusListBits / bits;
-        if (idx < 0 && idx <= maximumIndex) {
+        if (idx < 0 || idx >= maximumIndex) {
             throw new IndexOutOfBoundsException("Status List Index %d out of bounds; must be between 0 and %d".formatted(idx, maximumIndex));
         }
     }
