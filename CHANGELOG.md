@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Index Out of bounds is now thrown correctly instead of performing integer overflow and continuing with calculations `(#1213)`
+- Regression regarding SCID linkage between webvh and did document by updating to did-resolver 2.10.1 (#1516)
 
 ## [3.2.0]
 
