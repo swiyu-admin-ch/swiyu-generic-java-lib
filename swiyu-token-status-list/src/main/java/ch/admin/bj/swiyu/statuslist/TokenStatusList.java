@@ -225,19 +225,21 @@ public class TokenStatusList {
     }
 
     private void verifyIndexArgument(int idx) {
-        int statusListBits = this.statusList.length * 8;
-        int maximumIndex = statusListBits / bits;
-        if (idx < 0 && idx <= maximumIndex) {
+        // long arithmetic: length * 8 would overflow int for lists >= 256 MiB
+        long statusListBits = this.statusList.length * 8L;
+        // Inclusive upper bound of valid indices
+        long maximumIndex = statusListBits / bits - 1;
+        if (idx < 0 || idx > maximumIndex) {
             throw new IndexOutOfBoundsException("Status List Index %d out of bounds; must be between 0 and %d".formatted(idx, maximumIndex));
         }
     }
 
-    private byte getStatusEntryByte(int idx) throws IndexOutOfBoundsException {
-        try {
-            return statusList[idx * bits / 8];
-        } catch (ArrayIndexOutOfBoundsException e) {
-            throw new IndexOutOfBoundsException("Status List Index %d out of bounds (Max size %d)".formatted(idx, statusList.length * bits * 8));
-        }
+    /**
+     * Reads the byte containing the given entry. The index must already have been validated
+     * with {@link #verifyIndexArgument(int)}, which guarantees that {@code idx * bits} cannot overflow.
+     */
+    private byte getStatusEntryByte(int idx) {
+        return statusList[idx * bits / 8];
     }
 
     /**
