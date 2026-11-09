@@ -10,7 +10,7 @@ It provides a type-safe, fluent builder API for all Trust Statement types define
 - **All swiyu Trust Statement types**: Ready-to-use builders for `idTS`, `vqPS`, `pvaTS`, `piaTS`, `piTLS`, and `ncTLS`
 - **Validation**: Built-in constraint enforcement (UUID v4, RFC 3339 timestamps, max-length checks, non-empty list guards) – fail-fast in setters, complete validation before object construction
 - **Signing agnostic**: Produces an unsigned Nimbus `SignedJWT` (header + claims) – signing is delegated to a `JWSSigner` of your choice (e.g. HSM, software key)
-- **No framework dependency**: Pure Java 21, no Spring Boot required
+- **No framework dependency**: Pure Java 25, no Spring Boot required
 
 ## Installation
 
@@ -24,7 +24,7 @@ Add the dependency to your `pom.xml`:
 </dependency>
 ```
 
-**Note:** Requires Java 21+.
+**Note:** Requires Java 25+.
 
 ## Statement categories
 
@@ -185,7 +185,7 @@ Builder instances are **single-use** – calling `build()` a second time on the 
 ## Dependencies
 
 - **Nimbus JOSE JWT 10.6**: JWT/JWS data structures and serialization
-- **Java 21+**: Core runtime
+- **Java 25+**: Core runtime
 
 ## License
 

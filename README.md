@@ -60,7 +60,7 @@ mvn test -pl swiyu-jwt-validator
 
 ## Requirements
 
-- Java 21 or higher
+- Java 25 or higher
 - Maven 3.6 or higher
 
 ## Usage Examples
