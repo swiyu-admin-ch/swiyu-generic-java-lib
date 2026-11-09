@@ -180,11 +180,33 @@ class TokenStatusListTest {
 
 
     @ParameterizedTest
-    @ValueSource(ints = {0, 15})
-    void testTokenStatusListBounds_whenInBounds_thenSuccess(int testIndex) {
-        // Create Status List with 2 Bytes; indexes 0..15
-        var testStatusList = new TokenStatusList(2, 16);
-        assertDoesNotThrow(() -> testStatusList.getStatus(testIndex));
+    @ValueSource(ints = {1, 2, 4, 8})
+    void accessors_lastValidIndex_succeed(int bits) {
+        var list = new TokenStatusList(bits, 64);
+        int max = 64 - 1;
+        assertDoesNotThrow(() -> list.getStatus(max));
+        assertDoesNotThrow(() -> list.setStatus(max, 1));
+        assertDoesNotThrow(() -> list.unsetStatus(max));
+        assertDoesNotThrow(() -> list.getStatus(0));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 2, 4, 8})
+    void accessors_indexOutOfBounds_throwIndexOutOfBounds(int bits) {
+        var list = new TokenStatusList(bits, 64);
+        for (int idx : new int[]{-1, 64, 65, Integer.MIN_VALUE, Integer.MAX_VALUE}) {
+            assertThrows(IndexOutOfBoundsException.class, () -> list.getStatus(idx));
+            assertThrows(IndexOutOfBoundsException.class, () -> list.setStatus(idx, 1));
+            assertThrows(IndexOutOfBoundsException.class, () -> list.unsetStatus(idx));
+        }
+    }
+
+    @Test
+    void getStatus_overflowingIndexWouldWrapToValidPosition_throwsIndexOutOfBounds() {
+        // bits=8: idx * bits overflows int for idx=2^29+5 and would wrap to entry 5
+        var list = new TokenStatusList(8, 16);
+        assertThrows(IndexOutOfBoundsException.class, () -> list.getStatus((1 << 29) + 5));
+        assertThrows(IndexOutOfBoundsException.class, () -> list.setStatus((1 << 29) + 5, 1));
     }
 
     @ParameterizedTest
