@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Index Out of bounds is now thrown correctly instead of performing integer overflow and continuing with calculations `(#1213)`
+- `swiyu-ts-verifier`: Fix `exp` and `iat` = null edge cases (previously mapped to 0) in `Statement` (#1507)
 
 ## [3.2.0]
 

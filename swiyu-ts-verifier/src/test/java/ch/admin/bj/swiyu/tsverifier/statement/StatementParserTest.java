@@ -39,6 +39,14 @@ class StatementParserTest {
         );
     }
 
+    private static Stream<Arguments> iatExpNullProvider() {
+        return Stream.of(
+                Arguments.of(null, 1690360968L),
+                Arguments.of(1690360968L, null),
+                Arguments.of(null, null)
+        );
+    }
+
     @ParameterizedTest
     @MethodSource("statementsProvider")
     void parseStatement_returnsCorrectStatement(ExampleTrustStatement example, Class<? extends Statement> expectedClass) {
@@ -68,4 +76,53 @@ class StatementParserTest {
         StatementParser parser = new StatementParser();
         var parsedStatement = assertDoesNotThrow(() -> parser.parse(serializedJwt));
         assertThat(parsedStatement).as("Statement Header %s does not match the statement body".formatted(example.getHeader())).isEmpty();
-    }}
+    }
+
+    @ParameterizedTest
+    @MethodSource("iatExpNullProvider")
+    void parseStatement_withNullIatOrExp_returnsEmptyOptional(Long iat, Long exp) {
+        String body = """
+                {
+                    "sub": "did:example:actor",
+                    "iat": %s,
+                    "exp": %s,
+                    "status":  {
+                        "status_list": {
+                          "idx": 1,
+                          "uri": "https://example.com/statuslists/1"
+                        }
+                    },
+                    "entity_name": "John Smith's Smithery",
+                    "entity_name#de": "John Smith's Schmiderei",
+                    "entity_name#de-CH": "John Smith's Schmiderei",
+                    "is_state_actor": false,
+                    "registry_ids": [
+                      {
+                        "type": "UID",
+                        "value": "CHE-000.000.000"
+                      },
+                      {
+                        "type": "LEI",
+                        "value": "0A1B2C3D4E5F6G7H8J9I"
+                      }
+                    ]
+                }""".formatted(iat, exp);
+        String header = """
+                {
+                   "typ": "swiyu-identity-trust-statement+jwt",
+                   "alg": "ES256",
+                   "kid": "did:example:trust-issuer#key-1",
+               	   "profile_version": "swiss-profile-trust:1.0.0"
+               }""";
+        String serializedJwt = createSignedJwt(header, body);
+        StatementParser parser = new StatementParser();
+        var parsed = assertDoesNotThrow(() -> parser.parse(serializedJwt));
+        assertThat(parsed).as("Combination of iat: %s and exp: %s contains null values. And results in empty".formatted(iat, exp)).isEmpty();
+    }
+
+    private String createSignedJwt(String header, String body) {
+        var jwt = assertDoesNotThrow(() -> new SignedJWT(JWSHeader.parse(header), JWTClaimsSet.parse(body)));
+        assertDoesNotThrow(() -> jwt.sign(new ECDSASigner(key)));
+        return jwt.serialize();
+    }
+}
