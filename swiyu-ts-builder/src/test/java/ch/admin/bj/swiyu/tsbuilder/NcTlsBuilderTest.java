@@ -304,6 +304,28 @@ class NcTlsBuilderTest {
     }
 
     @Test
+    void nonCompliantActorBuilder_invalidDidMethod_throwsValidationException() {
+        assertThrows(TrustStatementValidationException.class,
+                () -> new NcTlsBuilder.NonCompliantActorBuilder(
+                        "did:example:123", VALID_FLAGGED_AT, VALID_REASON));
+    }
+
+    @Test
+    void nonCompliantActorBuilder_invalidDidScid_throwsValidationException() {
+        // SCID too short
+        assertThrows(TrustStatementValidationException.class,
+                () -> new NcTlsBuilder.NonCompliantActorBuilder(
+                        "did:tdw:QmShort", VALID_FLAGGED_AT, VALID_REASON));
+    }
+
+    @Test
+    void nonCompliantActorBuilder_invalidDidMissingScid_throwsValidationException() {
+        assertThrows(TrustStatementValidationException.class,
+                () -> new NcTlsBuilder.NonCompliantActorBuilder(
+                        "did:tdw:", VALID_FLAGGED_AT, VALID_REASON));
+    }
+
+    @Test
     void nonCompliantActorBuilder_blankFlaggedAt_throwsValidationException() {
         assertThrows(TrustStatementValidationException.class,
                 () -> new NcTlsBuilder.NonCompliantActorBuilder(VALID_ACTOR_DID, "  ", VALID_REASON));

@@ -152,6 +152,10 @@ public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> im
                 throw new TrustStatementValidationException(
                         "non_compliant_actor actor must not be null or blank");
             }
+            if (!AbstractTrustStatementBuilder.DID_PATTERN.matcher(did).matches()) {
+                throw new TrustStatementValidationException(
+                        "non_compliant_actor actor must be a valid swiyu DID (did:tdw or did:webvh with SCID), got: " + did);
+            }
             if (flaggedAt == null || flaggedAt.isBlank()) {
                 throw new TrustStatementValidationException(
                         "non_compliant_actor flagged_at must not be null or blank");
