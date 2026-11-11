@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Index Out of bounds is now thrown correctly instead of performing integer overflow and continuing with calculations `(#1213)`
-- `TokenStatusListVerifier` matchesIssuerIfRequired now checks for exact match of issuer instead of startsWith as indicated by the function name`(#1505)`
+- `TokenStatusListVerifier` matchesIssuerIfRequired now checks for exact match of issuer instead of startsWith as indicated by the function name`(#1504)`
 
 ## [3.2.0]
 
