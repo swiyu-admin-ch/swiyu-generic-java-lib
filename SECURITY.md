@@ -4,7 +4,7 @@
 
 | Version                     | Supported |
 |-----------------------------|-----------|
-| Latest tagged release 1.8.x | ✅         |
+| Latest tagged release 3.3.x | ✅         |
 
 ## Reporting a Vulnerability
 
@@ -21,7 +21,7 @@ Thank you for helping us to make our project more secure.
 The bug bounty program is limited to the following branches and the newest tagged release on that branch. The relevant
 branches are:
 
-- [release/1.8.x](https://github.com/swiyu-admin-ch/swiyu-generic-java-lib/tree/release/1.8.x)
+- [release/3.3.x](https://github.com/swiyu-admin-ch/swiyu-generic-java-lib/tree/release/3.3.x)
 
 Vulnerabilities affecting any other branches, older tags, forks and code are out of scope unless explicitly announced as
 included.
