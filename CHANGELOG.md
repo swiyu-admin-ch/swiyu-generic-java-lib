@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Index Out of bounds is now thrown correctly instead of performing integer overflow and continuing with calculations `(#1213)`
 - `swiyu-ts-verifier`: Fix `exp` and `iat` = null edge cases (previously mapped to 0) in `Statement` (#1507)
+- `swiyu-ts-builder`: Strict RFC 3339 timestamp validation in `NonCompliantActorBuilder` constructor (requires seconds, optional fractional seconds, requires timezone offset)
 
 ### Added
 - `swiyu-jwe-util`: Enforce Swiss Profile compliance in `JweUtil#encrypt` by introducing additional validations for the P-256 elliptic curve, optionally verifying the use of the ECDH-ES algorithm (as alg is optional), and ensuring that the encryption method and compression algorithm meet the Swiss Profile requirements (#EIDOMNI-1509)

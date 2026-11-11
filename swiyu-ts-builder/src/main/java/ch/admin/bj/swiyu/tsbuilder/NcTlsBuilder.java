@@ -3,7 +3,9 @@ package ch.admin.bj.swiyu.tsbuilder;
 import com.nimbusds.jwt.JWTClaimsSet;
 
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,6 +44,34 @@ import java.util.Map;
 public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> implements TrustListStatement {
 
     private static final String TYP = "swiyu-non-compliance-trust-list-statement+jwt";
+
+    /**
+     * Strict RFC 3339 date-time formatter requiring seconds component with optional fractional seconds.
+     * Pattern: {@code yyyy-MM-dd'T'HH:mm:ss[.SSSSSS]XXX} (e.g. {@code 2026-02-25T07:07:35Z},
+     * {@code 2026-02-25T07:07:35.123456Z}, or {@code 2026-02-25T08:07:35+01:00}).
+     * <p>
+     * RFC 3339 requires the seconds component and allows optional fractional seconds (time-secfrac);
+     * {@link DateTimeFormatter#ISO_OFFSET_DATE_TIME} is too lenient as it makes seconds optional
+     * via {@link DateTimeFormatter#ISO_LOCAL_TIME}.
+     * </p>
+     */
+    private static final DateTimeFormatter RFC3339_DATE_TIME = new DateTimeFormatterBuilder()
+            .appendValue(ChronoField.YEAR, 4)
+            .appendLiteral('-')
+            .appendValue(ChronoField.MONTH_OF_YEAR, 2)
+            .appendLiteral('-')
+            .appendValue(ChronoField.DAY_OF_MONTH, 2)
+            .appendLiteral('T')
+            .appendValue(ChronoField.HOUR_OF_DAY, 2)
+            .appendLiteral(':')
+            .appendValue(ChronoField.MINUTE_OF_HOUR, 2)
+            .appendLiteral(':')
+            .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
+            .optionalStart()
+            .appendFraction(ChronoField.NANO_OF_SECOND, 1, 9, true)
+            .optionalEnd()
+            .appendOffsetId()
+            .toFormatter();
 
     private final List<NonCompliantActor> nonCompliantActors = new ArrayList<>();
 
@@ -127,7 +157,7 @@ public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> im
                         "non_compliant_actor flagged_at must not be null or blank");
             }
             try {
-                DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(flaggedAt);
+                RFC3339_DATE_TIME.parse(flaggedAt);
             } catch (DateTimeParseException e) {
                 throw new TrustStatementValidationException(
                         "non_compliant_actor flagged_at must be a valid RFC 3339 timestamp "
