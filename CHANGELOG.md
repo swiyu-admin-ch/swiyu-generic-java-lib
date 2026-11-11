@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [NEXT]
 
 ### Changed
-- `swiyu-ts-builder`: Updated `PiaTsBuilder` length limits to match Trust Protocol 2.0 – `vct_name` max length 500 → 40, `reason` max length 50 → 1000
+- `swiyu-ts-builder`: Updated `PiaTsBuilder` length limits to match Trust Protocol 2.0 – `vct_name` max length 500 → 40, `reason` max length 50 → 1000 `(#1505)` 
 
 ### Fixed
 - Index Out of bounds is now thrown correctly instead of performing integer overflow and continuing with calculations `(#1213)`
