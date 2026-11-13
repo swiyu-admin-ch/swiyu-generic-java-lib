@@ -13,6 +13,11 @@ import java.util.*;
  * Recursively resolves selectively disclosed claims within a JSON claim tree according to
  * RFC 9901 §7.1 (object {@code _sd} arrays and array {@code ...} elements).
  *
+ * <p><strong>Deliberate deviation:</strong> array elements without a matching Disclosure are
+ * kept as digest placeholders instead of being removed as required by RFC 9901 §7.1 step 3.d.
+ * Removing them would shift the positions and disable the array index addressation of OID4VP DCQL
+ * claims path pointers (see {@code processArrayNode}).</p>
+ *
  * <p>This class is framework-agnostic and has no Spring dependencies.</p>
  */
 class SdJwtNodeProcessor {
@@ -191,7 +196,13 @@ class SdJwtNodeProcessor {
 
                     value = SdJwtObjectMapper.INSTANCE.convertValue(disclosure.getClaimValue(), JsonNode.class);
                 } else {
-                    // if value is not requested, return the digest so callers can check type -> must be checked in verifier
+                    // Deliberate deviation from RFC 9901 §7.1 step 3.d, which requires
+                    // removing array elements without a matching Disclosure. Removing an element shifts every following
+                    // position, so a DCQL claims path pointers addressing an element by index (e.g. ["addresses", 1])
+                    // would resolve to a different element (or no element) than the issuer
+                    // defined. Keeping the issuer-signed digest preserves the original positions.
+                    // Consumers MUST detect these placeholders via the embedded digests on SdJwt
+                    // and treat them as "not disclosed", never as claim values.
                     value = SdJwtObjectMapper.INSTANCE.convertValue(digest, JsonNode.class);
                 }
 

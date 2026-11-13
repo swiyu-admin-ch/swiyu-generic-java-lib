@@ -57,7 +57,6 @@ class TokenStatusListVerifierTest {
                 }
             }""", Map.class),
             new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).keyID("did:example:123456789#key-2").build());
-
     }
 
     @Test
@@ -83,6 +82,26 @@ class TokenStatusListVerifierTest {
         StatusVerificationResultDto result = assertDoesNotThrow(() -> verifier.verifyStatus(defaultReference, defaultStatusListToken));
         assertThat(result.valid()).as("Suspended, should be not valid").isFalse();
         assertThat(result.status()).as("Should be 2 indicating suspended").hasValue(2);
+    }
+
+    @Test
+    void testVerification_whenNotMatchingKids() {
+        var statusListTokenWithSameBeginningKid = TokenStatusListMapper.toTokenStatusListToken(
+                mapper.readValue("""
+            {
+                "sub": "https://www.example.com/status-lists/1",
+                "iat": 123456789,
+                "exp": 234567891,
+                "ttl": 15,
+                "status_list": {
+                "bits": 2,
+                "lst": "eNrt2zENACEQAEEuoaBABP5VIO01fCjIHTMStt9ovGVIAAAAAABAbiEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEB5WwIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAID0ugQAAAAAAAAAAAAAAAAAQG12SgAAAAAAAAAAAAAAAAAAAAAAAAAAAOCSIQEAAAAAAAAAAAAAAAAAAAAAAAD8ExIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwJEuAQAAAAAAAAAAAAAAAAAAAAAAAMB9SwIAAAAAAAAAAAAAAAAAAACoYUoAAAAAAAAAAAAAAEBqH81gAQw"
+                }
+            }""", Map.class),
+                new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).keyID("did:example:123456789_ADDITIONAL#key-2").build());
+
+        StatusVerificationResultDto result = assertDoesNotThrow(() -> verifier.verifyStatus(defaultReference, statusListTokenWithSameBeginningKid));
+        assertThat(result.valid()).as("Status as index 1 should be valid and Status List Objects were valid").isFalse();
     }
 
     @Test
