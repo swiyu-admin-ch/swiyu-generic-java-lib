@@ -43,7 +43,7 @@ public final class JwtUtil {
             try {
                 return new Ed25519Verifier(key.toOctetKeyPair());
             } catch (JOSEException e) {
-                throw new JwtUtilException("Failed to create EdDSA verifier", e);
+                throw new JwtUtilException("Failed to create Ed25519 verifier", e);
             }
         });
         VERIFIER_FACTORIES.put(KeyType.EC, key -> {
@@ -207,9 +207,9 @@ public final class JwtUtil {
      */
     public static JWSHeader.Builder prepareHeaderBuilder(JWSSigner signer) {
         JWSAlgorithm algorithm = JWSAlgorithm.ES256;
-            if (signer.supportedJWSAlgorithms().contains(JWSAlgorithm.Ed25519) || signer.supportedJWSAlgorithms().contains(JWSAlgorithm.EdDSA)) {
-                algorithm = JWSAlgorithm.EdDSA;
-            }
+        if (signer.supportedJWSAlgorithms().contains(JWSAlgorithm.Ed25519) || signer.supportedJWSAlgorithms().contains(JWSAlgorithm.EdDSA)) {
+            algorithm = JWSAlgorithm.Ed25519;
+        }
         return new JWSHeader.Builder(algorithm);
     }
 

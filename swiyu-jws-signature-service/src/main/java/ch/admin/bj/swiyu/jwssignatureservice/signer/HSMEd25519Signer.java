@@ -34,13 +34,13 @@ public class HSMEd25519Signer implements JWSSigner{
     @Override
     public Base64URL sign(JWSHeader header, byte[] signingInput) throws JOSEException {
         try {
-            Signature signer = Signature.getInstance("EdDSA", provider);
+            Signature signer = Signature.getInstance("Ed25519", provider);
             signer.initSign(privateKey);
             signer.update(signingInput);
             byte[] signature = signer.sign();
             return Base64URL.encode(signature);
         } catch (InvalidKeyException | NoSuchAlgorithmException | SignatureException e) {
-            throw new JOSEException("Failed to sign with HSM ED25519 key due to: " + e.getMessage(), e);
+            throw new JOSEException("Failed to sign with HSM Ed25519 key due to: " + e.getMessage(), e);
         }
     }
     

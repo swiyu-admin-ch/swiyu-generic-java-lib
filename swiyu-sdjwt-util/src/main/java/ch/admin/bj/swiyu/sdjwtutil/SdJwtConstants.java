@@ -21,7 +21,7 @@ public final class SdJwtConstants {
     /**
      * Supported algorithms for SD-JWT signatures.
      */
-    public static final Set<String> SUPPORTED_ALGORITHMS = Set.of(JWSAlgorithm.ES256.getName(), JWSAlgorithm.EdDSA.getName());
+    public static final Set<String> SUPPORTED_ALGORITHMS = Set.of(JWSAlgorithm.ES256.getName(), JWSAlgorithm.Ed25519.getName());
 
     /**
      * Digest of the Disclosure for an array element
