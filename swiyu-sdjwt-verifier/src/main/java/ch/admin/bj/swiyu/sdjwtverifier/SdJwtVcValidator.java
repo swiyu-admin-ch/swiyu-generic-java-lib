@@ -132,9 +132,11 @@ public class SdJwtVcValidator {
     /**
      * Processes disclosures for the verification case according to RFC 9901 7.1
      *
-     * <p>Note: Elements for which no disclosure was provided are represented by
-     * the original digest. When serialized to JSON this appears as a string containing the digest; consumers must
-     * compare the original digests provided in {@link SdJwt} to detect non-provided values.</p>
+     * <p>Note: for array elements without a corresponding Disclosure, the original digest is kept
+     * in place instead of removing the element (a deliberate deviation from RFC 9901 §7.1 step 3.d).
+     * This preserves array indices for OID4VP DCQL claims path pointers. The placeholder is the
+     * issuer-signed digest string; consumers must compare against the embedded digests in
+     * {@link SdJwt} to detect non-provided values.</p>
      *
      * @param sdJwt the sd-jwt to be processed
      * @return the claims resolved and processed according to RFC 9901 as JSON

@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Index Out of bounds is now thrown correctly instead of performing integer overflow and continuing with calculations `(#1213)`
 - Regression regarding SCID linkage between webvh and did document by updating to did-resolver 2.10.1 (#1516)
 
+### Changed
+- `swiyu-sdjwt-verifier`: Documented deliberate deviation from RFC 9901 §7.1 step 3.d for array elements. The deviation preserves array indices for OID4VP DCQL claims path pointers (#1497)
+
+### Added
+- `swiyu-sdjwt-util`: Added `aka_vcts` to the list of protected claims that cannot be selectively disclosed (#1497)
+
 ## [3.2.0]
 
 ### Changed

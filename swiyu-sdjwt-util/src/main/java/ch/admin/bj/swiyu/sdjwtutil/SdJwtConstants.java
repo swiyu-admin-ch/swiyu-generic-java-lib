@@ -49,6 +49,7 @@ public final class SdJwtConstants {
             "status",
             "vct_metadata_uri", 
             "vct_metadata_uri#integrity",
+            "aka_vcts",
             SD_CLAIM,
             SD_ALG_CLAIM,
             SD_ARRAY_CLAIM
