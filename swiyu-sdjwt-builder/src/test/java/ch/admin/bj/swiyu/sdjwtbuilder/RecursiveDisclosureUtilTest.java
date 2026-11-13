@@ -10,6 +10,8 @@ import com.authlete.sd.Disclosure;
 import com.authlete.sd.SDObjectBuilder;
 import ch.admin.bj.swiyu.sdjwtbuilder.exception.SdJwtBuilderException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class RecursiveDisclosureUtilTest {
 
@@ -45,14 +47,15 @@ class RecursiveDisclosureUtilTest {
         assertThat(disclosures).hasSize(3); // roles, admin, user
     }
 
-    @Test
-    void putSelectivelyDiscloseableData_WithProtectedClaim_ThrowsException() {
+    @ParameterizedTest
+    @ValueSource(strings = {"iss", "aka_vcts"})
+    void putSelectivelyDiscloseableData_WithProtectedClaim_ThrowsException(String claimName) {
         var builder = new SDObjectBuilder();
-        Map<String, Object> data = Map.of("iss", "invalid");
+        Map<String, Object> data = Map.of(claimName, "invalid");
 
         assertThatThrownBy(() -> RecursiveDisclosureUtil.putSelectivelyDiscloseableData(builder, data))
             .isInstanceOf(SdJwtBuilderException.class)
-            .hasMessageContaining("Protected claim iss MUST NOT be overridden");
+            .hasMessageContaining("Protected claim " + claimName + " MUST NOT be overridden");
     }
 
     @Test
