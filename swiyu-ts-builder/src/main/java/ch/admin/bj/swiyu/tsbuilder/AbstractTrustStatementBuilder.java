@@ -45,7 +45,7 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
     private static final String ISSUED_AT = "issuedAt";
     private static final String EXPIRES_AT = "expiresAt";
 
-    private static final Pattern DID_PATTERN =
+    static final Pattern DID_PATTERN =
             Pattern.compile(
                     "^did:(webvh|tdw):Q[1-9A-HJ-NP-Za-km-z]{45}(:[0-9a-zA-Z%_.-]+)++$");
 

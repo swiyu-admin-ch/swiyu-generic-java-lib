@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import com.authlete.sd.Disclosure;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.jwk.Curve;
@@ -61,6 +62,17 @@ class SdJwtParserTest {
         var presentation = testVc.jwt().serialize() + "~";
         assertDoesNotThrow(() -> SdJwtParser.parseSdJwt(presentation));
     }
+
+    @Test
+    void parseSdJwt_whenAkaVctsIsDisclosed_thenThrows() {
+        var disclosure = new Disclosure("aka_vcts", "some-value");
+        var presentation = testVc.jwt().serialize() + "~" + disclosure.getDisclosure() + "~";
+
+        assertThatThrownBy(() -> SdJwtParser.parseSdJwt(presentation))
+            .isInstanceOf(SdJwtParseException.class)
+            .hasMessageContaining("protected claim");
+    }
+
     /**
      * Test missing disclosures
      * JWT
@@ -72,4 +84,3 @@ class SdJwtParserTest {
     }
 
 }
-

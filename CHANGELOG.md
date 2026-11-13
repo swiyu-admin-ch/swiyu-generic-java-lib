@@ -7,9 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [NEXT]
 
+### Changed
+- `swiyu-ts-builder`: Updated `PiaTsBuilder` length limits to match Trust Protocol 2.0 – `vct_name` max length 500 → 40, `reason` max length 50 → 1000 `(#1505)` 
+
+### Fixed
+- Index Out of bounds is now thrown correctly instead of performing integer overflow and continuing with calculations (#1213)
+- `swiyu-ts-verifier`: Fix `exp` and `iat` = null edge cases (previously mapped to 0) in `Statement` (#1507)
+- `swiyu-ts-builder`: Strict RFC 3339 timestamp validation in `NonCompliantActorBuilder` constructor (requires seconds, optional fractional seconds, requires timezone offset) (#1510)
+- `swiyu-ts-builder`: DID validation in `NonCompliantActorBuilder` constructor (requires valid did:tdw or did:webvh with SCID) (#1510)
+
+### Added
+- `swiyu-jwe-util`: Enforce Swiss Profile compliance in `JweUtil#encrypt` by introducing additional validations for the P-256 elliptic curve, optionally verifying the use of the ECDH-ES algorithm (as alg is optional), and ensuring that the encryption method and compression algorithm meet the Swiss Profile requirements (#EIDOMNI-1509)
+
+## [3.3.0] - 2026-11-09
+
 ### Fixed
 - Index Out of bounds is now thrown correctly instead of performing integer overflow and continuing with calculations `(#1213)`
-- `swiyu-ts-verifier`: Fix `exp` and `iat` = null edge cases (previously mapped to 0) in `Statement` (#1507)
+- `TokenStatusListVerifier` matchesIssuerIfRequired now checks for exact match of issuer instead of startsWith as indicated by the function name`(#1504)`
+- Regression regarding SCID linkage between webvh and did document by updating to did-resolver 2.10.1 (#1516)
+
+### Changed
+- `swiyu-sdjwt-verifier`: Documented deliberate deviation from RFC 9901 §7.1 step 3.d for array elements. The deviation preserves array indices for OID4VP DCQL claims path pointers (#1497)
+
+### Added
+- `swiyu-sdjwt-util`: Added `aka_vcts` to the list of protected claims that cannot be selectively disclosed (#1497)
 
 ### Removed
 - `swiyu-claims-path-pointer-util` library removed

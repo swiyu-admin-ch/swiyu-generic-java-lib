@@ -297,28 +297,28 @@ class PiaTsBuilderTest {
 
     @Test
     void withCanIssue_vctNameExceedsMaxLength_throwsValidationException() {
-        String name501 = "A".repeat(501);
+        String name41 = "A".repeat(41);
         assertThrows(TrustStatementValidationException.class,
-                () -> new PiaTsBuilder().withCanIssue(VALID_VCT, null, name501, null));
+                () -> new PiaTsBuilder().withCanIssue(VALID_VCT, null, name41, null));
     }
 
     @Test
     void withCanIssue_vctNameAtExactMaxLength_doesNotThrow() {
-        String name500 = "A".repeat(500);
-        assertDoesNotThrow(() -> new PiaTsBuilder().withCanIssue(VALID_VCT, null, name500, null));
+        String name40 = "A".repeat(40);
+        assertDoesNotThrow(() -> new PiaTsBuilder().withCanIssue(VALID_VCT, null, name40, null));
     }
 
     @Test
     void withCanIssue_reasonExceedsMaxLength_throwsValidationException() {
-        String desc51 = "A".repeat(51);
+        String desc1001 = "A".repeat(1001);
         assertThrows(TrustStatementValidationException.class,
-                () -> new PiaTsBuilder().withCanIssue(VALID_VCT, null, "Name", desc51));
+                () -> new PiaTsBuilder().withCanIssue(VALID_VCT, null, "Name", desc1001));
     }
 
     @Test
     void withCanIssue_reasonAtExactMaxLength_doesNotThrow() {
-        String desc50 = "A".repeat(50);
-        assertDoesNotThrow(() -> new PiaTsBuilder().withCanIssue(VALID_VCT, null, "Name", desc50));
+        String desc1000 = "A".repeat(1000);
+        assertDoesNotThrow(() -> new PiaTsBuilder().withCanIssue(VALID_VCT, null, "Name", desc1000));
     }
 
     @Test

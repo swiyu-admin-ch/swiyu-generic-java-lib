@@ -168,7 +168,7 @@ class NcTlsBuilderTest {
 
         List<Map<String, Object>> actors =
                 (List<Map<String, Object>>) jwt.getJWTClaimsSet().getClaim("non_compliant_actors");
-        Map<String, Object> entry = actors.get(0);
+        Map<String, Object> entry = actors.getFirst();
 
         assertTrue(entry.containsKey("actor"),
                 "entry must use claim key 'actor' (not 'did')");
@@ -184,7 +184,7 @@ class NcTlsBuilderTest {
 
         List<Map<String, Object>> actors =
                 (List<Map<String, Object>>) jwt.getJWTClaimsSet().getClaims().get("non_compliant_actors");
-        assertEquals(VALID_FLAGGED_AT, actors.get(0).get("flagged_at"));
+        assertEquals(VALID_FLAGGED_AT, actors.getFirst().get("flagged_at"));
     }
 
     @Test
@@ -194,7 +194,7 @@ class NcTlsBuilderTest {
 
         List<Map<String, Object>> actors =
                 (List<Map<String, Object>>) jwt.getJWTClaimsSet().getClaims().get("non_compliant_actors");
-        assertEquals(VALID_REASON, actors.get(0).get("reason"));
+        assertEquals(VALID_REASON, actors.getFirst().get("reason"));
     }
 
     @Test
@@ -218,7 +218,7 @@ class NcTlsBuilderTest {
 
         List<Map<String, Object>> actors =
                 (List<Map<String, Object>>) jwt.getJWTClaimsSet().getClaims().get("non_compliant_actors");
-        Map<String, Object> entry = actors.get(0);
+        Map<String, Object> entry = actors.getFirst();
 
         assertEquals("The issuer is not who they claim to be (DE)", entry.get("reason"));
         assertEquals("The issuer is not who they claim to be (DE)", entry.get("reason#de"));
@@ -244,9 +244,9 @@ class NcTlsBuilderTest {
         List<Map<String, Object>> actors =
                 (List<Map<String, Object>>) jwt.getJWTClaimsSet().getClaims().get("non_compliant_actors");
         assertEquals(2, actors.size());
-        assertEquals("did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRCC1:identifier.admin.ch:api:v1:did", actors.get(0).get("actor"));
+        assertEquals("did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRCC1:identifier.admin.ch:api:v1:did", actors.getFirst().get("actor"));
         assertEquals("did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRDD1:identifier.admin.ch:api:v1:did", actors.get(1).get("actor"));
-        assertEquals("2026-02-25T07:07:35Z",  actors.get(0).get("flagged_at"));
+        assertEquals("2026-02-25T07:07:35Z",  actors.getFirst().get("flagged_at"));
         assertEquals("2025-01-13T07:13:00Z",  actors.get(1).get("flagged_at"));
     }
 
@@ -304,6 +304,28 @@ class NcTlsBuilderTest {
     }
 
     @Test
+    void nonCompliantActorBuilder_invalidDidMethod_throwsValidationException() {
+        assertThrows(TrustStatementValidationException.class,
+                () -> new NcTlsBuilder.NonCompliantActorBuilder(
+                        "did:example:123", VALID_FLAGGED_AT, VALID_REASON));
+    }
+
+    @Test
+    void nonCompliantActorBuilder_invalidDidScid_throwsValidationException() {
+        // SCID too short
+        assertThrows(TrustStatementValidationException.class,
+                () -> new NcTlsBuilder.NonCompliantActorBuilder(
+                        "did:tdw:QmShort", VALID_FLAGGED_AT, VALID_REASON));
+    }
+
+    @Test
+    void nonCompliantActorBuilder_invalidDidMissingScid_throwsValidationException() {
+        assertThrows(TrustStatementValidationException.class,
+                () -> new NcTlsBuilder.NonCompliantActorBuilder(
+                        "did:tdw:", VALID_FLAGGED_AT, VALID_REASON));
+    }
+
+    @Test
     void nonCompliantActorBuilder_blankFlaggedAt_throwsValidationException() {
         assertThrows(TrustStatementValidationException.class,
                 () -> new NcTlsBuilder.NonCompliantActorBuilder(VALID_ACTOR_DID, "  ", VALID_REASON));
@@ -325,9 +347,31 @@ class NcTlsBuilderTest {
     }
 
     @Test
+    void nonCompliantActorBuilder_flaggedAtWithoutSeconds_throwsValidationException() {
+        // RFC 3339 requires seconds component; "2026-02-25T07:07Z" is missing seconds
+        assertThrows(TrustStatementValidationException.class,
+                () -> new NcTlsBuilder.NonCompliantActorBuilder(
+                        VALID_ACTOR_DID, "2026-02-25T07:07Z", VALID_REASON));
+    }
+
+    @Test
     void nonCompliantActorBuilder_validRfc3339WithPositiveOffset_doesNotThrow() {
         assertDoesNotThrow(() -> new NcTlsBuilder.NonCompliantActorBuilder(
                 VALID_ACTOR_DID, "2026-02-25T08:07:35+01:00", VALID_REASON));
+    }
+
+    @Test
+    void nonCompliantActorBuilder_validRfc3339WithNegativeOffset_doesNotThrow() {
+        assertDoesNotThrow(() -> new NcTlsBuilder.NonCompliantActorBuilder(
+                VALID_ACTOR_DID, "1996-12-19T16:39:57-08:00", VALID_REASON));
+    }
+
+    @Test
+    void nonCompliantActorBuilder_validRfc3339WithFractionalSeconds_doesNotThrow() {
+        assertDoesNotThrow(() -> new NcTlsBuilder.NonCompliantActorBuilder(
+                VALID_ACTOR_DID, "2026-02-25T07:07:35.123Z", VALID_REASON));
+        assertDoesNotThrow(() -> new NcTlsBuilder.NonCompliantActorBuilder(
+                VALID_ACTOR_DID, "2026-02-25T07:07:35.123456789+01:00", VALID_REASON));
     }
 
     @Test

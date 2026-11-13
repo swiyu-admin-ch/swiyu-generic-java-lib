@@ -1,8 +1,11 @@
 package ch.admin.bj.swiyu.jweutil;
 
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWEAlgorithm;
+import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class JweUtilTest {
     @Test
     void encryptDecrypt_roundTrip_success() throws Exception {
-        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec1").generate();
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256).keyID("ec1").generate();
         // generates a string consisting of random letters (a-z, A-Z)
         String payload = new java.security.SecureRandom().ints(230000, 0, 52)
                 .mapToObj(i -> String.valueOf((char)(i < 26 ? 'A' + i : 'a' + (i - 26))))
@@ -28,7 +31,7 @@ class JweUtilTest {
 
     @Test
     void encryptDecrypt_roundTrip_thenError() throws Exception {
-        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec1").generate();
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256).keyID("ec1").generate();
         String payload = new java.security.SecureRandom().ints(200000, 0, 52)
                 .mapToObj(i -> String.valueOf((char)(i < 26 ? 'A' + i : 'a' + (i - 26))))
                 .collect(java.util.stream.Collectors.joining());
@@ -38,7 +41,7 @@ class JweUtilTest {
 
     @Test
     void encrypt_nullPayload_throws() throws JOSEException {
-        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec2").generate();
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256).keyID("ec2").generate();
         assertThrows(JweUtilException.class, () -> {
             JweUtil.encrypt(null, ecKey.toPublicJWK());
         });
@@ -51,7 +54,7 @@ class JweUtilTest {
 
     @Test
     void decrypt_nullJwe_throws() throws JOSEException {
-        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec3").generate();
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256).keyID("ec3").generate();
         assertThrows(JweUtilException.class, () -> JweUtil.decrypt(null, ecKey));
     }
 
@@ -62,13 +65,13 @@ class JweUtilTest {
 
     @Test
     void decrypt_invalidJwe_throws() throws JOSEException {
-        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec4").generate();
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256).keyID("ec4").generate();
         assertThrows(JweUtilException.class, () -> JweUtil.decrypt("not-a-jwe", ecKey));
     }
 
     @Test
     void encrypt_emptyPayload_success() throws Exception {
-        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec5").generate();
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256).keyID("ec5").generate();
         String encrypted = JweUtil.encrypt("", ecKey.toPublicJWK());
         String decrypted = JweUtil.decrypt(encrypted, ecKey);
         assertEquals("", decrypted);
@@ -76,14 +79,63 @@ class JweUtilTest {
 
     @Test
     void encrypt_unsupportedKeyType_throws() {
-        JWK octKey = new com.nimbusds.jose.jwk.OctetSequenceKey.Builder(new byte[]{1,2,3}).keyID("oct1").build();
+         JWK octKey = new OctetSequenceKey.Builder(new byte[]{1,2,3}).keyID("oct1").build();
         assertThrows(JweUtilException.class, () -> JweUtil.encrypt("payload", octKey));
     }
 
     @Test
     void decrypt_unsupportedKeyType_throws() {
-        JWK octKey = new com.nimbusds.jose.jwk.OctetSequenceKey.Builder(new byte[]{1,2,3}).keyID("oct2").build();
+        JWK octKey = new OctetSequenceKey.Builder(new byte[]{1,2,3}).keyID("oct2").build();
         assertThrows(JweUtilException.class, () -> JweUtil.decrypt("jwe", octKey));
+    }
+
+    // ---------------------------------------------------------------------
+    // Tests for Swiss Profile encryption requirements (P-256 curve, ECDH-ES algorithm)
+    // ---------------------------------------------------------------------
+
+    @Test
+    void encrypt_nonP256Curve_throws() throws JOSEException {
+        // P-384 curve should fail
+        ECKey ecKey = new ECKeyGenerator(Curve.P_384).keyID("ec-p384").generate();
+        JweUtilException exception = assertThrows(JweUtilException.class,
+                () -> JweUtil.encrypt("payload", ecKey.toPublicJWK()));
+        assertThat(exception.getMessage()).contains("Only P-256 curve is supported");
+    }
+
+    @Test
+    void encrypt_nonECDHESAlgorithm_throws() throws JOSEException {
+        // Key with ECDH-ES+A128KW algorithm should fail
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256)
+                .keyID("ec-alg")
+                .algorithm(JWEAlgorithm.ECDH_ES_A128KW)
+                .generate();
+        JweUtilException exception = assertThrows(JweUtilException.class,
+                () -> JweUtil.encrypt("payload", ecKey.toPublicJWK()));
+        assertThat(exception.getMessage()).contains("Only ECDH-ES algorithm is supported");
+    }
+
+    @Test
+    void encrypt_noAlgorithmSpecified_succeeds() throws Exception {
+        // Key without algorithm should work (alg is optional)
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256).keyID("ec-no-alg").generate();
+        // Ensure no algorithm is set
+        ECKey publicKey = ecKey.toPublicJWK();
+        assertNull(publicKey.getAlgorithm());
+        String encrypted = JweUtil.encrypt("payload", publicKey);
+        String decrypted = JweUtil.decrypt(encrypted, ecKey);
+        assertEquals("payload", decrypted);
+    }
+
+    @Test
+    void encrypt_ECDHESAlgorithm_succeeds() throws Exception {
+        // Key with explicit ECDH-ES algorithm should work
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256)
+                .keyID("ec-ecdh-es")
+                .algorithm(JWEAlgorithm.ECDH_ES)
+                .generate();
+        String encrypted = JweUtil.encrypt("payload", ecKey.toPublicJWK());
+        String decrypted = JweUtil.decrypt(encrypted, ecKey);
+        assertEquals("payload", decrypted);
     }
 
     // ---------------------------------------------------------------------
@@ -92,7 +144,7 @@ class JweUtilTest {
 
     @Test
     void decrypt_whenDecompressedPayloadWithinDefaultLimits_thenSucceeds() throws Exception {
-        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec6").generate();
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256).keyID("ec6").generate();
         String payload = "a small, well within default limits, payload";
         String encrypted = JweUtil.encrypt(payload, ecKey.toPublicJWK());
         String decrypted = JweUtil.decrypt(encrypted, ecKey, JweDecryptionLimits.defaults());
@@ -101,7 +153,7 @@ class JweUtilTest {
 
     @Test
     void decrypt_whenCompressedCipherTextExceedsConfiguredLimit_thenThrowsJweUtilException() throws Exception {
-        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec7").generate();
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256).keyID("ec7").generate();
         // random (high-entropy) data does not compress well, so the compressed ciphertext
         // will exceed a very small configured limit
         String payload = new java.security.SecureRandom().ints(50000, 0, 52)
@@ -114,7 +166,7 @@ class JweUtilTest {
 
     @Test
     void decrypt_whenDecompressedPayloadExceedsConfiguredLimit_thenThrowsJweUtilException() throws Exception {
-        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec8").generate();
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256).keyID("ec8").generate();
         // Highly repetitive (and therefore highly compressible) plaintext: this simulates a
         // "zip bomb" - its compressed size stays small, but its decompressed size is huge.
         String payload = "A".repeat(2_000_000); // ~2,000,000 chars decompressed
@@ -130,7 +182,7 @@ class JweUtilTest {
 
     @Test
     void decrypt_whenLimitsIsNull_thenDefaultsAreApplied() throws Exception {
-        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec9").generate();
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256).keyID("ec9").generate();
         String payload = "payload within defaults";
         String encrypted = JweUtil.encrypt(payload, ecKey.toPublicJWK());
         String decrypted = JweUtil.decrypt(encrypted, ecKey, (JweDecryptionLimits) null);
@@ -139,7 +191,7 @@ class JweUtilTest {
 
     @Test
     void decrypt_deprecatedNoArgOverload_stillWorks() throws Exception {
-        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec10").generate();
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256).keyID("ec10").generate();
         String payload = "backward compatible payload";
         String encrypted = JweUtil.encrypt(payload, ecKey.toPublicJWK());
         String decrypted = JweUtil.decrypt(encrypted, ecKey);
@@ -148,7 +200,7 @@ class JweUtilTest {
 
     @Test
     void decrypt_deprecatedIntegerOverload_stillWorks() throws Exception {
-        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec11").generate();
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256).keyID("ec11").generate();
         String payload = new java.security.SecureRandom().ints(230000, 0, 52)
                 .mapToObj(i -> String.valueOf((char) (i < 26 ? 'A' + i : 'a' + (i - 26))))
                 .collect(java.util.stream.Collectors.joining());
@@ -159,7 +211,7 @@ class JweUtilTest {
 
     @Test
     void decrypt_deprecatedIntegerOverload_exceedsLimit_throws() throws Exception {
-        ECKey ecKey = new ECKeyGenerator(com.nimbusds.jose.jwk.Curve.P_256).keyID("ec12").generate();
+        ECKey ecKey = new ECKeyGenerator(Curve.P_256).keyID("ec12").generate();
         String payload = new java.security.SecureRandom().ints(200000, 0, 52)
                 .mapToObj(i -> String.valueOf((char) (i < 26 ? 'A' + i : 'a' + (i - 26))))
                 .collect(java.util.stream.Collectors.joining());

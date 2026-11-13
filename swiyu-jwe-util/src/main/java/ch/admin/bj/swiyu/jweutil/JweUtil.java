@@ -5,6 +5,7 @@ import com.nimbusds.jose.crypto.ECDHDecrypter;
 import com.nimbusds.jose.crypto.ECDHEncrypter;
 import com.nimbusds.jose.crypto.opts.MaxCompressedCipherTextLength;
 import com.nimbusds.jose.crypto.opts.MaxDecompressedPlainTextLength;
+import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
 import lombok.experimental.UtilityClass;
@@ -14,27 +15,53 @@ import java.util.Set;
 /**
  * Utility for JSON Web Encryption (JWE) operations in the Swiyu ecosystem.
  * <p>
- * This class provides a placeholder for future JWE encryption and decryption functionality.
- * It is intended to offer methods for encrypting and decrypting payloads using JWE standards.
- * </p>
- * <p>
- * Note: This is a stub and does not contain any real implementation yet.
- * </p>
+ * Provides JWE encryption and decryption functionality conforming to the Swiss Profile
+ * for eID issuance (https://swiyu-admin-ch.github.io/specifications/swiss-profile-issuance/#cryptography):
+ * <ul>
+ *   <li>JWS algorithm MUST be ES256</li>
+ *   <li>Encryption MUST use only ECDH-ES with P-256 Keys with A256GCM algorithm</li>
+ *   <li>If zipping is possible, Deflate (DEF) MUST be used</li>
+ *   <li>If using encryption is possible, it MUST be used</li>
+ * </ul>
  */
 @UtilityClass
 public class JweUtil {
 
     /**
-     * Encrypts the given payload using JWE.
+     * Encrypts the given payload using JWE according to the Swiss Profile.
+     * <p>
+     * The encryption uses the following parameters as mandated by the Swiss Profile:
+     * <ul>
+     *   <li>Algorithm: {@link JWEAlgorithm#ECDH_ES} (ECDH-ES)</li>
+     *   <li>Encryption Method: {@link EncryptionMethod#A256GCM} (AES-256-GCM)</li>
+     *   <li>Compression: {@link CompressionAlgorithm#DEF} (Deflate)</li>
+     *   <li>Key Requirements: EC Key with P-256 curve ({@link Curve#P_256})</li>
+     * </ul>
+     * If the recipient public key has an algorithm ({@code alg}) set, it MUST be {@code ECDH-ES}.
+     * The key MUST use the P-256 curve.
      *
      * @param payload The data to encrypt (as a String).
-     * @return The encrypted JWE string, or null if not implemented.
+     * @param recipientPublicKey The recipient's public EC key (must be P-256 curve, alg must be ECDH-ES if set).
+     * @return The encrypted JWE string in compact serialization.
+     * @throws JweUtilException if the key is not an EC key, not P-256 curve, has an invalid algorithm,
+     *                          or encryption fails.
      */
     public static String encrypt(String payload, JWK recipientPublicKey) {
         try {
             if (!(recipientPublicKey instanceof ECKey ecKey)) {
                 throw new JweUtilException("Only EC keys are supported.");
             }
+
+            // Ensure the key is valid and has a P-256 Curve according to Swiss Profile
+            if (ecKey.getCurve() == null || !Curve.P_256.equals(ecKey.getCurve())) {
+                throw new JweUtilException("Only P-256 curve is supported according to Swiss Profile.");
+            }
+
+            // Check algorithm if specified -> alg is optional so check only applies if set
+            if (ecKey.getAlgorithm() != null && !JWEAlgorithm.ECDH_ES.equals(ecKey.getAlgorithm())) {
+                throw new JweUtilException("Only ECDH-ES algorithm is supported according to Swiss Profile.");
+            }
+
             JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.ECDH_ES, EncryptionMethod.A256GCM)
                     .compressionAlgorithm(CompressionAlgorithm.DEF)
                     .keyID(ecKey.getKeyID())
@@ -42,6 +69,8 @@ public class JweUtil {
             JWEObject jweObject = new JWEObject(header, new Payload(payload));
             jweObject.encrypt(new ECDHEncrypter(ecKey));
             return jweObject.serialize();
+        } catch (JweUtilException e) {
+            throw e;
         } catch (Exception e) {
             throw new JweUtilException("Error during JWE encryption", e);
         }
