@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class TokenStatusListVerifier {
     private static final String TOKEN_STATUS_LIST_TOKEN_TYPE = "statuslist+jwt";
+    private static final String DID_FRAGMENT_SEPARATOR = "#";
 
     private final TokenStatusListVerifierConfig config;
 
@@ -106,13 +107,14 @@ public class TokenStatusListVerifier {
 
         // If one kid is missing or does not contain a DID fragment ('#') we cannot validate -> reject
         if (tokenStatusListReferenceKid == null || statusListKid == null
-                || !tokenStatusListReferenceKid.contains("#") || !statusListKid.contains("#")) {
+                || !tokenStatusListReferenceKid.contains(DID_FRAGMENT_SEPARATOR) || !statusListKid.contains(DID_FRAGMENT_SEPARATOR)) {
             return false;
         }
 
         // remove key-ids from DIDs to compare issuers
-        String tokenStatusListReferenceKidIssuer = tokenStatusListReferenceKid.split("#", 2)[0];
+        String tokenStatusListReferenceKidIssuer = tokenStatusListReferenceKid.split(DID_FRAGMENT_SEPARATOR, 2)[0];
+        String statusListKidIssuer = statusListKid.split(DID_FRAGMENT_SEPARATOR, 2)[0];
 
-        return statusListKid.startsWith(tokenStatusListReferenceKidIssuer);
+        return statusListKidIssuer.equals(tokenStatusListReferenceKidIssuer);
     }
 }
