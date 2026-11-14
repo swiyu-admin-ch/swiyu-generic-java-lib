@@ -41,11 +41,6 @@
         <!-- Include all modules -->
         <dependency>
             <groupId>ch.admin.swiyu</groupId>
-            <artifactId>swiyu-claims-path-pointer-util</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ch.admin.swiyu</groupId>
             <artifactId>swiyu-did-resolver-adapter</artifactId>
             <version>${project.version}</version>
         </dependency>
