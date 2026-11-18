@@ -77,33 +77,6 @@ public class JweUtil {
     }
 
     /**
-     * Decrypts the given JWE string using {@link JweDecryptionLimits#defaults()}.
-     *
-     * @deprecated Use {@link #decrypt(String, JWK, JweDecryptionLimits)} instead (EIDOMNI-1117 / EIDSEC-843).
-     */
-    @Deprecated(since = "2.1.0")
-    public static String decrypt(String jweString, JWK recipientPrivateKey) {
-        return decrypt(jweString, recipientPrivateKey, JweDecryptionLimits.defaults());
-    }
-
-    /**
-     * Decrypts the given JWE string.
-     *
-     * @param maxCompressedCipherTextLength max length for compressed ciphertexts; default (if null or {@code <= 0})
-     *                                      is {@link JweDecryptionLimits#DEFAULT_MAX_COMPRESSED_CIPHER_TEXT_LENGTH}.
-     * @deprecated Use {@link #decrypt(String, JWK, JweDecryptionLimits)} instead. This overload does not enforce
-     *             a decompressed-payload limit, part of the fix for EIDOMNI-1117 / EIDSEC-843.
-     */
-    @Deprecated(since = "2.1.0")
-    public static String decrypt(String jweString, JWK recipientPrivateKey, Integer maxCompressedCipherTextLength) {
-        int compressedLimit = (maxCompressedCipherTextLength != null && maxCompressedCipherTextLength > 0)
-                ? maxCompressedCipherTextLength
-                : JweDecryptionLimits.DEFAULT_MAX_COMPRESSED_CIPHER_TEXT_LENGTH;
-        return decrypt(jweString, recipientPrivateKey,
-                new JweDecryptionLimits(compressedLimit, JweDecryptionLimits.DEFAULT_MAX_DECOMPRESSED_PAYLOAD_LENGTH));
-    }
-
-    /**
      * Decrypts the given JWE string, enforcing the supplied size limits.
      * <p>
      * Fixes the JWE "Decompression Bomb" vulnerability (EIDOMNI-1117 / EIDSEC-843): Nimbus only checks the
