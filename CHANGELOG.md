@@ -33,6 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `swiyu-sdjwt-util`: Added `aka_vcts` to the list of protected claims that cannot be selectively disclosed (#1497)
 
+### Removed
+- `swiyu-claims-path-pointer-util` library removed
+
 ## [3.2.0]
 
 ### Changed
