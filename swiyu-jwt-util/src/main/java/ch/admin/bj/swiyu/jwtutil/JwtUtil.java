@@ -143,20 +143,9 @@ public final class JwtUtil {
      */
     public static Map<String, Object> verifySignedJwt(SignedJWT jwt, JWKSet keySet)
             throws JwtUtilException {
-        try {
             JWSHeader header = jwt.getHeader();
             JWK key = keySet.getKeyByKeyId(header.getKeyID());
-            if (key == null) {
-                throw new JwtUtilException("No matching key found");
-            }
-            JWSVerifier verifier = buildVerifier(key.getKeyType(), key);
-            if (!jwt.verify(verifier)) {
-                throw new JwtUtilException("JWT signature verification failed");
-            }
-            return jwt.getJWTClaimsSet().toJSONObject();
-        } catch (JOSEException | ParseException e) {
-            throw new JwtUtilException("Failed to verify JWT", e);
-        }
+            return verifySignedJwt(jwt, key);
     }
 
     /**
