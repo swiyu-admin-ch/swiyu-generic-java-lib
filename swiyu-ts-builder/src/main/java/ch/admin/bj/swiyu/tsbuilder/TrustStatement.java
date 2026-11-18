@@ -19,6 +19,7 @@ package ch.admin.bj.swiyu.tsbuilder;
  *   <li>{@code status} is <strong>required</strong></li>
  * </ul>
  */
+@Deprecated(forRemoval = true)
 public interface TrustStatement {
 }
 

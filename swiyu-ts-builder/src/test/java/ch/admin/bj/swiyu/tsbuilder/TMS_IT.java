@@ -51,6 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *   <li>carries {@code alg = ES256}</li>
  * </ul>
  */
+@Deprecated(forRemoval = true)
 class TMS_IT {
 
     private static final String KID          = "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRAA1:identifier.admin.ch:api:v1:did#assert-key-01";

@@ -41,6 +41,7 @@ import java.util.Map;
  *     .build();
  * }</pre>
  */
+@Deprecated(forRemoval = true)
 public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> implements TrustListStatement {
 
     private static final String TYP = "swiyu-non-compliance-trust-list-statement+jwt";

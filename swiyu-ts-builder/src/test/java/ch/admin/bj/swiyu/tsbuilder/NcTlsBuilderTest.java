@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * </ul>
  * </p>
  */
+@Deprecated(forRemoval = true)
 class NcTlsBuilderTest {
 
     private static final String VALID_KID       = "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRAA1:identifier.admin.ch:api:v1:did#assert-key-01";
