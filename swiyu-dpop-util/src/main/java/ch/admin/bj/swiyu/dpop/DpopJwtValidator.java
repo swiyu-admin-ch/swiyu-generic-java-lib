@@ -29,17 +29,6 @@ import java.util.List;
 public final class DpopJwtValidator {
 
     /**
-     * Parses a DPoP JWT string into a SignedJWT object.
-     *
-     * @param dpop the DPoP JWT as a string
-     * @return the parsed SignedJWT
-     * @throws ParseException if the JWT cannot be parsed
-     */
-    public static SignedJWT parse(String dpop) throws ParseException {
-        return SignedJWT.parse(dpop);
-    }
-
-    /**
      * Validates that all mandatory header and payload claims are present in the DPoP JWT.
      *
      * @param header    the JWS header
