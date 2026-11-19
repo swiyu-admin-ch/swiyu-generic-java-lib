@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `swiyu-jwe-util`: Enforce Swiss Profile compliance in `JweUtil#encrypt` by introducing additional validations for the P-256 elliptic curve, optionally verifying the use of the ECDH-ES algorithm (as alg is optional), and ensuring that the encryption method and compression algorithm meet the Swiss Profile requirements (#EIDOMNI-1509)
 
+### Removed
+- Functions across the entire library not used by any of the swiyu components were removed. TS-Builder lib was marked as deprecated (#1226) 
+
 ## [3.3.0] - 2026-11-09
 
 ### Fixed
