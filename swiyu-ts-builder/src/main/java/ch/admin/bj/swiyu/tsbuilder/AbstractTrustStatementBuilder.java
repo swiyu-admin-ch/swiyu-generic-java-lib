@@ -1,5 +1,6 @@
 package ch.admin.bj.swiyu.tsbuilder;
 
+import ch.admin.bj.swiyu.didresolveradapter.DidHelper;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -11,7 +12,6 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 /**
  * Abstract base class for all Trust Statement builders.
@@ -44,15 +44,6 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
     private static final String NOT_BEFORE = "notBefore";
     private static final String ISSUED_AT = "issuedAt";
     private static final String EXPIRES_AT = "expiresAt";
-
-    static final Pattern DID_PATTERN =
-            Pattern.compile(
-                    "^did:(webvh|tdw):Q[1-9A-HJ-NP-Za-km-z]{45}(:[0-9a-zA-Z%_.-]+)++$");
-
-    private static final Pattern KID_PATTERN =
-            Pattern.compile(
-                    "^did:(webvh|tdw):Q[1-9A-HJ-NP-Za-km-z]{45}(:[0-9a-zA-Z%_.-]+)++#[0-9a-zA-Z_-]+$");
-
 
     /**
      * Nimbus header builder – accumulates header claims set by this builder and subclasses.
@@ -108,6 +99,12 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      * accepted by the swiyu DID resolver (e.g. {@code did:tdw:QmZytP...#assert-key-01}).
      * Only {@code did:tdw} and {@code did:webvh} methods are supported.
      * </p>
+     * <p>
+     * The actual format check is delegated to
+     * {@link DidHelper#validateKid(String, String)}; any {@link IllegalArgumentException}
+     * it raises is translated into a {@link TrustStatementValidationException} so that
+     * callers of the builder keep a single, type-safe validation exception.
+     * </p>
      *
      * @param kid the absolute DID key reference, must not be {@code null} or blank
      * @return this builder for fluent chaining
@@ -116,13 +113,10 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      */
 
     public T withKid(String kid) {
-        if (kid == null || kid.isBlank()) {
-            throw new TrustStatementValidationException("kid must not be null or blank");
-        }
-        if (!KID_PATTERN.matcher(kid).matches()) {
-            throw new TrustStatementValidationException(
-                    "kid must be an absolute DID (did:tdw or did:webvh) with a valid SCID and key reference fragment " +
-                    "(e.g. did:tdw:QmZyt...#key-1), got: " + kid);
+        try {
+            DidHelper.validateKid(kid, "kid");
+        } catch (IllegalArgumentException e) {
+            throw new TrustStatementValidationException(e.getMessage());
         }
         headerBuilder.keyID(kid);
         return self();
@@ -385,6 +379,12 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
     /**
      * Validates that the given value is a syntactically valid swiyu DID
      * ({@code did:tdw} or {@code did:webvh} with a valid SCID and path segments).
+     * <p>
+     * The actual format check is delegated to
+     * {@link DidHelper#validateDid(String, String)}; any {@link IllegalArgumentException}
+     * it raises is translated into a {@link TrustStatementValidationException} so that
+     * callers of the builder keep a single, type-safe validation exception.
+     * </p>
      *
      * @param did       the DID value to validate
      * @param claimName the claim name used in the error message
@@ -392,12 +392,10 @@ public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustState
      *                                           the expected DID format
      */
     protected void validateDid(String did, String claimName) {
-        if (did == null || did.isBlank()) {
-            throw new TrustStatementValidationException(claimName + " must not be null or blank");
-        }
-        if (!DID_PATTERN.matcher(did).matches()) {
-            throw new TrustStatementValidationException(
-                    claimName + " must be a valid swiyu DID (did:tdw or did:webvh with SCID), got: " + did);
+        try {
+            DidHelper.validateDid(did, claimName);
+        } catch (IllegalArgumentException e) {
+            throw new TrustStatementValidationException(e.getMessage());
         }
     }
 

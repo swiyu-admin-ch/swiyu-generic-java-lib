@@ -1,5 +1,6 @@
 package ch.admin.bj.swiyu.tsbuilder;
 
+import ch.admin.bj.swiyu.didresolveradapter.DidHelper;
 import com.nimbusds.jwt.JWTClaimsSet;
 
 import java.time.format.DateTimeFormatter;
@@ -152,7 +153,7 @@ public class NcTlsBuilder extends AbstractTrustStatementBuilder<NcTlsBuilder> im
                 throw new TrustStatementValidationException(
                         "non_compliant_actor actor must not be null or blank");
             }
-            if (!AbstractTrustStatementBuilder.DID_PATTERN.matcher(did).matches()) {
+            if (!DidHelper.isValidDid(did)) {
                 throw new TrustStatementValidationException(
                         "non_compliant_actor actor must be a valid swiyu DID (did:tdw or did:webvh with SCID), got: " + did);
             }

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - `swiyu-ts-builder`: Updated `PiaTsBuilder` length limits to match Trust Protocol 2.0 – `vct_name` max length 500 → 40, `reason` max length 50 → 1000 `(#1505)` 
+- `swiyu-ts-builder`: DID and `kid` validation in `AbstractTrustStatementBuilder` (`withSubject`, `withKid`) and `NcTlsBuilder.NonCompliantActorBuilder` now delegates to the new `DidHelper` in `swiyu-did-resolver-adapter` `(#1606)`
 
 ### Fixed
 - Index Out of bounds is now thrown correctly instead of performing integer overflow and continuing with calculations (#1213)
@@ -19,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - `swiyu-jwe-util`: Enforce Swiss Profile compliance in `JweUtil#encrypt` by introducing additional validations for the P-256 elliptic curve, optionally verifying the use of the ECDH-ES algorithm (as alg is optional), and ensuring that the encryption method and compression algorithm meet the Swiss Profile requirements (#EIDOMNI-1509)
+- `swiyu-did-resolver-adapter`: New public `DidHelper` utility exposing the swiyu DID patterns (`DID_PATTERN`, `KID_PATTERN`) plus `isValidDid(String)`/`validateDid(String, String)` and `isValidKid(String)`/`validateKid(String, String)` for reuse across libraries `(#1606)`
 
 ## [3.3.0] - 2026-11-09
 
