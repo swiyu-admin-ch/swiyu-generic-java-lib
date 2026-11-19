@@ -65,6 +65,33 @@
             <version>${jackson.version}</version>
         </dependency>
 
+        <!-- Shared DID validation helpers. Spring Boot and the native didresolver are
+             excluded because DidHelper only needs plain Java (the native resolver is
+             only required by the DID resolution classes of the adapter). -->
+        <dependency>
+            <groupId>ch.admin.swiyu</groupId>
+            <artifactId>swiyu-did-resolver-adapter</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-web</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>ch.admin.swiyu</groupId>
+                    <artifactId>didresolver</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>net.java.dev.jna</groupId>
+                    <artifactId>jna</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
