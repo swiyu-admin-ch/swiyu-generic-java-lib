@@ -157,20 +157,15 @@ public class DidJwtValidator {
      *                               DID Document, or the signature verification fails
      */
     public void validateJwt(String jwtString, DidDoc didDocument) {
-        // Validate that DID is of a trusted URI
-        getAndValidateResolutionUrl(jwtString);
         String kid = didKidParser.extractKidFromHeader(jwtString);
-
         Jwk jwk;
         try {
             jwk = didDocument.getKeyByMethodId(kid);
         } catch (DidSidekicksException e) {
             throw new JwtValidatorException("Key '" + kid + "' not found in DID Document", e);
         }
-
-        validateTimeClaims(jwtString);
         JWK jwkNimbus = toJwk(jwk);
-        verifySignature(jwtString, jwkNimbus);
+        validateJwt(jwtString, jwkNimbus);
     }
 
     /**

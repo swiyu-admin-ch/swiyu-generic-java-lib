@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Blackbox unit tests for {@link PiTlsBuilder}.
  */
+@Deprecated(forRemoval = true)
 class PiTlsBuilderTest {
 
     private static final String VALID_KID = "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRAA1:identifier.admin.ch:api:v1:did#assert-key-01";

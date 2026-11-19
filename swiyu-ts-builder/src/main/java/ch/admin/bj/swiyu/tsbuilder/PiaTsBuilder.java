@@ -18,6 +18,7 @@ import java.util.Map;
  * <p>Fixed header {@code typ}:
  * {@code swiyu-protected-issuance-authorization-trust-statement+jwt}</p>
  */
+@Deprecated(forRemoval = true)
 public class PiaTsBuilder extends AbstractTrustStatementBuilder<PiaTsBuilder> implements TrustStatement {
 
     private static final String TYP = "swiyu-protected-issuance-authorization-trust-statement+jwt";

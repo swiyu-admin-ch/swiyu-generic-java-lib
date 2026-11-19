@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Note: {@code can_issue} is a single JSON object, not an array.
  * </p>
  */
+@Deprecated(forRemoval = true)
 class PiaTsBuilderTest {
 
     private static final String VALID_KID     = "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRAA1:identifier.admin.ch:api:v1:did#assert-key-01";

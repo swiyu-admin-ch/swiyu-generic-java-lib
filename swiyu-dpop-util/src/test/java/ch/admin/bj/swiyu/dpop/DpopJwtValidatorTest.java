@@ -29,13 +29,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class DpopJwtValidatorTest {
 
     @Test
-    void parse_validJwt_returnsSignedJwt() throws Exception {
-        SignedJWT signedJWT = buildSignedJwt();
-        SignedJWT parsed = DpopJwtValidator.parse(signedJWT.serialize());
-        assertDoesNotThrow(() -> DpopJwtValidator.validateSignature(parsed, signedJWT.getHeader().getJWK()));
-    }
-
-    @Test
     void validateMandatoryClaims_missingHeaderClaim_throws() {
         JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.ES256).type(new JOSEObjectType(DpopConstants.DPOP_JWT_HEADER_TYP)).build();
         JWTClaimsSet claims = new JWTClaimsSet.Builder().build();

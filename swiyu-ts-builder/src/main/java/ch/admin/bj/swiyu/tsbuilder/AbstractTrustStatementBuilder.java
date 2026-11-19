@@ -37,6 +37,7 @@ import java.util.UUID;
  *
  * @param <T> the concrete builder type, must extend {@code AbstractTrustStatementBuilder<T>}
  */
+@Deprecated(forRemoval = true)
 public abstract class AbstractTrustStatementBuilder<T extends AbstractTrustStatementBuilder<T>> {
 
     private static final String PROFILE_VERSION = "swiss-profile-trust:1.0.0";

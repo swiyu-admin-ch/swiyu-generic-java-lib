@@ -18,6 +18,7 @@ import java.util.Map;
  *
  * <p>Fixed header {@code typ}: {@code swiyu-verification-query-public-statement+jwt}</p>
  */
+@Deprecated(forRemoval = true)
 public class VqPsBuilder extends AbstractTrustStatementBuilder<VqPsBuilder> implements PublicStatement {
 
     private static final String TYP = "swiyu-verification-query-public-statement+jwt";

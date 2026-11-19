@@ -18,6 +18,7 @@ package ch.admin.bj.swiyu.tsbuilder;
  *   <li>{@code status} is <strong>not required</strong></li>
  * </ul>
  */
+@Deprecated(forRemoval = true)
 public interface PublicStatement {
 }
 

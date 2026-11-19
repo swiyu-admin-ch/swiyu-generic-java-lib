@@ -9,6 +9,7 @@ package ch.admin.bj.swiyu.tsbuilder;
  * the caller without waiting for {@code build()}.
  * </p>
  */
+@Deprecated(forRemoval = true)
 public class TrustStatementValidationException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;

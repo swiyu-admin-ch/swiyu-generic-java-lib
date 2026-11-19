@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * </ul>
  * </p>
  */
+@Deprecated(forRemoval = true)
 class VqPsBuilderTest {
     private static final String VALID_KID     = "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRAA1:identifier.admin.ch:api:v1:did#assert-key-01";
     private static final String VALID_SUBJECT = "did:tdw:QmYyQSo1c1Ym7orWxLYvCrzRLZad5ZxQ8HkBLyEE4RRBB1:identifier.admin.ch:api:v1:did";

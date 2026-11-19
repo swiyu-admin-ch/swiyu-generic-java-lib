@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `swiyu-jwe-util`: Enforce Swiss Profile compliance in `JweUtil#encrypt` by introducing additional validations for the P-256 elliptic curve, optionally verifying the use of the ECDH-ES algorithm (as alg is optional), and ensuring that the encryption method and compression algorithm meet the Swiss Profile requirements (#EIDOMNI-1509)
 - `swiyu-did-resolver-adapter`: New public `DidHelper` utility exposing the swiyu DID patterns (`DID_PATTERN`, `KID_PATTERN`) plus `isValidDid(String)`/`validateDid(String, String)` and `isValidKid(String)`/`validateKid(String, String)` for reuse across libraries `(#1606)`
 
+### Removed
+- Functions across the entire library not used by any of the swiyu components were removed. TS-Builder lib was marked as deprecated (#1226) 
+
 ## [3.3.0] - 2026-11-09
 
 ### Fixed
