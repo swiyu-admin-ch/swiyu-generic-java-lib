@@ -1,3 +1,10 @@
+---
+name: prepare-dev
+description: Prepare dev environment after release by bumping to next SNAPSHOT version and adding [NEXT] to CHANGELOG
+disable-model-invocation: true
+allowed-tools: Bash, Read, Edit, Write, Glob, Grep
+---
+
 # Post-Release Dev Environment Preparation Skill
 
 This skill documents the process to prepare the development environment after a release has been published.
@@ -36,7 +43,6 @@ The current version will be in `X.Y.Z` format (e.g., `3.4.0`).
 > - `3.4.0` → `3.5.0-SNAPSHOT` (standard)
 > - `3.4.0` → `3.4.1-SNAPSHOT` (if only patch releases planned)
 > - `3.4.0` → `4.0.0-SNAPSHOT` (if planning breaking changes)
-
 ### 2. Bump to Next SNAPSHOT Version
 
 Run from the project root with your confirmed version:
@@ -47,13 +53,13 @@ mvn versions:set -DnewVersion=X.Y+1.0-SNAPSHOT -DprocessAllModules=true
 ```
 
 This updates:
-- Root `pom.xml`
-- All 14 module `pom.xml` files
+- Root `../../../pom.xml`
+- All 14 module `../../../pom.xml` files
 - Inter-module dependency versions
 
-### 2. Update Version in README.md Files
+### 3. Update Version in README.md Files
 
-Each module has a `README.md` with a dependency example. Update the version in all of them:
+Each module has a `../../../README.md` with a dependency example. Update the version in all of them:
 
 ```bash
 # List of modules with README.md files (11 files)
@@ -72,7 +78,7 @@ swiyu-token-status-list/README.md
 
 Change `<version>X.Y.Z</version>` to `<version>X.Y+1.0-SNAPSHOT</version>`
 
-### 3. Update CHANGELOG.md
+### 4. Update CHANGELOG.md
 
 Add a new `## [NEXT]` section at the top (after the header) with empty subchapters:
 
@@ -102,7 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Keep `### Removed` optional - only add when needed
 - Maintain blank line after each subchapter header
 
-### 4. Clean Up Backup Files
+### 5. Clean Up Backup Files
 
 Remove Maven versions plugin backup files:
 
@@ -110,7 +116,7 @@ Remove Maven versions plugin backup files:
 find . -name "*.versionsBackup" -delete
 ```
 
-### 5. Verify Changes
+### 6. Verify Changes
 
 ```bash
 # Check all POMs have the new SNAPSHOT version
@@ -129,7 +135,7 @@ head -20 CHANGELOG.md
 git status
 ```
 
-### 6. Commit
+### 7. Commit
 
 ```bash
 git add -A
@@ -199,7 +205,7 @@ git push origin main
 
 ## Files Modified
 
-- 15 `pom.xml` files (root + 14 modules)
-- 11 `README.md` files
-- 1 `CHANGELOG.md` file
+- 15 `../../../pom.xml` files (root + 14 modules)
+- 11 `../../../README.md` files
+- 1 `../../../CHANGELOG.md` file
 - Cleanup: `*.versionsBackup` files removed

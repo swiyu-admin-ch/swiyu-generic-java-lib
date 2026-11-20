@@ -1,3 +1,10 @@
+---
+name: prepare-release
+description: Prepare a release by bumping version from SNAPSHOT to release, updating CHANGELOG, and committing/tagging
+disable-model-invocation: true
+allowed-tools: Bash(git log:*), Bash(git status:*), Bash(git branch:*), Bash(git diff:*), Read, Grep, Glob
+---
+
 # Release Preparation Skill
 
 This skill documents the release preparation process for the swiyu-generic-java-lib project.
@@ -36,7 +43,6 @@ The current version will be in `X.Y.Z-SNAPSHOT` format (e.g., `3.4.0-SNAPSHOT`).
 > - Patch increment (3.4.0 → 3.4.1): bug fixes only
 > - Minor increment (3.4.0 → 3.5.0): new features, backward compatible
 > - Major increment (3.4.0 → 4.0.0): breaking changes
-
 ### 2. Update Version in All POMs
 
 Run from the project root with your confirmed version:
@@ -47,13 +53,13 @@ mvn versions:set -DnewVersion=X.Y.Z -DprocessAllModules=true
 ```
 
 This updates:
-- Root `pom.xml`
-- All 14 module `pom.xml` files
+- Root `../../../pom.xml`
+- All 14 module `../../../pom.xml` files
 - Inter-module dependency versions
 
-### 2. Update Version in README.md Files
+### 3. Update Version in README.md Files
 
-Each module has a `README.md` with a dependency example. Update the version in all of them:
+Each module has a `../../../README.md` with a dependency example. Update the version in all of them:
 
 ```bash
 # List of modules with README.md files
@@ -72,7 +78,7 @@ swiyu-token-status-list/README.md
 
 Change `<version>X.Y.Z-SNAPSHOT</version>` to `<version>X.Y.Z</version>`
 
-### 3. Update CHANGELOG.md
+### 4. Update CHANGELOG.md
 
 Replace the `## [NEXT]` header with the release version and current date:
 
@@ -85,7 +91,7 @@ Replace the `## [NEXT]` header with the release version and current date:
 - Keep ticket prefixes: `(#EIDOMNI-1234)`
 - Match the format used in previous releases
 
-### 4. Clean Up Backup Files
+### 5. Clean Up Backup Files
 
 Remove Maven versions plugin backup files:
 
@@ -93,7 +99,7 @@ Remove Maven versions plugin backup files:
 find . -name "*.versionsBackup" -delete
 ```
 
-### 5. Verify Changes
+### 6. Verify Changes
 
 ```bash
 # Check no SNAPSHOT references remain in actual files
@@ -106,7 +112,7 @@ head -30 CHANGELOG.md
 git status
 ```
 
-### 6. Commit and Tag
+### 7. Commit and Tag
 
 ```bash
 git add -A
@@ -119,7 +125,7 @@ git push origin main --tags
 
 - **No parent POM**: Each of the 14 module POMs repeats its own version
 - Version bumps must touch all 15 POMs (root + 14 modules)
-- The release workflow (`.github/workflows/maven-central-publish.yml`) publishes to Maven Central when a GitHub release is created
+- The release workflow (`../../../.github/workflows/maven-central-publish.yml`) publishes to Maven Central when a GitHub release is created
 - Do NOT run `mvn deploy` locally - `central-publishing-maven-plugin` handles publishing
 
 ## Changelog Format Reference
