@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import com.authlete.sd.Disclosure;
@@ -40,11 +41,15 @@ class RecursiveDisclosureUtilTest {
     @Test
     void putSelectivelyDiscloseableData_WithList_ReturnsDisclosures() throws SdJwtBuilderException {
         var builder = new SDObjectBuilder();
-        Map<String, Object> data = Map.of("roles", List.of("admin", "user"));
+        var values = new LinkedList<>();
+        values.add("admin");
+        values.add(null);
+        values.add("user");
+        Map<String, Object> data = Map.of("roles", values);
 
         var disclosures = RecursiveDisclosureUtil.putSelectivelyDiscloseableData(builder, data);
 
-        assertThat(disclosures).hasSize(3); // roles, admin, user
+        assertThat(disclosures).hasSize(4); // roles, admin, user, null
     }
 
     @ParameterizedTest
