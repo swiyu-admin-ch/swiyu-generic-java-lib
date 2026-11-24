@@ -11,6 +11,7 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -95,10 +96,16 @@ public class SdJwtUsageTest {
     void createAndValidateSdJwt(SignatureData signatureData) throws ParseException {
         String issuerDid = "did:webvh:scid:example.com";
         String verificationMethod = issuerDid + "#" + signatureData.jwk.getKeyID();
+        List<Object> nullContainingList = new LinkedList<>();
+        nullContainingList.add("Non-Null");
+        nullContainingList.add(null);
+        nullContainingList.add("Second-Non-Null");
+
         // Create fixed vc calims with normal claims, optional data and discloseable claims
         Map<SdJwtVcClaim, Object> vcClaims = Map.of(SdJwtVcClaim.ISSUER, issuerDid, SdJwtVcClaim.VCT, "ch.swiyu.test", SdJwtVcClaim.VCT_SUBTYPE, "ch.swiyu.test.v2");
         Map<String, Object> credentialSubjectClaims = Map.of("name", "Bob", "surname", "Builder", 
-            "canWeArray", 
+            "canWeNullList", nullContainingList,
+                "canWeArray",
                 // Test Lists with mixed values and same values in list
                 List.of("Yes", "Duplicate", "Duplicate", "Duplicate", 1l, 1l, 1.0, //  Note: Numbers are after processing all longs
                     List.of("List in List", Map.of("Subobject in list", "In List"))),  // Nested List and Nested Object in List

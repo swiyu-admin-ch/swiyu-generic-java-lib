@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+- SD-JWT array element disclosures (e.g. ["addresses", 1, null]) allow now null values. Before these values were silently dropped (#1396)
 
 ## [3.4.0] - 2026-11-20
 

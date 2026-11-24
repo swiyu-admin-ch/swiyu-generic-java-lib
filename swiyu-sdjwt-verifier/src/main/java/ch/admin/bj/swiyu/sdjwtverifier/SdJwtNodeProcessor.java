@@ -190,7 +190,8 @@ class SdJwtNodeProcessor {
 
                     var disclosure = digestMap.get(digest);
 
-                    if (disclosure.getClaimName() != null || disclosure.getClaimValue() == null || disclosure.getSalt() == null) {
+                    // For array nodes no claim names may be present. The array node value itself may be null; e.g. ["addresses", 1, null] is valid
+                    if (disclosure.getClaimName() != null || disclosure.getSalt() == null) {
                         throw new SdJwtVerificationException("Illegal non-array disclosure found");
                     }
 
